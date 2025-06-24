@@ -1,7 +1,10 @@
 import { pgTable, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const projects = pgTable("links", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: varchar("name", { length: 255 }),
-  url: varchar("url", { length: 2048 }),
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: varchar("description", { length: 1024 }).notNull(),
+  url: varchar("url", { length: 2048 }).notNull(),
+  headerImage: varchar("header_image", { length: 2048 }),
+  slug: varchar("slug", { length: 255 }).notNull(),
 });

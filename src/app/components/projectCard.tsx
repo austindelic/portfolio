@@ -8,7 +8,8 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({ title, description }) => {
   return (
     <div style={{
-      width: '300px',
+      width: '320px',
+	  height: '300px',
       borderRadius: '20px',
       overflow: 'hidden',
       boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
@@ -17,7 +18,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, description }) => {
     }}>
       {/* Header Placeholder */}
       <div style={{
-        height: '180px',
+        height: '110px',
         background: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
         display: 'flex',
         justifyContent: 'center',
