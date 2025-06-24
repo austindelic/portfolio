@@ -1,0 +1,29 @@
+/* styles/markdown.css */
+.markdown-body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  font-weight: bold;
+  margin-top: 1.5em;
+}
+
+.markdown-body pre {
+  background: #f6f8fa;
+  padding: 1em;
+  overflow: auto;
+  border-radius: 6px;
+}
+
+.markdown-body code {
+  font-family: monospace;
+  background: #f0f0f0;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
