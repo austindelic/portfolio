@@ -1,7 +1,8 @@
 import { fetch_project_by_slug } from '@/lib/db';
 import { fetchReadmeFromRepo } from '@/lib/github';
-import { read } from 'fs';
-//import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
 
 
 export default async function PostPage({params: {slug}}: {params: {slug: string}}) {
@@ -12,7 +13,14 @@ export default async function PostPage({params: {slug}}: {params: {slug: string}
 		console.log('Project:', project);
 		console.log('README:', readme);
 		return (
-			<pre>{readme}</pre>
+			<div>
+				<ReactMarkdown
+					rehypePlugins={[rehypeRaw]}
+					remarkPlugins={[remarkGfm]}
+				>
+					{readme}
+				</ReactMarkdown>
+			</div> 
 		);
 	}
 	catch (error) {
