@@ -12,7 +12,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ title, slug, url, logoImage, description = "", headerImage}) => {
   return (
-<a href={'/posts/' + slug} style={{
+<a href={slug} style={{
 	display: 'inline-block',
 	textDecoration: 'none', 
 	color: 'inherit',
