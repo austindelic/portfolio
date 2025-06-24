@@ -8,13 +8,17 @@ export default async function page() {
 	return (
 		<div className="text-center pt-20">
 			<h1 className="text-3xl font-bold">Posts</h1>
-			<ul>
-				{data.map((project: { id: string; name: string | null; url: string | null }) => (
+			<ul className="flex flex-wrap justify-center gap-6 p-6">
+				{data.map((project: { id: string; name: string; url: string; slug: string; logoImage: string | null; headerImage: string | null; description: string }) => (
 					<li key={project.id}>
-						<a href={project.url || "#"} target="_blank" rel="noopener noreferrer">
-							{project.name || "Unnamed Project"}
-							<ProjectCard title={project.name || "Unnamed Project"} description="This is a demo description." />
-						</a>
+						<ProjectCard 
+						title={project.name} 
+						slug={project.slug}
+						url={project.url}
+						logoImage={project.logoImage || undefined}
+						headerImage={project.headerImage || undefined}
+						description= {project.description || ""}
+						/>
 					</li>
 				))}
 			</ul>

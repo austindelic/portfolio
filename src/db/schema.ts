@@ -5,6 +5,7 @@ export const projects = pgTable("links", {
   name: varchar("name", { length: 255 }).notNull(),
   description: varchar("description", { length: 1024 }).notNull(),
   url: varchar("url", { length: 2048 }).notNull(),
+  logoImage: varchar("logo_image", { length: 2048 }),
   headerImage: varchar("header_image", { length: 2048 }),
   slug: varchar("slug", { length: 255 }).notNull(),
 });
