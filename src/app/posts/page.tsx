@@ -1,9 +1,9 @@
-import { fetch_example } from "@/lib";
+import { fetch_all_projects } from "@/lib/db";
 import { UUID } from "crypto";
 import ProjectCard from "../components/projectCard";
 
 export default async function page() {
-	const data = await fetch_example()
+	const data = await fetch_all_projects()
 	
 	return (
 		<div className="text-center pt-20">
