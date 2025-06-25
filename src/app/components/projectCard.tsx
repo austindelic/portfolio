@@ -1,4 +1,3 @@
-import { join } from 'path';
 import React from 'react';
 
 interface ProjectCardProps {
@@ -78,13 +77,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 		{description}
 		</p>
 		{technologyIcons && technologyIcons.length > 0 && (
-			<div style={{ display: 'flex', marginTop: '15px', gap: '10px', justifyContent: 'flex-start' }}>
+			<div style={{ display: 'flex', marginTop: '5px', marginBottom: '5px', justifyContent: 'flex-start' }}>
 				{technologyIcons.map((icon, index) => (
 					<img 
 						key={index} 
 						src={icon}
 						alt='technology icon'
-						style={{ width: '24px', height: '24px' }}
+						style={{ width: '24px', height: '24px', padding: '4px' }}
 					/>
 				))}
 			</div>

@@ -1,7 +1,5 @@
 import { fetchAllProjects } from "@/lib/db";
-import { UUID } from "crypto";
 import ProjectCard from "../components/projectCard";
-import { technologies } from "@/db/schema";
 
 export default async function page() {
 		const data: { project: { id: string; name: string; url: string; logoImage: string | null; headerImage: string | null; description: string }; technologies: { iconUrl: string }[] }[] = await fetchAllProjects();
