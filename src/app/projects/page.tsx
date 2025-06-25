@@ -8,7 +8,7 @@ export default async function project() {
 	return (
 		<div className="text-center pt-20">
 			<h1 className="text-3xl font-bold">[projects]</h1>
-			<ul className="flex flex-wrap justify-center gap-6 p-6">
+			<ul className="flex flex-wrap justify-center gap-6">
 				{data.map(({ project, technologies }) => (
 					<li key={project.id}>
 						<ProjectCard 

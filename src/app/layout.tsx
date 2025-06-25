@@ -29,8 +29,11 @@ export default function RootLayout({
 
         <div className="flex flex-col min-h-screen min-w-[400px] max-w-[800px] mx-auto bg-white text-black">
           <Header />
-          {children}
+          <div className="p-8">
+            {children}
+          </div>
           <Footer />
+          
         </div>
         
       </body>
