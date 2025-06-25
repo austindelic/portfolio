@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function () {
 	return (
-		<div className="border-black/10 border-b h-[40px] flex items-center justify-between px-4">
+		<div className="h-[40px] flex items-center justify-between px-4">
 			<Link href="/">
 				<img
 					src="https://hc-cdn.hel1.your-objectstorage.com/s/v3/e096f8a3857a7dd609db312427b03b7b0a77db6f_asset_1.svg"
