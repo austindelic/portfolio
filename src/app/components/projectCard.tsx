@@ -16,7 +16,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 	textDecoration: 'none', 
 	color: 'inherit',
 	width: '330px',
-	height: '270px',
+	height: 'fit-content',
 	borderRadius: '20px',
 	overflow: 'hidden',
 	boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
@@ -28,32 +28,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 	}}>
 	{/* Header */}
 	<div style={{
-		height: '110px',
+		paddingTop: '56.25%',
 		background: headerImage ? `url(${headerImage}) center/cover` : 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
 		display: 'flex',
 		justifyContent: 'center',
 		alignItems: 'center',
 		position: 'relative'
 	}}>
-	{!logoImage ? (
-		<div style={{
-			width: '80px',
-			height: '80px',
-			backgroundColor: '#000',
-			color: '#fff',
-			borderRadius: '20px',
-			display: 'flex',
-			justifyContent: 'center',
-			alignItems: 'center',
-			fontSize: '40px',
-			fontWeight: 'bold',
-			position: 'absolute',
-			bottom: '-40px',
-			boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
-			}}>
-			{title[0].toUpperCase()}
-		</div>
-	) : (
+	{logoImage && (
 		<img 
 			src={logoImage} 
 			alt={`${title} logo`} 
@@ -71,19 +53,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 	</div>
 
 	{/* Text Content */}
-	<div style={{ padding: '60px 20px 20px 20px', textAlign: 'left' }}>
+	<div style={{
+		padding: logoImage ? '60px 20px 20px 20px' : '20px',
+		textAlign: 'left',
+		display: 'flex',
+		flexDirection: 'column',
+		gap: '8px'
+	}}>
 		<h2 style={{ margin: 0, fontSize: '1.5rem' }}>{title}</h2>
-		<p style={{ marginTop: '10px', color: '#555', fontSize: '0.9rem' }}>
+		<p style={{marginTop: '5px', color: '#555', fontSize: '0.9rem' }}>
 		{description}
 		</p>
 		{technologyIcons && technologyIcons.length > 0 && (
-			<div style={{ display: 'flex', marginTop: '5px', marginBottom: '5px', justifyContent: 'flex-start' }}>
+			<div style={{ display: 'flex', justifyContent: 'flex-start' }}>
 				{technologyIcons.map((icon, index) => (
 					<img 
 						key={index} 
 						src={icon}
 						alt='technology icon'
-						style={{ width: '24px', height: '24px', padding: '4px' }}
+						style={{ width: '24px', height: '24px',  marginTop: '10px'}}
 					/>
 				))}
 			</div>

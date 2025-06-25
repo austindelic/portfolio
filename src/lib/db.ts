@@ -4,9 +4,11 @@ import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { projects, projectTechnologies, technologies } from '../db/schema';
 
+const client = postgres(process.env.DATABASE_URL!);
+const db = drizzle(client);
+
 export async function fetchAllProjects(){
-  const client = postgres(process.env.DATABASE_URL!);
-  const db = drizzle(client);
+  
   try {
     const allProjectsWithTech = await db
     .select({
