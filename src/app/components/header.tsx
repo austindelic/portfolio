@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function () {
 	return (
-		<div className="h-[40px] flex items-center justify-between px-4">
+		<div className="h-[40px] flex items-center justify-between px-4 font-[900]">
 			<Link href="/">
 				<img
 					src="https://hc-cdn.hel1.your-objectstorage.com/s/v3/e096f8a3857a7dd609db312427b03b7b0a77db6f_asset_1.svg"
@@ -13,10 +13,10 @@ export default function () {
 			</Link>
 			<ul className="flex flex-row items-center gap-4">
 				<li>
-					<Link href="/">Home</Link>
+					<Link href="/">[home]</Link>
 				</li>
 				<li>
-					<Link href="/projects">Projects</Link>
+					<Link href="/projects">[projects]</Link>
 				</li>
 			</ul>
 		</div>

@@ -25,7 +25,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-roboto m-0 p-0">
+      <body className="font-[Roboto_Condensed] m-0 p-0">
 
         <div className="flex flex-col min-h-screen min-w-[400px] max-w-[800px] mx-auto bg-white text-black">
           <Header />
