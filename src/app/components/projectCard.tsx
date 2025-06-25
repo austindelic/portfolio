@@ -3,16 +3,15 @@ import React from 'react';
 
 interface ProjectCardProps {
   title: string;
-  slug: string;
   url: string;
   logoImage?: string;
   description?: string;
   headerImage?: string;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ title, slug, url, logoImage, description = "", headerImage}) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, description = "", headerImage}) => {
   return (
-<a href={slug} style={{
+<a href={url} style={{
 	display: 'inline-block',
 	textDecoration: 'none', 
 	color: 'inherit',
