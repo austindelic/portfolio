@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, primaryKey } from "drizzle-orm/pg-core";
 
 export const projects = pgTable("links", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -17,6 +17,9 @@ export const technologies = pgTable("technologies", {
 });
 
 export const projectTechnologies = pgTable("project_technologies", {
-  projectId: uuid("project_id").notNull(),
-  technologyId: uuid("technology_id").notNull(),
-})
+  projectId: uuid("project_id").notNull().references(() => projects.id),
+  technologyId: uuid("technology_id").notNull().references(() => technologies.id),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.projectId, table.technologyId] })
+}));
+//  
