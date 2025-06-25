@@ -6,7 +6,7 @@ import { projects, projectTechnologies, technologies } from '../db/schema';
 
 const client = postgres(process.env.DATABASE_URL!);
 const db = drizzle(client);
-
+  
 export async function fetchAllProjects(){
   
   try {
