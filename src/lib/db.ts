@@ -10,8 +10,20 @@ export async function fetchAllProjects(){
   try {
     const allProjectsWithTech = await db
     .select({
-      project: projects,
-      technology: technologies
+      project: {
+        id: projects.id,
+        name: projects.name,
+        description: projects.description,
+        url: projects.url,
+        logoImage: projects.logoImage,
+        headerImage: projects.headerImage
+      },
+      technology: {
+        id: technologies.id,
+        name: technologies.name,
+        slug: technologies.slug,
+        iconUrl: technologies.iconUrl
+      }
     })
     .from(projects)
     .leftJoin(projectTechnologies, eq(projectTechnologies.projectId, projects.id))
