@@ -7,9 +7,10 @@ interface ProjectCardProps {
   logoImage?: string;
   description?: string;
   headerImage?: string;
+  technologyIcons?: string[];
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, description = "", headerImage}) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, description = "", headerImage, technologyIcons}) => {
   return (
 <a href={url} style={{
 	display: 'inline-block',
@@ -76,6 +77,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 		<p style={{ marginTop: '10px', color: '#555', fontSize: '0.9rem' }}>
 		{description}
 		</p>
+		{technologyIcons && technologyIcons.length > 0 && (
+			<div style={{ display: 'flex', marginTop: '15px', gap: '10px', justifyContent: 'flex-start' }}>
+				{technologyIcons.map((icon, index) => (
+					<img 
+						key={index} 
+						src={icon}
+						alt='technology icon'
+						style={{ width: '24px', height: '24px' }}
+					/>
+				))}
+			</div>
+		)}
 	</div>
 	</div>
 </a>
