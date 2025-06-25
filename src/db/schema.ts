@@ -17,9 +17,8 @@ export const technologies = pgTable("technologies", {
 });
 
 export const projectTechnologies = pgTable("project_technologies", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
   projectId: uuid("project_id").notNull().references(() => projects.id),
   technologyId: uuid("technology_id").notNull().references(() => technologies.id),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.projectId, table.technologyId] })
-}));
+});
 //  
