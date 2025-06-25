@@ -15,8 +15,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 	display: 'inline-block',
 	textDecoration: 'none', 
 	color: 'inherit',
-	width: '330px',
-	height: 'fit-content',
+	width: '400px',
+	height: '362px',
 	borderRadius: '20px',
 	overflow: 'hidden',
 	boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
@@ -28,12 +28,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 	}}>
 	{/* Header */}
 	<div style={{
-		paddingTop: '56.25%',
+		paddingTop: '40%',
 		background: headerImage ? `url(${headerImage}) center/cover` : 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
 		display: 'flex',
 		justifyContent: 'center',
 		alignItems: 'center',
-		position: 'relative'
+		position: 'relative',
 	}}>
 	{logoImage && (
 		<img 
@@ -54,28 +54,38 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 
 	{/* Text Content */}
 	<div style={{
-		padding: logoImage ? '60px 20px 20px 20px' : '20px',
+		padding: logoImage ? '45px 20px 20px 20px' : '20px',
 		textAlign: 'left',
 		display: 'flex',
 		flexDirection: 'column',
-		gap: '8px'
+		gap: '8px',
 	}}>
-		<h2 style={{ margin: 0, fontSize: '1.5rem' }}>{title}</h2>
-		<p style={{marginTop: '5px', color: '#555', fontSize: '0.9rem' }}>
-		{description}
-		</p>
-		{technologyIcons && technologyIcons.length > 0 && (
-			<div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-				{technologyIcons.map((icon, index) => (
-					<img 
-						key={index} 
-						src={icon}
-						alt='technology icon'
-						style={{ width: '24px', height: '24px',  marginTop: '10px'}}
-					/>
-				))}
-			</div>
-		)}
+		<h2 style={{ margin: 0, fontSize: '1.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h2>
+		<div style={{display: 'flex', flexDirection: 'column'}}>
+			<p style={{
+				marginTop: '5px',
+				color: '#555',
+				fontSize: '1.1rem',
+				display: '-webkit-box',
+				WebkitLineClamp: 3,
+				WebkitBoxOrient: 'vertical',
+				overflow: 'hidden',
+			}}>
+				{description}
+			</p>
+			{technologyIcons && technologyIcons.length > 0 && (
+				<div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+					{technologyIcons.map((icon, index) => (
+						<img 
+							key={index} 
+							src={icon}
+							alt='technology icon'
+							style={{ width: '24px', height: '24px',  marginTop: '10px', overflow: 'hidden', textOverflow: 'ellipsis'}}
+						/>
+					))}
+				</div>
+			)}
+		</div>
 	</div>
 	</div>
 </a>
