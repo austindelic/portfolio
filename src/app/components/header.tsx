@@ -13,10 +13,10 @@ export default function () {
 			</Link>
 			<ul className="flex flex-row items-center gap-4">
 				<li>
-					<Link href="/">[home]</Link>
+					<Link href="/" className="hover:underline font-black text-xl">[home]</Link>
 				</li>
 				<li>
-					<Link href="/projects">[projects]</Link>
+					<Link href="/projects" className="hover:underline font-black text-xl">[projects]</Link>
 				</li>
 			</ul>
 		</div>
