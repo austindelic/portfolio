@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const projects = pgTable("links", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -8,17 +8,3 @@ export const projects = pgTable("links", {
   logoImage: varchar("logo_image", { length: 2048 }),
   headerImage: varchar("header_image", { length: 2048 }),
 });
-
-export const technologies = pgTable("technologies", {
-  id: uuid("id").defaultRandom().primaryKey().notNull(),
-  name: varchar("name", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 255 }).notNull(),
-  iconUrl: varchar("icon_url", { length: 2048 }).notNull(),
-});
-
-export const projectTechnologies = pgTable("project_technologies", {
-  id: uuid("id").defaultRandom().primaryKey().notNull(),
-  projectId: uuid("project_id").notNull().references(() => projects.id),
-  technologyId: uuid("technology_id").notNull().references(() => technologies.id),
-});
-//  
