@@ -15,7 +15,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, descri
 	display: 'inline-block',
 	textDecoration: 'none', 
 	color: 'inherit',
-	width: '360px',
+	width: '350px',
 	height: '319px',
 	borderRadius: '20px',
 	overflow: 'hidden',
