@@ -1,18 +1,13 @@
 "use server"
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { projects } from '../db/schema';
+import { projects, projectTechnologies, technologies } from '../db/schema';
+import { UUID } from 'crypto';
 
-export async function fetch_example(){
+export async function fetchAllProjects(){
   const client = postgres(process.env.DATABASE_URL!);
   const db = drizzle(client);
-
   try {
-    // await db.insert(projects).values({
-    //   name: 'Drizzle ORM',
-    //   url: 'https://orm.drizzle.team',
-    // });
-
     const allLinks = await db.select().from(projects);
     return allLinks;
   } catch (error) {

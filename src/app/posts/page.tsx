@@ -1,9 +1,9 @@
-import { fetch_example } from "@/lib";
+import { fetchAllProjects } from "@/lib/db";
 import { UUID } from "crypto";
 import ProjectCard from "../components/projectCard";
 
 export default async function page() {
-	const data: { id: string; name: string; url: string; logoImage: string | null; headerImage: string | null; description: string }[] = await fetch_example();
+	const data: { id: string; name: string; url: string; logoImage: string | null; headerImage: string | null; description: string }[] = await fetchAllProjects();
 	
 	return (
 		<div className="text-center pt-20">
