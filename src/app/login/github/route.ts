@@ -9,10 +9,11 @@ export async function GET(): Promise<Response> {
             status: 429
         }) 
 	}
+	const cookieStore = await cookies();
 	const state = generateState();
 	const url = github.createAuthorizationURL(state, ["user:email"]);
 
-	cookies().set("github_oauth_state", state, {
+	cookieStore.set("github_oauth_state", state, {
 		path: "/",
 		secure: process.env.NODE_ENV === "production",
 		httpOnly: true,
