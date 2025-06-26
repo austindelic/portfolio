@@ -1,13 +1,19 @@
 // src/lib/server/session.ts
+//import { PrismaClient } from "@prisma/client";
+import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
+// export const prisma = new PrismaClient();
+// Using local Prisma client defined in this file
 import { cache } from "react";
-// @ts-expect-error — the Prisma adapter publishes a default export at runtime
-import { prisma } from "@lucia-auth/adapter-prisma";
+
 import { Lucia, TimeSpan } from "lucia";
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
 import { db } from "./db";
 import { cookies } from "next/headers";
 
-export const lucia = new Lucia(prisma(db), {
+// Initialize Lucia’s Prisma adapter using the client’s model delegates
+const adapter = new PrismaAdapter(db.session, db.user);
+
+export const lucia = new Lucia(adapter, {
   sessionCookie: {
     name: "session",
     attributes: {
