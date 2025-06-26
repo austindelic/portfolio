@@ -11,17 +11,16 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ title, url, logoImage, description = "", headerImage, technologyIcons}) => {
   return (
-<a href={url} style={{
+<a href={url} className="border-2 border-black" style={{
 	display: 'inline-block',
 	textDecoration: 'none', 
 	color: 'inherit',
-	width: '350px',
+	width: '356px',
 	height: '319px',
-	borderRadius: '20px',
+	borderRadius: '0',
 	overflow: 'hidden',
-	boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
 	fontFamily: 'sans-serif',
-	backgroundColor: '#fff'
+	backgroundColor: '#fff',
 	}}>
 	<div style={{
 	
