@@ -1,7 +1,7 @@
 // src/lib/server/session.ts
 import { cache } from "react";
-// @ts-expect-error — adapter’s typings don’t expose `prisma` in v4, but it exists at runtime
-import { prisma as luciaPrismaAdapter } from "@lucia-auth/adapter-prisma";
+// @ts-expect-error — the Prisma adapter publishes a default export at runtime
+import luciaPrismaAdapter from "@lucia-auth/adapter-prisma";
 import { Lucia, TimeSpan } from "lucia";
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
 import { db } from "./db";
