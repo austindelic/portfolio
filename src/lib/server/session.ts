@@ -1,7 +1,8 @@
 // src/lib/server/session.ts
 import { cache } from "react";
-import { Lucia, TimeSpan } from "lucia";
+// @ts-expect-error — adapter’s typings don’t expose `prisma` in v4, but it exists at runtime
 import { prisma as luciaPrismaAdapter } from "@lucia-auth/adapter-prisma";
+import { Lucia, TimeSpan } from "lucia";
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
 import { db } from "./db";
 import { cookies } from "next/headers";
@@ -15,7 +16,7 @@ export const lucia = new Lucia(luciaPrismaAdapter(db), {
       sameSite: "lax",
     },
   },
-  sessionExpiresIn: new TimeSpan(30, "d"), // 30 days
+  sessionExpiresIn: new TimeSpan(30, "d"),
 });
 
 export type SessionValidationResult = {

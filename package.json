@@ -10,9 +10,10 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@lucia-auth/adapter-prisma": "^4.0.1",
     "@pilcrowjs/db-query": "^0.0.2",
     "@pilcrowjs/object-parser": "^0.0.4",
-    "@prisma/client": "^6.10.1",
+    "@prisma/client": "^5.22.0",
     "@vercel/analytics": "^1.5.0",
     "arctic": "^3.7.0",
     "dotenv": "^16.5.0",
@@ -22,6 +23,7 @@
     "next-auth": "^4.24.11",
     "nodemailer": "^6.10.1",
     "postgres": "^3.4.7",
+    "prisma": "^5.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -37,7 +39,6 @@
     "drizzle-kit": "^0.31.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
-    "prisma": "^6.10.1",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "typescript": "^5"
