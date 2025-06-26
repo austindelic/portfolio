@@ -6,10 +6,10 @@ import { LogoutButton } from "./components";
 import { globalGETRateLimit } from "@/lib/server/request";
 
 export default async function Home() {
-  if (!globalGETRateLimit()) {
+  if (!(await globalGETRateLimit())) {
     return "Too many requests";
   }
-  const { user } = getCurrentSession();
+  const { user } = await getCurrentSession();
   if (user === null) {
     return redirect("/login");
   }

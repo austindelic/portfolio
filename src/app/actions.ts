@@ -5,12 +5,12 @@ import { deleteSessionTokenCookie, getCurrentSession, invalidateSession } from "
 import { redirect } from "next/navigation";
 
 export async function logoutAction(): Promise<ActionResult> {
-    if (!globalPOSTRateLimit()) {
+    if (!(await globalPOSTRateLimit())) {
         return {
             message: "Too many requests"
         }
     }
-	const { session } = getCurrentSession();
+	const { session } = await getCurrentSession();
 	if (session === null) {
 		return {
 			message: "Not authenticated"
