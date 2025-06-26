@@ -1,5 +1,5 @@
-import { pgTable, uuid, varchar, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
-import { use } from "react";
+import { pgTable, uuid, varchar, primaryKey, timestamp } from "drizzle-orm/pg-core";
+//import { use } from "react";
 
 export const projects = pgTable("links", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
