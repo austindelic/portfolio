@@ -23,3 +23,8 @@ export const projectTechnologies = pgTable("project_technologies", {
   pk: primaryKey({ columns: [table.projectId, table.technologyId] })
 }));
 //  
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  githubId: varchar("github_id", { length: 255 }).notNull().unique(),
+  username: varchar("username", { length: 255 }).notNull(),
+});
