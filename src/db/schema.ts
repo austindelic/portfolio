@@ -27,4 +27,5 @@ export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   githubId: varchar("github_id", { length: 255 }).notNull().unique(),
   username: varchar("username", { length: 255 }).notNull(),
+  avatarUrl: varchar("avatar_url", { length: 2048 }),
 });
