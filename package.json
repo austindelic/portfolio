@@ -13,6 +13,7 @@
     "@lucia-auth/adapter-drizzle": "^1.1.0",
     "@pilcrowjs/db-query": "^0.0.2",
     "@pilcrowjs/object-parser": "^0.0.4",
+    "@vercel/analytics": "^1.5.0",
     "arctic": "^3.7.0",
     "better-sqlite3": "^12.1.1",
     "dotenv": "^16.5.0",
