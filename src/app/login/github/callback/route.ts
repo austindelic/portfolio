@@ -16,7 +16,8 @@ export async function GET(request: Request): Promise<Response> {
 	const url = new URL(request.url);
 	const code = url.searchParams.get("code");
 	const state = url.searchParams.get("state");
-	const storedState = cookies().get("github_oauth_state")?.value ?? null;
+	const cookieStore = await cookies();
+	const storedState = cookieStore.get("github_oauth_state")?.value ?? null;
 	if (code === null || state === null || storedState === null) {
 		return new Response("Please restart the process.", {
 			status: 400
