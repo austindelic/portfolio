@@ -8,6 +8,7 @@ import { globalGETRateLimit } from "@/lib/server/request";
 import type { OAuth2Tokens } from "arctic";
 
 export async function GET(request: Request): Promise<Response> {
+    const cookieStore = await cookies();
     if (!globalGETRateLimit()) {
 		return new Response("Too many requests", {
             status: 429
@@ -16,7 +17,6 @@ export async function GET(request: Request): Promise<Response> {
 	const url = new URL(request.url);
 	const code = url.searchParams.get("code");
 	const state = url.searchParams.get("state");
-	const cookieStore = await cookies();
 	if (state !== null) {
 		cookieStore.set("github_oauth_state", state, {
 			path: "/",
