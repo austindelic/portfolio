@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@lucia-auth/adapter-drizzle": "^1.1.0",
+    "@pilcrowjs/db-query": "^0.0.2",
+    "@pilcrowjs/object-parser": "^0.0.4",
     "arctic": "^3.7.0",
+    "better-sqlite3": "^12.1.1",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
     "lucia": "^3.2.2",
