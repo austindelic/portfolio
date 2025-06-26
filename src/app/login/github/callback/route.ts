@@ -1,4 +1,5 @@
-import { generateSessionToken, createSession, setSessionTokenCookie } from "@/lib/server/session";
+import { setSessionTokenCookie, lucia } from "@/lib/server/session";
+
 import { github } from "@/lib/server/oauth";
 import { cookies } from "next/headers";
 import { createUser, getUserFromGitHubId } from "@/lib/server/user";
@@ -9,7 +10,7 @@ import type { OAuth2Tokens } from "arctic";
 
 export async function GET(request: Request): Promise<Response> {
     const cookieStore = await cookies();
-    if (!globalGETRateLimit()) {
+    if (!(await globalGETRateLimit())) {
 		return new Response("Too many requests", {
             status: 429
         }) 
@@ -56,11 +57,11 @@ export async function GET(request: Request): Promise<Response> {
 	const githubUserId = userParser.getNumber("id");
 	const username = userParser.getString("login");
 
-	const existingUser = getUserFromGitHubId(githubUserId);
+	const existingUser = await getUserFromGitHubId(githubUserId);
 	if (existingUser !== null) {
-		const sessionToken = generateSessionToken();
-		const session = createSession(sessionToken, existingUser.id);
-		setSessionTokenCookie(sessionToken, session.expiresAt);
+		const sessionToken = crypto.randomUUID();
+		const session = await lucia.createSession(String(existingUser.id), {}, { sessionId: sessionToken });
+		await setSessionTokenCookie(sessionToken, session.expiresAt);
 		return new Response(null, {
 			status: 302,
 			headers: {
@@ -93,10 +94,10 @@ export async function GET(request: Request): Promise<Response> {
 		});
 	}
 
-	const user = createUser(githubUserId, email, username);
-	const sessionToken = generateSessionToken();
-	const session = createSession(sessionToken, user.id);
-	setSessionTokenCookie(sessionToken, session.expiresAt);
+	const user = await createUser(githubUserId, email, username);
+	const sessionToken = crypto.randomUUID();
+	const session = await lucia.createSession(String(user.id), {}, { sessionId: sessionToken });
+	await setSessionTokenCookie(sessionToken, session.expiresAt);
 	return new Response(null, {
 		status: 302,
 		headers: {

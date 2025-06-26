@@ -5,37 +5,30 @@ interface ProjectsViewProps {
 	limit?: number;
 }
 
-export default async function ProjectsView({ limit = -1}: ProjectsViewProps) {
-	const data: {
-		project: {
-			id: string;
-			name: string;
-			url: string;
-			logoImage: string | null;
-			headerImage: string | null;
-			description: string;
-		};
-		technologies: { iconUrl: string }[];
-	}[] = await fetchAllProjects();
+export default async function ProjectsView({ limit = -1 }: ProjectsViewProps) {
+	const projects = await fetchAllProjects();
 
-	const displayData = limit === -1 ? data : data.slice(0, Math.max(0, limit));
+	const displayData =
+		limit === -1 ? projects : projects.slice(0, Math.max(0, limit));
 
 	return (
 		<ul className="flex flex-wrap justify-center gap-6">
-			{displayData.map(({ project, technologies }) => (
+			{displayData.map((project) => (
 				<li key={project.id}>
 					<ProjectCard
 						title={project.name}
-						url={project.url}
-						logoImage={project.logoImage || undefined}
-						headerImage={project.headerImage || undefined}
-						description={project.description || ""}
-						technologyIcons={technologies.map(tech => tech.iconUrl) || []}
+						url={project.url ?? ""}
+						logoImage={project.logoImage ?? undefined}
+						headerImage={project.headerImage ?? undefined}
+						description={project.description ?? ""}
+						technologyIcons={
+							project.techLinks
+								.map((tl) => tl.technology.iconUrl ?? "")
+								.filter(Boolean)
+						}
 					/>
 				</li>
 			))}
 		</ul>
 	);
-
-
 }

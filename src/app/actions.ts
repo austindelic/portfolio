@@ -1,7 +1,11 @@
 "use server";
 
 import { globalPOSTRateLimit } from "@/lib/server/request";
-import { deleteSessionTokenCookie, getCurrentSession, invalidateSession } from "@/lib/server/session";
+import {
+	deleteSessionTokenCookie,
+	getCurrentSession,
+	lucia
+} from "@/lib/server/session";
 import { redirect } from "next/navigation";
 
 export async function logoutAction(): Promise<ActionResult> {
@@ -16,8 +20,8 @@ export async function logoutAction(): Promise<ActionResult> {
 			message: "Not authenticated"
 		};
 	}
-	invalidateSession(session.id);
-	deleteSessionTokenCookie();
+	await lucia.invalidateSession(session.id);
+	await deleteSessionTokenCookie();
 	return redirect("/login");
 }
 
