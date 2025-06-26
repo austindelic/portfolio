@@ -2,14 +2,18 @@ import type { User as PrismaUser } from "@prisma/client";
 import { getCurrentSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "../components";
+import { isAdmin } from "@/lib/auth/isAdmin";
 
 export default async function Page() {
   const { user } = await getCurrentSession();
+  const profile = user as PrismaUser;
   if (!user) {
     redirect("/login");
   }
-
-  const profile = user as PrismaUser;
+  if (!isAdmin(profile)) {
+	redirect("/home");
+  }
+  
   const image = `https://avatars.githubusercontent.com/u/${profile.githubId}`;
 
   return (
