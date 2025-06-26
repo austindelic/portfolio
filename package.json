@@ -10,9 +10,11 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@lucia-auth/adapter-drizzle": "^1.1.0",
     "arctic": "^3.7.0",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
+    "lucia": "^3.2.2",
     "masonry-layout": "^4.2.2",
     "next": "^15.3.4",
     "next-auth": "^4.24.11",

@@ -1,4 +1,5 @@
-import { pgTable, uuid, varchar, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { use } from "react";
 
 export const projects = pgTable("links", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -28,4 +29,10 @@ export const users = pgTable("users", {
   githubId: varchar("github_id", { length: 255 }).notNull().unique(),
   username: varchar("username", { length: 255 }).notNull(),
   avatarUrl: varchar("avatar_url", { length: 2048 }),
+});
+
+export const sessions = pgTable("sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
