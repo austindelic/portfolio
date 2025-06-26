@@ -1,0 +1,56 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/* ─── Data models ────────────────────────────────────────── */
+
+model User {
+  id        String    @id @default(uuid())
+  username  String    @unique
+  email     String    @unique
+  githubId  Int       @unique
+  Session   Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Project {
+  id          String               @id @default(uuid())
+  name        String
+  description String?
+  url         String?
+  logoImage   String?
+  headerImage String?
+  techLinks   ProjectTechnology[]
+}
+
+model Technology {
+  id       String               @id @default(uuid())
+  name     String               @unique
+  slug     String               @unique
+  iconUrl  String?
+  projects ProjectTechnology[]
+}
+
+model ProjectTechnology {
+  projectId    String
+  technologyId String
+
+  project     Project     @relation(fields: [projectId], references: [id])
+  technology  Technology  @relation(fields: [technologyId], references: [id])
+
+  @@id([projectId, technologyId])
+}

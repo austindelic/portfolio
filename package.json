@@ -10,14 +10,12 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@lucia-auth/adapter-drizzle": "^1.1.0",
     "@pilcrowjs/db-query": "^0.0.2",
     "@pilcrowjs/object-parser": "^0.0.4",
+    "@prisma/client": "^6.10.1",
     "@vercel/analytics": "^1.5.0",
     "arctic": "^3.7.0",
-    "better-sqlite3": "^12.1.1",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.44.2",
     "lucia": "^3.2.2",
     "masonry-layout": "^4.2.2",
     "next": "^15.3.4",
@@ -39,6 +37,7 @@
     "drizzle-kit": "^0.31.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "prisma": "^6.10.1",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "typescript": "^5"
