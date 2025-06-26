@@ -1,4 +1,4 @@
-import { fetchAllProjects } from "@/lib/db";
+//import { fetchAllProjects } from "@/lib/db";
 import ProjectsView from "../components/ProjectsView";
 
 export default async function project() {
