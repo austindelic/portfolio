@@ -10,6 +10,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@lucia-auth/adapter-drizzle": "^1.1.0",
     "@lucia-auth/adapter-prisma": "^4.0.1",
     "@pilcrowjs/db-query": "^0.0.2",
     "@pilcrowjs/object-parser": "^0.0.4",
@@ -36,6 +37,7 @@
     "@types/masonry-layout": "^4.2.8",
     "@types/node": "^20.19.1",
     "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.15.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.3",

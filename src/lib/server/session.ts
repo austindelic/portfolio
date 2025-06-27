@@ -1,20 +1,18 @@
-// src/lib/server/session.ts
-//import { PrismaClient } from "@prisma/client";
-import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
-// export const prisma = new PrismaClient();
-// Using local Prisma client defined in this file
+import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
+
 import { cache } from "react";
 
 import { Lucia, TimeSpan } from "lucia";
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
-import { db } from "./db";
 import { cookies } from "next/headers";
 
-// Initialize Lucia’s Prisma adapter using the client’s model delegates
-const adapter = new PrismaAdapter(db.session, db.user);
+import { sessions, users } from "@/db/schema"; 
 
+import { db } from "@/lib/db"; 
+
+const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users);
 export const lucia = new Lucia(adapter, {
-  sessionCookie: {
+  sessionCookie: {	
     name: "session",
     attributes: {
       secure: process.env.NODE_ENV === "production",
