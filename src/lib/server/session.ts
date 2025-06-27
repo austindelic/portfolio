@@ -1,3 +1,4 @@
+// src/lib/server/session.ts
 import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 
 import { cache } from "react";
@@ -34,7 +35,7 @@ export const getCurrentSession = cache(async (): Promise<SessionValidationResult
 	if (!token) return { session: null, user: null };
 
 	const result = await lucia.validateSession(token);
-	if (!result.session) cookieStore.set("session", "", { path: "/", maxAge: 0 });
+	if (!result.session) return { session: null, user: null };
 	return result;
 });
 

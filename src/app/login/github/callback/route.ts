@@ -1,3 +1,4 @@
+// src/app/login/github/callback/route.ts
 import { setSessionTokenCookie, lucia } from "@/lib/server/session";
 
 import { github } from "@/lib/server/oauth";

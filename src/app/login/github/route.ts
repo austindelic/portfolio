@@ -1,3 +1,4 @@
+// src/app/login/github/route.ts
 import { generateState } from "arctic";
 import { github } from "@/lib/server/oauth";
 import { cookies } from "next/headers";
