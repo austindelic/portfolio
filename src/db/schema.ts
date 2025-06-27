@@ -33,7 +33,7 @@ export const sessions = pgTable(
 
 // Projects
 export const projects = pgTable("Project", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: uuid("id").notNull().defaultRandom().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   url: text("url"),
