@@ -7,7 +7,6 @@ import { projects, projectTechnologies, technologies } from "../db/schema";
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-  max: 1,
 });
 
 export const db = drizzle(pool, { schema });
