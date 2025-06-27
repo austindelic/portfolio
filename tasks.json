@@ -9,7 +9,10 @@
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "env": {
+        "DATABASE_URL": "${env:DATABASE_URL}"
+      }
     }
   ]
 }
