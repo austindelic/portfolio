@@ -1,17 +1,19 @@
-import type { User as PrismaUser } from "@prisma/client";
-import { getCurrentSession } from "@/lib/server/session";
+import { users } from "@/db/schema";
+import type { InferSelectModel } from "drizzle-orm";
+
+type User = InferSelectModel<typeof users>;import { getCurrentSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "../components";
 import { isAdmin } from "@/lib/auth/isAdmin";
 
 export default async function Page() {
   const { user } = await getCurrentSession();
-  const profile = user as PrismaUser;
+  const profile = user as User;
   if (!user) {
     redirect("/login");
   }
   if (!isAdmin(profile)) {
-	redirect("/home");
+    redirect("/home");
   }
   
   const image = `https://avatars.githubusercontent.com/u/${profile.githubId}`;
