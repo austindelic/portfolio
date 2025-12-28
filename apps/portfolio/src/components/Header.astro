@@ -1,0 +1,98 @@
+---
+const { navbarActiveItemID } = Astro.props;
+const activeClasses = ["text-white", "opacity-100"];
+import { SquareArrowOutUpRight } from "lucide-react";
+const links: Array<{
+	title: string;
+	id?: string;
+	url?: string;
+	new?: boolean;
+	redirect?: string;
+}> = [
+	{
+		title: "home",
+		id: "home",
+		url: "/",
+	},
+	{
+		title: "links",
+		id: "links",
+		url: "/links",
+	},
+
+	{
+		title: "blog",
+		id: "blog",
+		url: "/blog",
+	},
+];
+---
+
+<header id="main-header" class="mb-8 px-6 mt-6">
+  <nav
+    id="navigation-menu"
+    aria-label="Main menu"
+    class="flex flex-col lg:flex-row justify-between items-start lg:items-center"
+  >
+    <span class="mb-4 lg:mb-0">
+      <a href="/" target="_self" class="text-white font-medium text-md">
+        <span id="perth-time">--:--</span>
+      </a>
+    </span>
+    <span class="flex flex-wrap gap-6 text-sm">
+      {
+        links.map((link) => {
+          const isActive = link.id === navbarActiveItemID;
+
+          return (
+            <a
+              href={link.redirect ? link.redirect : link.url}
+              target={link.redirect ? "_blank" : "_self"}
+              id={link.id}
+              class="text-gray-400 opacity-70 hover:opacity-100 transition-opacity duration-200 inline-flex items-center gap-1"
+            >
+              {link.title}
+              {!isActive && (
+                <SquareArrowOutUpRight
+                  className="h-[1em] w-[1em] shrink-0"
+                  aria-hidden="true"
+                />
+              )}
+            </a>
+          );
+        })
+      }
+    </span>
+  </nav>
+</header>
+
+<script
+  define:vars={{
+    navbarActiveItemID,
+    activeClasses,
+  }}
+>
+  const activeItemElement = document.getElementById(navbarActiveItemID);
+
+  activeClasses.forEach((activeClass) => {
+    activeItemElement.classList.add(activeClass);
+  });
+
+  function updatePerthTime() {
+      const now = new Date();
+
+      const time = new Intl.DateTimeFormat("en-AU", {
+        timeZone: "Australia/Perth",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(now);
+
+      const el = document.getElementById("perth-time");
+      if (el) el.textContent = time;
+    }
+
+    updatePerthTime();
+    setInterval(updatePerthTime, 1000);
+</script>

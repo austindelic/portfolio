@@ -1,0 +1,74 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import "../styles/global.css";
+import FaultyTerminal from "@/components/FaultyTerminal";
+import { SITE_DESCRIPTION, SITE_TITLE } from "../config";
+
+const {
+	image,
+	title = SITE_TITLE,
+	description = SITE_DESCRIPTION,
+	navbarActiveItemID,
+} = Astro.props;
+---
+
+<!doctype html>
+<html
+  lang="en"
+  class="dark h-full text-gray-400 selection:bg-cyan-700 selection:text-white"
+>
+  <head >
+
+    <BaseHead title={title} description={description} image={image} />
+  </head>
+  <body class="relative min-h-screen font-sans text-gray-400 dark selection:bg-cyan-700 selection:text-white">
+
+  <!-- Background layer -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      <!-- effect goes here: -->
+    <FaultyTerminal
+      scale={3}
+      gridMul={[2, 1]}
+      digitSize={1.2}
+      timeScale={1}
+      pause={false}
+      scanlineIntensity={0.5}
+      glitchAmount={1}
+      flickerAmount={0.5}
+      noiseAmp={1}
+      chromaticAberration={0}
+      dither={0}
+      curvature={0.1}
+      tint="#6fd136"
+      mouseReact={false}
+      mouseStrength={0}
+      pageLoadAnimation={true}
+      brightness={0.8}
+      client:idle
+      client:only
+    />
+  </div>
+
+  <!-- Foreground content -->
+  <div class="relative z-10 xl:w-220 lg:w-4/5 w-full md:px-4 mx-auto">
+  <div
+    class="
+      mt-6 rounded-2xl
+      bg-black/50
+      backdrop-blur-xl
+      backdrop-saturate-150
+      border border-white/10
+      shadow-2xl
+    "
+  >
+    <Header navbarActiveItemID={navbarActiveItemID} />
+
+    <main id="main" class="px-4 md:px-8 pb-12 pt-4">
+      <slot />
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

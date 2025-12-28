@@ -1,0 +1,154 @@
+
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SocialMediaIcons from "../components/SocialMediaIcons.astro";
+
+const links: Array<{
+	title: string;
+	description?: string;
+	href: string;
+	icon?: string;
+	badge?: string;
+}> = [
+	{
+		title: "Portfolio",
+		description: "austindelic.com",
+		href: "https://austindelic.com",
+		icon: "🌐",
+	},
+	{
+		title: "GitHub",
+		description: "@austindelic",
+		href: "https://github.com/austindelic",
+		icon: "🐙",
+	},
+	{
+		title: "YouTube",
+		description: "Austin Develops",
+		href: "https://youtube.com/@austindevelops",
+		icon: "📺",
+		badge: "new",
+	},
+	{
+		title: "Instagram",
+		description: "@austin.develops",
+		href: "https://instagram.com/austin.develops",
+		icon: "📸",
+	},
+	{
+		title: "TikTok",
+		description: "@austin.develops",
+		href: "https://tiktok.com/@austin.develops",
+		icon: "🎵",
+	},
+	{
+		title: "Email",
+		description: "austin@austindelic.com",
+		href: "mailto:austin@austindelic.com",
+		icon: "✉️",
+	},
+];
+---
+
+<BaseLayout navbarActiveItemID="links">
+  <main>
+    <section id="links" class="mt-6" aria-labelledby="links-heading">
+      <div
+        class="bg-black/30 border border-gray-600 rounded-lg font-mono text-sm p-6"
+        role="region"
+      >
+        <!-- Terminal header -->
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-600">
+          <div class="flex gap-2" role="img" aria-label="Window controls">
+            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+          </div>
+          <span class="text-gray-400 text-xs ml-2">$ xh austindelic.com/links</span>
+        </div>
+
+        <div class="text-xs space-y-4">
+          <div class="flex items-center gap-4">
+            <p class="text-3xl">🔗</p>
+            <div class="flex flex-col">
+              <h1 id="links-heading" class="text-primary text-xl">
+                Austin Delic
+              </h1>
+              <p class="text-gray-400 text-xs">Quick links</p>
+            </div>
+          </div>
+
+
+          <div class="border-b border-gray-600 w-full"></div>
+
+          <div class="space-y-2" role="list" aria-label="Link list">
+            {
+              links.map((item, index) => (
+                <div
+                  class="group hover:bg-gray-800/50 p-1 rounded transition-colors"
+                  role="listitem"
+                >
+                  <a
+                    href={item.href}
+                    target={item.href.startsWith("mailto:") ? undefined : "_blank"}
+                    rel={
+                      item.href.startsWith("mailto:")
+                        ? undefined
+                        : "noopener noreferrer"
+                    }
+                    class="block focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
+                    aria-label={`${item.title}${item.description ? `: ${item.description}` : ""}`}
+                  >
+                    <div class="flex items-start gap-2">
+                      <span class="text-gray-400 w-6 shrink-0" aria-hidden="true">
+                        {String(index + 1).padStart(2, "0")}.
+                      </span>
+
+                      <span
+                        class="text-yellow-360 shrink-0"
+                        role="img"
+                        aria-hidden="true"
+                      >
+                        {item.icon ?? "→"}
+                      </span>
+
+                      <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 min-w-0">
+                          <span class="text-white group-hover:text-cyan-300 font-semibold truncate">
+                            {item.title}
+                          </span>
+
+                          {item.badge ? (
+                            <span class="text-[10px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-400">
+                              {item.badge}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {item.description ? (
+                          <div class="text-gray-500 truncate">{item.description}</div>
+                        ) : null}
+                      </div>
+
+                      <span class="text-gray-600 shrink-0 group-hover:text-gray-400">
+                        ↗
+                      </span>
+                    </div>
+                  </a>
+                </div>
+              ))
+            }
+          </div>
+
+        </div>
+
+        <div class="mt-3 pt-2 border-t border-gray-700 text-gray-500 text-xs">
+          <span class="text-gray-400">$</span> eza -la links/ | total {
+            links.length
+          }
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
