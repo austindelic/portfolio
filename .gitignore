@@ -37,6 +37,8 @@ yarn-error.log*
 .DS_Store
 *.pem
 
+.astro
+
 # Private application materials stay local
 /apps/resume/
 /.github/workflows/build-resume.yml

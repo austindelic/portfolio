@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/DepartureMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 @custom-variant dark (&:is(.dark *));
 noise {
   pointer-events: none;
@@ -34,6 +41,8 @@ body::-webkit-scrollbar {
 }
 
 @theme inline {
+  --font-mono: "Departure Mono", "Courier New", monospace;
+  --font-Departure: "Departure Mono", "Courier New", monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
