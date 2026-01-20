@@ -1,7 +1,9 @@
 ---
 const { navbarActiveItemID } = Astro.props;
 const activeClasses = ["text-white", "opacity-100"];
+
 import { SquareArrowOutUpRight } from "lucide-react";
+
 const links: Array<{
 	title: string;
 	id?: string;
@@ -20,9 +22,9 @@ const links: Array<{
 		url: "/blog",
 	},
 	{
-		title: "links",
-		id: "links",
-		url: "/links",
+		title: "socials",
+		id: "socials",
+		url: "/socials",
 	},
 
 	{ title: "resume", id: "resume", url: "/resume.pdf" },

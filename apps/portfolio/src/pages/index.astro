@@ -1,4 +1,6 @@
 ---
+
+import { SquareArrowOutUpRight } from "lucide-react";
 import { getCollection } from "astro:content";
 import PostPreview from "../components/PostPreview.astro";
 import SocialMediaIcons from "../components/SocialMediaIcons.astro";
@@ -14,7 +16,7 @@ const techStack: Record<string, string> = {
 	python: "Python",
 	postgres: "Postgres",
 	astro: "Astro",
-
+	svelte: "Svelte",
 	next: "Next.js",
 	tailwind: "Tailwind",
 	rust: "Rust",
@@ -75,7 +77,7 @@ const projects: Array<{
             <!-- Personal paragraph -->
             <div class="bg-gray-500/10 rounded-lg p-3 mb-4">
               <p class="text-gray-200 leading-relaxed">
-                Shipping since 2024. Currently studying Mechatronic Engineering and Computer Science while building products in Rust, TypeScript, and modern web stacks.
+                Shipping since 2024. Currently studying Mechatronic Engineering and Computer Science while building products in Rust, TypeScript and Svelte.
               </p>
             </div>
 
@@ -119,14 +121,7 @@ const projects: Array<{
               </span>
             </div>
 
-            <div class="flex items-center">
-              <span class="text-gray-400 w-36 shrink-0">Social</span>
-              <span class="text-white flex-1 min-w-0">
-                <SocialMediaIcons />
-              </span>
-            </div>
-
-            <div class="pt-2">
+            <div class="flex">
               <div class="flex items-center">
                 <span class="text-gray-400 w-36 shrink-0">Tech</span>
                 <div class="flex flex-wrap gap-2" role="list" aria-label="Tech">
