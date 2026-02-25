@@ -9,20 +9,6 @@
   font-display: swap;
 }
 @custom-variant dark (&:is(.dark *));
-noise {
-  pointer-events: none;
-  z-index: -1;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeat center center url("/noise.svg");
-  background-size: auto;
-  background-size: 32%;
-  opacity: 0.05;
-  mix-blend-mode: luminosity;
-}
 
 /* Hide scrollbar but KEEP scrolling */
 html {
@@ -165,4 +151,9 @@ body::-webkit-scrollbar {
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* Remove Shiki background so code blocks inherit the page background */
+.astro-code {
+  background: transparent !important;
 }
