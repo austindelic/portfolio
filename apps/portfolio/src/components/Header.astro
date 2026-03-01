@@ -84,16 +84,24 @@ const links: Array<{
   function updatePerthTime() {
       const now = new Date();
 
-      const time = new Intl.DateTimeFormat("en-AU", {
+      const parts = new Intl.DateTimeFormat("en-AU", {
         timeZone: "Australia/Perth",
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
         hour12: false,
-      }).format(now);
+      }).formatToParts(now);
 
+      let h = "", m = "", s = "";
+      for (const p of parts) {
+        if (p.type === "hour") h = p.value;
+        if (p.type === "minute") m = p.value;
+        if (p.type === "second") s = p.value;
+      }
+
+      const colonClass = `clock-colon${now.getSeconds() % 2 === 0 ? "" : " off"}`;
       const el = document.getElementById("perth-time");
-      if (el) el.textContent = time;
+      if (el) el.innerHTML = `${h}<span class="${colonClass}">:</span>${m}<span class="${colonClass}">:</span>${s}`;
     }
 
     updatePerthTime();

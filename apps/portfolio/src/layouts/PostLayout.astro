@@ -49,4 +49,8 @@ const displayDate = dayjs(publishDate).format("ll");
     <slot class="my-12" />
   </article>
 </BaseLayout>
-<style></style>
+<style>
+  article :global(img) {
+    border-radius: 0.75rem;
+  }
+</style>

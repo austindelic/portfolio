@@ -8,6 +8,40 @@
   font-style: normal;
   font-display: swap;
 }
+
+@font-face {
+  font-family: "DSEG14Modern";
+  src: url("/fonts/DSEG14Modern-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Lofi Forest Pixel";
+  src: url("/fonts/LofiForestTrial-Pixel.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@keyframes colon-blink {
+  0%, 49.9% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+#perth-time {
+  font-family: "DSEG14Modern", monospace;
+  font-weight: 400;
+}
+
+#perth-time .clock-colon {
+  transition: opacity 0.05s;
+}
+
+#perth-time .clock-colon.off {
+  opacity: 0;
+}
 @custom-variant dark (&:is(.dark *));
 
 /* Hide scrollbar but KEEP scrolling */

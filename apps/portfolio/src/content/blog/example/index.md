@@ -14,6 +14,8 @@ Hello world.
 
 This is a test
 
+![blue marble](bluemarble.jpg)
+
 ```rust
 fn main() -> None {
     let x = 10;
