@@ -20,12 +20,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               </div>
 
               <!-- Error message -->
-              <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+              <div
+                class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4"
+              >
                 <div class="flex items-start gap-2">
                   <span class="text-red-400 font-bold">ERROR:</span>
                   <p class="text-gray-200 leading-relaxed">
-                    The requested resource could not be found on this server. 
-                    The page you are trying to access does not exist or has been moved.
+                    The requested resource could not be found on this server.
+                    The page you are trying to access does not exist or has been
+                    moved.
                   </p>
                 </div>
               </div>
@@ -53,9 +56,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
                 <div class="flex">
                   <span class="text-gray-400 w-24 shrink-0">Timestamp</span>
-                  <span class="text-white" id="error-time">
-                    Loading...
-                  </span>
+                  <span class="text-white" id="error-time"> Loading... </span>
                 </div>
               </div>
 
@@ -69,18 +70,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                     <span class="text-gray-500">01.</span> Check the URL for typos
                   </p>
                   <p class="text-gray-300">
-                    <span class="text-gray-500">02.</span> Return to the 
-                    <a 
-                      href="/" 
+                    <span class="text-gray-500">02.</span> Return to the
+                    <a
+                      href="/"
                       class="text-cyan-400 hover:text-cyan-300 underline focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900"
                     >
                       homepage
                     </a>
                   </p>
                   <p class="text-gray-300">
-                    <span class="text-gray-500">03.</span> Browse available 
-                    <a 
-                      href="/blog" 
+                    <span class="text-gray-500">03.</span> Browse available
+                    <a
+                      href="/blog"
                       class="text-cyan-400 hover:text-cyan-300 underline focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900"
                     >
                       blog posts
@@ -97,14 +98,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
   <script>
     // Display current path and timestamp
-    document.addEventListener('DOMContentLoaded', () => {
-      const pathElement = document.getElementById('current-path');
-      const timeElement = document.getElementById('error-time');
-      
+    document.addEventListener("DOMContentLoaded", () => {
+      const pathElement = document.getElementById("current-path");
+      const timeElement = document.getElementById("error-time");
+
       if (pathElement) {
         pathElement.textContent = window.location.pathname;
       }
-      
+
       if (timeElement) {
         timeElement.textContent = new Date().toISOString();
       }

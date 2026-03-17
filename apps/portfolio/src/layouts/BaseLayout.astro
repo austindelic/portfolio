@@ -2,7 +2,7 @@
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import "../styles/global.css";
-import FaultyTerminal from "@/components/FaultyTerminal";
+import RainBackground from "@/components/RainBackground";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../config";
 
 const {
@@ -22,31 +22,27 @@ const {
 
     <BaseHead title={title} description={description} image={image} />
   </head>
-  <body class="relative min-h-screen font-Departure text-gray-400 dark selection:bg-cyan-700 selection:text-white">
+  <body class="relative isolate min-h-screen bg-transparent font-Departure text-gray-400 dark selection:bg-cyan-700 selection:text-white">
 
   <!-- Background layer -->
-    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      <!-- effect goes here: -->
-    <FaultyTerminal
-      scale={3}
-      gridMul={[2, 1]}
-      digitSize={1.2}
-      timeScale={1}
-      pause={false}
-      scanlineIntensity={0.5}
-      glitchAmount={1}
-      flickerAmount={0.5}
-      noiseAmp={1}
-      chromaticAberration={0}
-      dither={0}
-      curvature={0.1}
-      tint="#6fd136"
-      mouseReact={false}
-      mouseStrength={0}
-      pageLoadAnimation={true}
-      brightness={0.8}
-      client:idle
-      client:only
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+    <RainBackground
+      imageSrc="/ferns.png"
+      rainAmount={0.63}
+      timeScale={0.17}
+      minBlur={0}
+      maxBlurMin={0}
+      maxBlurMax={0}
+      sceneZoomBase={2}
+      sceneZoomAmplitude={0}
+      uvZoomBase={0.77}
+      uvZoomAmplitude={0}
+      zoomFrequency={0.11}
+      colorShiftStrength={1}
+      lightningStrength={1}
+      vignetteStrength={1}
+      enablePost={true}
+      client:load
     />
   </div>
 
