@@ -57,6 +57,7 @@ bun run format       # prettier format
 bun run ci           # full check + build (pre-PR gate)
 ```
 
+
 ## Notes
 
 - `turbo` not in PATH directly — use `bun run <script>` or `bunx turbo`
