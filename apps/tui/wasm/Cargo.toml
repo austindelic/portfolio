@@ -1,0 +1,13 @@
+[package]
+name = "tui-wasm"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "tui-wasm"
+path = "src/main.rs"
+
+[dependencies]
+tui-core = { path = "../core" }
+ratatui = { version = "0.30.0", default-features = false }
+ratzilla = "0.3.0"

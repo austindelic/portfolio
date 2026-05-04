@@ -1,0 +1,93 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic "Create learn and play the teachers way" [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e9]: Create
+        - generic [ref=e11]: learn
+      - generic [ref=e12]:
+        - generic [ref=e14]: and
+        - generic [ref=e17]: play
+      - generic [ref=e18]:
+        - generic [ref=e20]: the
+        - generic [ref=e22]: teachers
+        - generic [ref=e23]:
+          - img [ref=e25]
+          - generic [ref=e27]: way
+    - generic [ref=e29]:
+      - paragraph [ref=e30]: Thoughtfully designed workshops in the South West, led by a primary teacher and mum of three - where creativity meets real learning.
+      - link "Shop Now" [ref=e31] [cursor=pointer]:
+        - /url: "#shop"
+        - text: Shop Now
+        - generic [ref=e32]: ↗
+  - generic [ref=e35]:
+    - img "Messy Play workshop poster" [ref=e36]
+    - img "Story Time workshop poster" [ref=e37]
+    - img "Nature Craft workshop poster" [ref=e38]
+    - img "Sensory Tray workshop poster" [ref=e39]
+    - img "Mini Makers workshop poster" [ref=e40]
+    - img "Paint & Print workshop poster" [ref=e41]
+    - img "Loose Parts workshop poster" [ref=e42]
+    - img "Small World workshop poster" [ref=e43]
+    - img "Outdoor Art workshop poster" [ref=e44]
+    - img "Discovery Table workshop poster" [ref=e45]
+    - img "Potion Lab workshop poster" [ref=e46]
+    - img "Creative Maths workshop poster" [ref=e47]
+  - region "Growth & Joy" [ref=e48]:
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - paragraph [ref=e51]: Workshops Designed for
+        - heading "Growth & Joy" [level=2] [ref=e52]:
+          - generic [ref=e53]: Growth
+          - generic [ref=e54]: "&"
+          - generic [ref=e55]: Joy
+      - generic [ref=e57]:
+        - article [ref=e58]:
+          - generic [ref=e60]:
+            - img [ref=e62]
+            - heading "Creative Workshops" [level=3] [ref=e64]
+            - paragraph [ref=e65]: Hands-on art and craft experiences that spark imagination.
+        - article [ref=e66]:
+          - generic [ref=e68]:
+            - img [ref=e70]
+            - heading "Learning Through Play" [level=3] [ref=e72]
+            - paragraph [ref=e73]: Structured activities disguised as fun, building real skills.
+        - article [ref=e74]:
+          - generic [ref=e76]:
+            - img [ref=e78]
+            - heading "School Holiday Programs" [level=3] [ref=e81]
+            - paragraph [ref=e82]: Engaging sessions that keep kids learning without feeling like school.
+        - article [ref=e83]:
+          - generic [ref=e85]:
+            - img [ref=e87]
+            - heading "Private Group Sessions" [level=3] [ref=e91]
+            - paragraph [ref=e92]: Perfect for birthdays, playgroups, or small community events.
+  - generic [ref=e94]:
+    - img "Portrait framed inside an organic blob shape" [ref=e97]:
+      - generic [ref=e101]:
+        - generic [ref=e102]: MADE WITH LOVE ❤ MADE WITH LOVE ❤ MADE WITH LOVE ❤ MADE WITH LOVE ❤
+        - generic [ref=e103]: MADE WITH LOVE ❤ MADE WITH LOVE ❤ MADE WITH LOVE ❤ MADE WITH LOVE ❤
+    - generic [ref=e104]:
+      - paragraph [ref=e105]: About Me
+      - heading "Teacher-led creativity, made for real family life." [level=2] [ref=e106]
+      - paragraph [ref=e107]: I'm the teacher and mum behind Little Creative Learners, creating warm, playful workshops that help children make, explore, and build confidence through hands-on learning.
+      - paragraph [ref=e108]: "Everything is shaped by classroom experience, child-led curiosity, and the reality of raising little ones. The goal is simple: meaningful activities that feel beautiful, calm, and genuinely doable for families in the South West."
+  - generic [ref=e111]:
+    - img [ref=e112]
+    - img [ref=e115]
+    - img [ref=e123]
+    - img [ref=e127]
+    - img [ref=e131]
+    - img [ref=e134]
+  - generic [ref=e142]:
+    - button "Menu" [ref=e143]:
+      - img [ref=e145]
+      - generic: Menu
+    - button "Inspect" [ref=e149]:
+      - img [ref=e151]
+      - generic: Inspect
+    - button "Audit" [ref=e153]:
+      - img [ref=e155]
+      - generic: Audit
+    - button "Settings" [ref=e158]:
+      - img [ref=e160]
+      - generic: Settings

@@ -1,0 +1,17 @@
+[package]
+name = "tui-ssh"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "tui"
+path = "src/main.rs"
+
+[dependencies]
+tui-core = { path = "../core" }
+tokio = { version = "1", features = ["full"] }
+russh = "0.46"
+russh-keys = "0.46"
+ratatui = "0.30"
+anyhow = "1"
+async-trait = "0.1"

@@ -1,0 +1,21 @@
+[tools]
+"cargo:trunk" = "latest"
+rust = "latest"
+
+[tasks.ssh]
+description = "Run the SSH portfolio server"
+run = "cargo run --bin tui"
+
+[tasks.web]
+description = "Run the browser TUI (trunk dev server)"
+run = "trunk serve"
+dir = "wasm"
+
+[tasks.build]
+description = "Build all crates"
+run = "cargo build --release"
+
+[tasks.build-web]
+description = "Build the WASM app for production"
+run = "trunk build --release"
+dir = "wasm"
