@@ -107,7 +107,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
 	vec3 color = ColorFetch(uv);
 
-	color += GetBloom(uv) * 0.08;
+	color += GetBloom(uv) * 0.08 * uBloomStrength;
+	color *= uExposure;
 
 	color = pow(color, vec3(1.5));
 	color = color / (1.0 + color);

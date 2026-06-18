@@ -1779,12 +1779,6 @@ void mainImage( out vec4 FragColor, in vec2 FragCoord )
     }
 
     FinalColor = ApplyToneMapping(FinalColor, CurrentShift);
-    vec3 mapCamDir = normalize((iInverseCamRot * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
-    // 渲染拓扑UI并覆盖 (使用基于真实像素分辨率归一化的屏幕空间坐标)
-    vec2 screenUV = Uv;
-    vec4 mapCol = RenderTopologyMap(screenUV, vec3(CamPosWorld.x,-CamPosWorld.y,-CamPosWorld.z), vec3(mapCamDir.x,-mapCamDir.y,-mapCamDir.z));
-    FinalColor.rgb = mix(FinalColor.rgb, mapCol.rgb, mapCol.a);
-    FinalColor.a = mix(FinalColor.a, 1.0, mapCol.a);
     vec4 PrevColor = vec4(0.0);
     if(iFrame > 0) {
         PrevColor = texelFetch(iHistoryTex, ivec2(FragCoord.xy), 0);
