@@ -1,4 +1,7 @@
+import { ChevronDown, ChevronUp, SlidersHorizontal, Type } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
 import bloomSource from "../shaders/black-hole/bloom.glsl?raw";
 import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
 import bufferBSource from "../shaders/black-hole/buffer-b.glsl?raw";
@@ -7,6 +10,58 @@ import bufferDSource from "../shaders/black-hole/buffer-d.glsl?raw";
 import imageSource from "../shaders/black-hole/image.glsl?raw";
 
 type Vec3 = [number, number, number];
+
+type AsciiCellSize = {
+	x: number;
+	y: number;
+};
+
+type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
+type PaletteMode = "source" | "custom";
+type FontFamily =
+	| "Departure Mono"
+	| "DSEG14Modern"
+	| "Menlo"
+	| "Courier New"
+	| "monospace";
+
+type ShaderControls = {
+	timeScale: number;
+	exposure: number;
+	bloomStrength: number;
+	paletteMode: PaletteMode;
+	shadowColor: string;
+	midColor: string;
+	highlightColor: string;
+	glyphPreset: GlyphPreset;
+	customGlyphs: string;
+	fontFamily: FontFamily;
+	textSize: number;
+	brightness: number;
+	contrast: number;
+};
+
+type GlyphAtlasConfig = {
+	glyphs: string;
+	fontFamily: FontFamily;
+	textSize: number;
+	cellSize: AsciiCellSize;
+	key: string;
+};
+
+type RenderUniforms = {
+	asciiCellSize: AsciiCellSize;
+	asciiMix: number;
+	glyphCount: number;
+	exposure: number;
+	bloomStrength: number;
+	asciiBrightness: number;
+	asciiContrast: number;
+	paletteMode: number;
+	shadowColor: Vec3;
+	midColor: Vec3;
+	highlightColor: Vec3;
+};
 
 type TextureLike = {
 	texture: WebGLTexture;
@@ -59,6 +114,17 @@ type ProgramPass = {
 		uQuality: WebGLUniformLocation | null;
 		uBlendWeight: WebGLUniformLocation | null;
 		uBloomMode: WebGLUniformLocation | null;
+		uAsciiCellSize: WebGLUniformLocation | null;
+		uAsciiMix: WebGLUniformLocation | null;
+		uGlyphCount: WebGLUniformLocation | null;
+		uAsciiBrightness: WebGLUniformLocation | null;
+		uAsciiContrast: WebGLUniformLocation | null;
+		uPaletteMode: WebGLUniformLocation | null;
+		uShadowColor: WebGLUniformLocation | null;
+		uMidColor: WebGLUniformLocation | null;
+		uHighlightColor: WebGLUniformLocation | null;
+		uExposure: WebGLUniformLocation | null;
+		uBloomStrength: WebGLUniformLocation | null;
 	};
 };
 
@@ -67,6 +133,7 @@ type OptimizedPassSet = {
 	composite: ProgramPass;
 	bloom: ProgramPass;
 	image: ProgramPass;
+	ascii: ProgramPass;
 };
 
 type FallbackPassSet = {
@@ -75,6 +142,7 @@ type FallbackPassSet = {
 	c: ProgramPass;
 	d: ProgramPass;
 	image: ProgramPass;
+	ascii: ProgramPass;
 };
 
 type OptimizedTargets = {
@@ -83,6 +151,7 @@ type OptimizedTargets = {
 	bloomMip: RenderTarget;
 	bloomHorizontal: RenderTarget;
 	bloomVertical: RenderTarget;
+	scene: RenderTarget;
 };
 
 type FallbackTargets = {
@@ -90,6 +159,7 @@ type FallbackTargets = {
 	b: PingPongTarget;
 	c: RenderTarget;
 	d: RenderTarget;
+	scene: RenderTarget;
 };
 
 type CameraState = {
@@ -110,12 +180,29 @@ type BlackHoleStats = {
 	dpr: number;
 	prepassScale: number;
 	bloomScale: number;
+	sceneScale: number;
+	asciiEnabled: boolean;
+	asciiCellSize: AsciiCellSize;
 	renderWidth: number;
 	renderHeight: number;
+	sceneWidth: number;
+	sceneHeight: number;
 	prepassWidth: number;
 	prepassHeight: number;
 	bloomWidth: number;
 	bloomHeight: number;
+	cameraPosition: Vec3;
+	cameraForward: Vec3;
+	timeScale: number;
+	exposure: number;
+	bloomStrength: number;
+	paletteMode: PaletteMode;
+	glyphCount: number;
+	fontFamily: FontFamily;
+	textSize: number;
+	asciiBrightness: number;
+	asciiContrast: number;
+	shaderTime: number;
 	fallbackReason: string | null;
 };
 
@@ -126,6 +213,23 @@ type Props = {
 	prepassScale?: number;
 	bloomScale?: number;
 	maxDevicePixelRatio?: number;
+	asciiEnabled?: boolean;
+	asciiCellSize?: AsciiCellSize;
+	asciiMix?: number;
+	sceneScale?: number;
+	timeScale?: number;
+	exposure?: number;
+	bloomStrength?: number;
+	paletteMode?: PaletteMode;
+	shadowColor?: string;
+	midColor?: string;
+	highlightColor?: string;
+	glyphPreset?: GlyphPreset;
+	customGlyphs?: string;
+	fontFamily?: FontFamily;
+	textSize?: number;
+	brightness?: number;
+	contrast?: number;
 	debugStats?: boolean;
 };
 
@@ -164,6 +268,17 @@ uniform float uUniverseSign;
 uniform float uQuality;
 uniform float uBlendWeight;
 uniform int uBloomMode;
+uniform vec2 uAsciiCellSize;
+uniform float uAsciiMix;
+uniform int uGlyphCount;
+uniform float uAsciiBrightness;
+uniform float uAsciiContrast;
+uniform int uPaletteMode;
+uniform vec3 uShadowColor;
+uniform vec3 uMidColor;
+uniform vec3 uHighlightColor;
+uniform float uExposure;
+uniform float uBloomStrength;
 `;
 
 const BLACK_HOLE_HELPERS = `
@@ -207,10 +322,6 @@ vec4 FinalizeTrace(TraceResult res, vec2 uv, mat4 inverseCamRot, vec3 mapCamDir)
 	}
 
 	finalColor = ApplyToneMapping(finalColor, currentShift);
-
-	vec4 mapCol = RenderTopologyMap(uv, vec3(uCameraPosition.x, -uCameraPosition.y, -uCameraPosition.z), vec3(mapCamDir.x, -mapCamDir.y, -mapCamDir.z));
-	finalColor.rgb = mix(finalColor.rgb, mapCol.rgb, mapCol.a);
-	finalColor.a = mix(finalColor.a, 1.0, mapCol.a);
 
 	return finalColor;
 }
@@ -354,13 +465,56 @@ const MOVE_SPEED = 2.5;
 const MOUSE_SENSITIVITY = 0.003;
 const ROLL_SPEED = 2.0;
 const FRAME_TARGET_MS = 22;
-const MIN_PREPASS_SCALE = 0.34;
+const MIN_PREPASS_SCALE = 0.25;
 const MAX_PREPASS_SCALE = 0.67;
 const DIRECT_FALLBACK_DPR = 0.85;
 const IDLE_PREPASS_STRIDE = 4;
 const ACTIVE_PREPASS_STRIDE = 2;
 const BLOOM_FRAME_STRIDE = 3;
 const IDLE_RENDER_INTERVAL_MS = 24;
+const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 8, y: 12 };
+const MAX_GLYPHS = 96;
+const GLYPH_PRESETS: Record<Exclude<GlyphPreset, "custom">, string> = {
+	gargantua: " CGO08@",
+	classic: " .:-=+*#%@",
+	dense:
+		" .'`,^\":;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
+};
+const FONT_OPTIONS: FontFamily[] = [
+	"Departure Mono",
+	"DSEG14Modern",
+	"Menlo",
+	"Courier New",
+	"monospace",
+];
+const DEFAULT_SHADER_CONTROLS: ShaderControls = {
+	timeScale: 1,
+	exposure: 1,
+	bloomStrength: 1,
+	paletteMode: "source",
+	shadowColor: "#08162d",
+	midColor: "#35c7ff",
+	highlightColor: "#fffaf2",
+	glyphPreset: "gargantua",
+	customGlyphs: GLYPH_PRESETS.gargantua,
+	fontFamily: "Departure Mono",
+	textSize: 12,
+	brightness: 0,
+	contrast: 1,
+};
+const DEFAULT_RENDER_UNIFORMS: RenderUniforms = {
+	asciiCellSize: DEFAULT_ASCII_CELL_SIZE,
+	asciiMix: 1,
+	glyphCount: GLYPH_PRESETS.gargantua.length,
+	exposure: 1,
+	bloomStrength: 1,
+	asciiBrightness: 0,
+	asciiContrast: 1,
+	paletteMode: 0,
+	shadowColor: [0.031, 0.086, 0.176],
+	midColor: [0.207, 0.78, 1],
+	highlightColor: [1, 0.98, 0.949],
+};
 
 function add(a: Vec3, b: Vec3): Vec3 {
 	return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -436,25 +590,184 @@ function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
 }
 
+function sanitizeGlyphs(value: string): string {
+	const glyphs = Array.from(
+		value.trim().length > 0 ? value : GLYPH_PRESETS.gargantua,
+	);
+	const unique: string[] = [];
+	const seen = new Set<string>();
+
+	if (!seen.has(" ")) {
+		seen.add(" ");
+		unique.push(" ");
+	}
+
+	for (const glyph of glyphs) {
+		if (seen.has(glyph)) continue;
+		seen.add(glyph);
+		unique.push(glyph);
+		if (unique.length >= MAX_GLYPHS) break;
+	}
+
+	return unique.join("");
+}
+
+function glyphsForControls(controls: ShaderControls): string {
+	if (controls.glyphPreset === "custom") {
+		return sanitizeGlyphs(controls.customGlyphs);
+	}
+
+	return sanitizeGlyphs(GLYPH_PRESETS[controls.glyphPreset]);
+}
+
+function cellSizeForText(textSize: number): AsciiCellSize {
+	const height = Math.round(clamp(textSize, 8, 28));
+	return {
+		x: Math.max(4, Math.round(height * 0.67)),
+		y: Math.max(6, height),
+	};
+}
+
+function createGlyphAtlasConfig(controls: ShaderControls): GlyphAtlasConfig {
+	const textSize = Math.round(clamp(controls.textSize, 8, 28));
+	const glyphs = glyphsForControls(controls);
+	const cellSize = cellSizeForText(textSize);
+
+	return {
+		glyphs,
+		fontFamily: controls.fontFamily,
+		textSize,
+		cellSize,
+		key: `${glyphs}\n${controls.fontFamily}\n${textSize}`,
+	};
+}
+
+function normalizeHexColor(value: string, fallback: string): string {
+	if (/^#[0-9a-fA-F]{6}$/.test(value)) return value;
+	return fallback;
+}
+
+function hexToVec3(value: string, fallback: string): Vec3 {
+	const hex = normalizeHexColor(value, fallback);
+	const numberValue = Number.parseInt(hex.slice(1), 16);
+	return [
+		((numberValue >> 16) & 255) / 255,
+		((numberValue >> 8) & 255) / 255,
+		(numberValue & 255) / 255,
+	];
+}
+
+function createInitialControls(props: Props): ShaderControls {
+	return {
+		...DEFAULT_SHADER_CONTROLS,
+		timeScale: clamp(
+			props.timeScale ?? DEFAULT_SHADER_CONTROLS.timeScale,
+			0,
+			2,
+		),
+		exposure: clamp(
+			props.exposure ?? DEFAULT_SHADER_CONTROLS.exposure,
+			0.2,
+			2.5,
+		),
+		bloomStrength: clamp(
+			props.bloomStrength ?? DEFAULT_SHADER_CONTROLS.bloomStrength,
+			0,
+			3,
+		),
+		paletteMode: props.paletteMode ?? DEFAULT_SHADER_CONTROLS.paletteMode,
+		shadowColor: normalizeHexColor(
+			props.shadowColor ?? DEFAULT_SHADER_CONTROLS.shadowColor,
+			DEFAULT_SHADER_CONTROLS.shadowColor,
+		),
+		midColor: normalizeHexColor(
+			props.midColor ?? DEFAULT_SHADER_CONTROLS.midColor,
+			DEFAULT_SHADER_CONTROLS.midColor,
+		),
+		highlightColor: normalizeHexColor(
+			props.highlightColor ?? DEFAULT_SHADER_CONTROLS.highlightColor,
+			DEFAULT_SHADER_CONTROLS.highlightColor,
+		),
+		glyphPreset: props.glyphPreset ?? DEFAULT_SHADER_CONTROLS.glyphPreset,
+		customGlyphs: props.customGlyphs ?? DEFAULT_SHADER_CONTROLS.customGlyphs,
+		fontFamily: props.fontFamily ?? DEFAULT_SHADER_CONTROLS.fontFamily,
+		textSize: clamp(props.textSize ?? DEFAULT_SHADER_CONTROLS.textSize, 8, 28),
+		brightness: clamp(
+			props.brightness ?? DEFAULT_SHADER_CONTROLS.brightness,
+			-0.5,
+			0.5,
+		),
+		contrast: clamp(
+			props.contrast ?? DEFAULT_SHADER_CONTROLS.contrast,
+			0.25,
+			3,
+		),
+	};
+}
+
+function createRenderUniforms(
+	controls: ShaderControls,
+	atlasConfig: GlyphAtlasConfig,
+	asciiEnabled: boolean,
+	asciiMix: number,
+): RenderUniforms {
+	return {
+		asciiCellSize: atlasConfig.cellSize,
+		asciiMix: asciiEnabled ? clamp(asciiMix, 0, 1) : 0,
+		glyphCount: Math.max(1, Array.from(atlasConfig.glyphs).length),
+		exposure: clamp(controls.exposure, 0.2, 2.5),
+		bloomStrength: clamp(controls.bloomStrength, 0, 3),
+		asciiBrightness: clamp(controls.brightness, -0.5, 0.5),
+		asciiContrast: clamp(controls.contrast, 0.25, 3),
+		paletteMode: controls.paletteMode === "custom" ? 1 : 0,
+		shadowColor: hexToVec3(
+			controls.shadowColor,
+			DEFAULT_SHADER_CONTROLS.shadowColor,
+		),
+		midColor: hexToVec3(controls.midColor, DEFAULT_SHADER_CONTROLS.midColor),
+		highlightColor: hexToVec3(
+			controls.highlightColor,
+			DEFAULT_SHADER_CONTROLS.highlightColor,
+		),
+	};
+}
+
+function isControlKeyboardTarget(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) return false;
+	return Boolean(
+		target.closest("[data-black-hole-control]") ||
+			target.isContentEditable ||
+			["BUTTON", "INPUT", "SELECT", "TEXTAREA"].includes(target.tagName),
+	);
+}
+
 function resolveQualitySettings({
 	quality,
 	prepassScale,
 	bloomScale,
+	sceneScale,
 	maxDevicePixelRatio,
+	asciiEnabled = true,
 }: Pick<
 	Props,
-	"quality" | "prepassScale" | "bloomScale" | "maxDevicePixelRatio"
+	| "quality"
+	| "prepassScale"
+	| "bloomScale"
+	| "sceneScale"
+	| "maxDevicePixelRatio"
+	| "asciiEnabled"
 >) {
 	if (typeof quality === "number") {
 		return {
 			qualityValue: clamp(quality, 0.6, 1.15),
 			initialPrepassScale: clamp(
-				prepassScale ?? 0.5 * quality,
+				prepassScale ?? (asciiEnabled ? 0.3 * quality : 0.5 * quality),
 				MIN_PREPASS_SCALE,
 				MAX_PREPASS_SCALE,
 			),
-			bloomScale: clamp(bloomScale ?? 0.5, 0.35, 0.75),
-			maxDevicePixelRatio: maxDevicePixelRatio ?? 1.25,
+			bloomScale: clamp(bloomScale ?? (asciiEnabled ? 0.3 : 0.5), 0.25, 0.75),
+			sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.4 : 1), 0.25, 1),
+			maxDevicePixelRatio: maxDevicePixelRatio ?? (asciiEnabled ? 1 : 1.25),
 		};
 	}
 
@@ -462,11 +775,12 @@ function resolveQualitySettings({
 		return {
 			qualityValue: 0.65,
 			initialPrepassScale: clamp(
-				prepassScale ?? MIN_PREPASS_SCALE,
+				prepassScale ?? (asciiEnabled ? 0.25 : MIN_PREPASS_SCALE),
 				MIN_PREPASS_SCALE,
 				MAX_PREPASS_SCALE,
 			),
-			bloomScale: clamp(bloomScale ?? 0.35, 0.35, 0.75),
+			bloomScale: clamp(bloomScale ?? (asciiEnabled ? 0.25 : 0.35), 0.25, 0.75),
+			sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.28 : 0.8), 0.25, 1),
 			maxDevicePixelRatio: maxDevicePixelRatio ?? 1,
 		};
 	}
@@ -480,6 +794,7 @@ function resolveQualitySettings({
 				MAX_PREPASS_SCALE,
 			),
 			bloomScale: clamp(bloomScale ?? 0.67, 0.35, 0.75),
+			sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.65 : 1), 0.25, 1),
 			maxDevicePixelRatio: maxDevicePixelRatio ?? 1.5,
 		};
 	}
@@ -487,12 +802,13 @@ function resolveQualitySettings({
 	return {
 		qualityValue: 0.72,
 		initialPrepassScale: clamp(
-			prepassScale ?? MIN_PREPASS_SCALE,
+			prepassScale ?? (asciiEnabled ? 0.3 : MIN_PREPASS_SCALE),
 			MIN_PREPASS_SCALE,
 			MAX_PREPASS_SCALE,
 		),
-		bloomScale: clamp(bloomScale ?? 0.4, 0.35, 0.75),
-		maxDevicePixelRatio: maxDevicePixelRatio ?? 1.25,
+		bloomScale: clamp(bloomScale ?? (asciiEnabled ? 0.3 : 0.4), 0.25, 0.75),
+		sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.36 : 1), 0.25, 1),
+		maxDevicePixelRatio: maxDevicePixelRatio ?? (asciiEnabled ? 1 : 1.25),
 	};
 }
 
@@ -628,6 +944,17 @@ function createPass(
 			uQuality: gl.getUniformLocation(program, "uQuality"),
 			uBlendWeight: gl.getUniformLocation(program, "uBlendWeight"),
 			uBloomMode: gl.getUniformLocation(program, "uBloomMode"),
+			uAsciiCellSize: gl.getUniformLocation(program, "uAsciiCellSize"),
+			uAsciiMix: gl.getUniformLocation(program, "uAsciiMix"),
+			uGlyphCount: gl.getUniformLocation(program, "uGlyphCount"),
+			uAsciiBrightness: gl.getUniformLocation(program, "uAsciiBrightness"),
+			uAsciiContrast: gl.getUniformLocation(program, "uAsciiContrast"),
+			uPaletteMode: gl.getUniformLocation(program, "uPaletteMode"),
+			uShadowColor: gl.getUniformLocation(program, "uShadowColor"),
+			uMidColor: gl.getUniformLocation(program, "uMidColor"),
+			uHighlightColor: gl.getUniformLocation(program, "uHighlightColor"),
+			uExposure: gl.getUniformLocation(program, "uExposure"),
+			uBloomStrength: gl.getUniformLocation(program, "uBloomStrength"),
 		},
 	};
 }
@@ -892,6 +1219,51 @@ function createKeyboardTexture(
 	return { texture, width: 256, height: 1 };
 }
 
+function createGlyphAtlasTexture(
+	gl: WebGL2RenderingContext,
+	config: GlyphAtlasConfig,
+): TextureLike {
+	const glyphs = Array.from(config.glyphs);
+	const glyphCount = Math.max(1, glyphs.length);
+	const width = Math.max(1, config.cellSize.x * glyphCount);
+	const height = Math.max(1, config.cellSize.y);
+	const canvas = document.createElement("canvas");
+	const context = canvas.getContext("2d");
+	const texture = gl.createTexture();
+
+	if (!context || !texture)
+		throw new Error("Could not create ASCII glyph atlas.");
+
+	canvas.width = width;
+	canvas.height = height;
+	context.clearRect(0, 0, width, height);
+	context.fillStyle = "#ffffff";
+	context.textAlign = "center";
+	context.textBaseline = "middle";
+	context.font = `${config.textSize}px "${config.fontFamily}", monospace`;
+
+	for (let index = 0; index < glyphCount; index++) {
+		context.fillText(
+			glyphs[index] ?? " ",
+			index * config.cellSize.x + config.cellSize.x * 0.5,
+			config.cellSize.y * 0.56,
+			config.cellSize.x,
+		);
+	}
+
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+	gl.bindTexture(gl.TEXTURE_2D, null);
+
+	return { texture, width, height };
+}
+
 function updateKeyboardTexture(
 	gl: WebGL2RenderingContext,
 	keyboard: TextureLike,
@@ -953,6 +1325,7 @@ function renderPass(
 	blendWeight: number,
 	bloomMode: number,
 	channelResolutionScratch: Float32Array,
+	renderUniforms: RenderUniforms = DEFAULT_RENDER_UNIFORMS,
 ) {
 	gl.bindFramebuffer(gl.FRAMEBUFFER, target?.framebuffer ?? null);
 
@@ -994,6 +1367,38 @@ function renderPass(
 		gl.uniform1f(pass.locations.uBlendWeight, blendWeight);
 	if (pass.locations.uBloomMode)
 		gl.uniform1i(pass.locations.uBloomMode, bloomMode);
+	if (pass.locations.uAsciiCellSize)
+		gl.uniform2f(
+			pass.locations.uAsciiCellSize,
+			renderUniforms.asciiCellSize.x,
+			renderUniforms.asciiCellSize.y,
+		);
+	if (pass.locations.uAsciiMix)
+		gl.uniform1f(pass.locations.uAsciiMix, renderUniforms.asciiMix);
+	if (pass.locations.uGlyphCount)
+		gl.uniform1i(pass.locations.uGlyphCount, renderUniforms.glyphCount);
+	if (pass.locations.uAsciiBrightness)
+		gl.uniform1f(
+			pass.locations.uAsciiBrightness,
+			renderUniforms.asciiBrightness,
+		);
+	if (pass.locations.uAsciiContrast)
+		gl.uniform1f(pass.locations.uAsciiContrast, renderUniforms.asciiContrast);
+	if (pass.locations.uPaletteMode)
+		gl.uniform1i(pass.locations.uPaletteMode, renderUniforms.paletteMode);
+	if (pass.locations.uShadowColor)
+		gl.uniform3fv(pass.locations.uShadowColor, renderUniforms.shadowColor);
+	if (pass.locations.uMidColor)
+		gl.uniform3fv(pass.locations.uMidColor, renderUniforms.midColor);
+	if (pass.locations.uHighlightColor)
+		gl.uniform3fv(
+			pass.locations.uHighlightColor,
+			renderUniforms.highlightColor,
+		);
+	if (pass.locations.uExposure)
+		gl.uniform1f(pass.locations.uExposure, renderUniforms.exposure);
+	if (pass.locations.uBloomStrength)
+		gl.uniform1f(pass.locations.uBloomStrength, renderUniforms.bloomStrength);
 
 	if (pass.locations.iChannelResolution) {
 		fillChannelResolution(channels, channelResolutionScratch);
@@ -1077,6 +1482,139 @@ function updateCamera(
 	}
 }
 
+function ControlPanel({
+	title,
+	icon,
+	open,
+	onToggle,
+	children,
+}: {
+	title: string;
+	icon: ReactNode;
+	open: boolean;
+	onToggle: () => void;
+	children: ReactNode;
+}) {
+	const ToggleIcon = open ? ChevronDown : ChevronUp;
+
+	return (
+		<section
+			className="border border-white/15 bg-black/70 text-white shadow-2xl backdrop-blur-md"
+			data-black-hole-control
+		>
+			<button
+				type="button"
+				className="flex h-9 w-full items-center justify-between gap-3 px-3 text-left font-mono text-[11px] uppercase tracking-[0.16em] text-white/80 transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+				onClick={onToggle}
+				aria-expanded={open}
+				title={open ? `Collapse ${title}` : `Expand ${title}`}
+			>
+				<span className="flex min-w-0 items-center gap-2">
+					<span className="text-cyan-200">{icon}</span>
+					<span className="truncate">{title}</span>
+				</span>
+				<ToggleIcon aria-hidden className="h-4 w-4 shrink-0" />
+			</button>
+			{open ? (
+				<div className="grid gap-3 border-t border-white/10 p-3">
+					{children}
+				</div>
+			) : null}
+		</section>
+	);
+}
+
+function RangeControl({
+	label,
+	value,
+	min,
+	max,
+	step,
+	onChange,
+	formatValue = (nextValue) => nextValue.toFixed(2),
+}: {
+	label: string;
+	value: number;
+	min: number;
+	max: number;
+	step: number;
+	onChange: (value: number) => void;
+	formatValue?: (value: number) => string;
+}) {
+	return (
+		<label className="grid gap-1 font-mono text-[11px] text-white/70">
+			<span className="flex items-center justify-between gap-3">
+				<span>{label}</span>
+				<span className="tabular-nums text-white/45">{formatValue(value)}</span>
+			</span>
+			<input
+				type="range"
+				min={min}
+				max={max}
+				step={step}
+				value={value}
+				onChange={(event) => onChange(Number(event.currentTarget.value))}
+				className="h-4 w-full accent-cyan-300"
+			/>
+		</label>
+	);
+}
+
+function SelectControl<Value extends string>({
+	label,
+	value,
+	options,
+	onChange,
+}: {
+	label: string;
+	value: Value;
+	options: Array<{ label: string; value: Value }>;
+	onChange: (value: Value) => void;
+}) {
+	return (
+		<label className="grid gap-1 font-mono text-[11px] text-white/70">
+			<span>{label}</span>
+			<select
+				value={value}
+				onChange={(event) => onChange(event.currentTarget.value as Value)}
+				className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
+			>
+				{options.map((option) => (
+					<option key={option.value} value={option.value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+		</label>
+	);
+}
+
+function ColorControl({
+	label,
+	value,
+	onChange,
+}: {
+	label: string;
+	value: string;
+	onChange: (value: string) => void;
+}) {
+	return (
+		<label className="grid gap-1 font-mono text-[11px] text-white/70">
+			<span>{label}</span>
+			<span className="flex h-8 items-center gap-2 border border-white/15 bg-black/80 px-2">
+				<input
+					type="color"
+					value={value}
+					onChange={(event) => onChange(event.currentTarget.value)}
+					className="h-5 w-7 cursor-pointer border-0 bg-transparent p-0"
+					title={label}
+				/>
+				<span className="text-white/45">{value}</span>
+			</span>
+		</label>
+	);
+}
+
 export default function BlackHoleShader({
 	className = "",
 	quality = "balanced",
@@ -1084,10 +1622,61 @@ export default function BlackHoleShader({
 	prepassScale,
 	bloomScale,
 	maxDevicePixelRatio,
+	asciiEnabled = true,
+	asciiCellSize = DEFAULT_ASCII_CELL_SIZE,
+	asciiMix = 1,
+	sceneScale,
+	timeScale,
+	exposure,
+	bloomStrength,
+	paletteMode,
+	shadowColor,
+	midColor,
+	highlightColor,
+	glyphPreset,
+	customGlyphs,
+	fontFamily,
+	textSize,
+	brightness,
+	contrast,
 	debugStats = false,
 }: Props) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const requestRenderRef = useRef<() => void>(() => {});
+	const initialPropsRef = useRef<Props>({
+		timeScale,
+		exposure,
+		bloomStrength,
+		paletteMode,
+		shadowColor,
+		midColor,
+		highlightColor,
+		glyphPreset,
+		customGlyphs,
+		fontFamily,
+		textSize: textSize ?? asciiCellSize.y,
+		brightness,
+		contrast,
+	});
+	const [controls, setControls] = useState<ShaderControls>(() =>
+		createInitialControls(initialPropsRef.current),
+	);
+	const [blackHolePanelOpen, setBlackHolePanelOpen] = useState(true);
+	const [asciiPanelOpen, setAsciiPanelOpen] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const controlsRef = useRef(controls);
+	const atlasConfigRef = useRef(createGlyphAtlasConfig(controls));
+
+	controlsRef.current = controls;
+	atlasConfigRef.current = createGlyphAtlasConfig(controls);
+
+	const updateControl = <Key extends keyof ShaderControls>(
+		key: Key,
+		value: ShaderControls[Key],
+	) => {
+		setControls((current) => ({ ...current, [key]: value }));
+		requestRenderRef.current();
+	};
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -1110,7 +1699,9 @@ export default function BlackHoleShader({
 			quality,
 			prepassScale,
 			bloomScale,
+			sceneScale,
 			maxDevicePixelRatio,
+			asciiEnabled,
 		});
 
 		let disposed = false;
@@ -1120,8 +1711,11 @@ export default function BlackHoleShader({
 		let fallbackReason: string | null = null;
 		let startTime = performance.now();
 		let lastTime = startTime;
+		let shaderTime = 0;
 		let renderWidth = 1;
 		let renderHeight = 1;
+		let sceneWidth = 1;
+		let sceneHeight = 1;
 		let prepassWidth = 1;
 		let prepassHeight = 1;
 		let bloomWidth = 1;
@@ -1143,11 +1737,16 @@ export default function BlackHoleShader({
 		const fallbackFormat = chooseFallbackTextureFormat(gl);
 		const fallbackTexture = createSolidTexture(gl, [0, 0, 0, 255]);
 		const keyboardTexture = createKeyboardTexture(gl, keyboardData);
+		let glyphAtlasConfig = atlasConfigRef.current;
+		let glyphAtlasTexture = createGlyphAtlasTexture(gl, glyphAtlasConfig);
 		const vertexBuffer = gl.createBuffer();
 		const channelResolutionScratch = new Float32Array(12);
 
 		if (!vertexBuffer) {
 			setError("Could not create fullscreen vertex buffer.");
+			gl.deleteTexture(glyphAtlasTexture.texture);
+			gl.deleteTexture(fallbackTexture.texture);
+			gl.deleteTexture(keyboardTexture.texture);
 			return;
 		}
 
@@ -1191,6 +1790,11 @@ export default function BlackHoleShader({
 					"Image",
 					createStandardFragmentSource("Image", imageSource),
 				),
+				ascii: createPass(
+					gl,
+					"ASCII",
+					createStandardFragmentSource("ASCII", asciiSource),
+				),
 			};
 		} catch (optimizedError) {
 			mode = "fallback";
@@ -1225,12 +1829,18 @@ export default function BlackHoleShader({
 						"Image",
 						createStandardFragmentSource("Image", imageSource),
 					),
+					ascii: createPass(
+						gl,
+						"ASCII",
+						createStandardFragmentSource("ASCII", asciiSource),
+					),
 				};
 			} catch (fallbackError) {
 				setError(formatError(fallbackError));
 				gl.deleteBuffer(vertexBuffer);
 				gl.deleteTexture(fallbackTexture.texture);
 				gl.deleteTexture(keyboardTexture.texture);
+				gl.deleteTexture(glyphAtlasTexture.texture);
 				return;
 			}
 		}
@@ -1241,6 +1851,7 @@ export default function BlackHoleShader({
 			disposeRenderTarget(gl, optimizedTargets?.bloomMip ?? null);
 			disposeRenderTarget(gl, optimizedTargets?.bloomHorizontal ?? null);
 			disposeRenderTarget(gl, optimizedTargets?.bloomVertical ?? null);
+			disposeRenderTarget(gl, optimizedTargets?.scene ?? null);
 			optimizedTargets = null;
 		};
 
@@ -1249,6 +1860,7 @@ export default function BlackHoleShader({
 			fallbackTargets?.b.dispose();
 			disposeRenderTarget(gl, fallbackTargets?.c ?? null);
 			disposeRenderTarget(gl, fallbackTargets?.d ?? null);
+			disposeRenderTarget(gl, fallbackTargets?.scene ?? null);
 			fallbackTargets = null;
 		};
 
@@ -1257,25 +1869,44 @@ export default function BlackHoleShader({
 			disposeFallbackTargets();
 		};
 
+		const syncGlyphAtlas = () => {
+			const nextConfig = atlasConfigRef.current;
+			if (nextConfig.key === glyphAtlasConfig.key) return;
+
+			gl.deleteTexture(glyphAtlasTexture.texture);
+			glyphAtlasTexture = createGlyphAtlasTexture(gl, nextConfig);
+			glyphAtlasConfig = nextConfig;
+		};
+
 		const createOptimizedTargets = () => {
 			if (!floatFormat) throw new Error("Float targets are unavailable.");
+			const nextSceneWidth = Math.max(
+				2,
+				Math.floor(renderWidth * settings.sceneScale),
+			);
+			const nextSceneHeight = Math.max(
+				2,
+				Math.floor(renderHeight * settings.sceneScale),
+			);
 			const nextPrepassWidth = Math.max(
 				2,
-				Math.floor(renderWidth * currentPrepassScale),
+				Math.floor(nextSceneWidth * currentPrepassScale),
 			);
 			const nextPrepassHeight = Math.max(
 				2,
-				Math.floor(renderHeight * currentPrepassScale),
+				Math.floor(nextSceneHeight * currentPrepassScale),
 			);
 			const nextBloomWidth = Math.max(
 				2,
-				Math.floor(renderWidth * settings.bloomScale),
+				Math.floor(nextSceneWidth * settings.bloomScale),
 			);
 			const nextBloomHeight = Math.max(
 				2,
-				Math.floor(renderHeight * settings.bloomScale),
+				Math.floor(nextSceneHeight * settings.bloomScale),
 			);
 
+			sceneWidth = nextSceneWidth;
+			sceneHeight = nextSceneHeight;
 			prepassWidth = nextPrepassWidth;
 			prepassHeight = nextPrepassHeight;
 			bloomWidth = nextBloomWidth;
@@ -1291,8 +1922,8 @@ export default function BlackHoleShader({
 				),
 				composite: createPingPongTarget(
 					gl,
-					renderWidth,
-					renderHeight,
+					sceneWidth,
+					sceneHeight,
 					floatFormat,
 					"linear",
 				),
@@ -1317,40 +1948,56 @@ export default function BlackHoleShader({
 					floatFormat,
 					"linear",
 				),
+				scene: createRenderTarget(
+					gl,
+					sceneWidth,
+					sceneHeight,
+					floatFormat,
+					"linear",
+				),
 			};
 		};
 
 		const createFallbackTargets = () => {
-			prepassWidth = renderWidth;
-			prepassHeight = renderHeight;
-			bloomWidth = renderWidth;
-			bloomHeight = renderHeight;
+			sceneWidth = Math.max(2, Math.floor(renderWidth * settings.sceneScale));
+			sceneHeight = Math.max(2, Math.floor(renderHeight * settings.sceneScale));
+			prepassWidth = sceneWidth;
+			prepassHeight = sceneHeight;
+			bloomWidth = sceneWidth;
+			bloomHeight = sceneHeight;
 			fallbackTargets = {
 				a: createPingPongTarget(
 					gl,
-					renderWidth,
-					renderHeight,
+					sceneWidth,
+					sceneHeight,
 					fallbackFormat,
 					"linear",
 				),
 				b: createPingPongTarget(
 					gl,
-					renderWidth,
-					renderHeight,
+					sceneWidth,
+					sceneHeight,
 					fallbackFormat,
 					"linear",
 				),
 				c: createRenderTarget(
 					gl,
-					renderWidth,
-					renderHeight,
+					sceneWidth,
+					sceneHeight,
 					fallbackFormat,
 					"linear",
 				),
 				d: createRenderTarget(
 					gl,
-					renderWidth,
-					renderHeight,
+					sceneWidth,
+					sceneHeight,
+					fallbackFormat,
+					"linear",
+				),
+				scene: createRenderTarget(
+					gl,
+					sceneWidth,
+					sceneHeight,
 					fallbackFormat,
 					"linear",
 				),
@@ -1372,26 +2019,36 @@ export default function BlackHoleShader({
 				1,
 				Math.floor(rect.height * dpr * resolutionScale),
 			);
+			const nextSceneWidth = Math.max(
+				2,
+				Math.floor(nextWidth * settings.sceneScale),
+			);
+			const nextSceneHeight = Math.max(
+				2,
+				Math.floor(nextHeight * settings.sceneScale),
+			);
 			const nextPrepassWidth =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextWidth * currentPrepassScale))
-					: nextWidth;
+					? Math.max(2, Math.floor(nextSceneWidth * currentPrepassScale))
+					: nextSceneWidth;
 			const nextPrepassHeight =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextHeight * currentPrepassScale))
-					: nextHeight;
+					? Math.max(2, Math.floor(nextSceneHeight * currentPrepassScale))
+					: nextSceneHeight;
 			const nextBloomWidth =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextWidth * settings.bloomScale))
-					: nextWidth;
+					? Math.max(2, Math.floor(nextSceneWidth * settings.bloomScale))
+					: nextSceneWidth;
 			const nextBloomHeight =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextHeight * settings.bloomScale))
-					: nextHeight;
+					? Math.max(2, Math.floor(nextSceneHeight * settings.bloomScale))
+					: nextSceneHeight;
 
 			if (
 				nextWidth === renderWidth &&
 				nextHeight === renderHeight &&
+				nextSceneWidth === sceneWidth &&
+				nextSceneHeight === sceneHeight &&
 				nextPrepassWidth === prepassWidth &&
 				nextPrepassHeight === prepassHeight &&
 				nextBloomWidth === bloomWidth &&
@@ -1442,6 +2099,11 @@ export default function BlackHoleShader({
 								"Image",
 								createStandardFragmentSource("Image", imageSource),
 							),
+							ascii: createPass(
+								gl,
+								"ASCII",
+								createStandardFragmentSource("ASCII", asciiSource),
+							),
 						};
 					}
 					createFallbackTargets();
@@ -1453,12 +2115,15 @@ export default function BlackHoleShader({
 			frame = 0;
 			startTime = performance.now();
 			lastTime = startTime;
+			shaderTime = 0;
 			lastRenderNow = 0;
 		};
 
 		const publishStats = (frameTimeMs: number) => {
 			if (!debugStats && !import.meta.env.DEV) return;
 
+			const activeControls = controlsRef.current;
+			const activeAtlas = atlasConfigRef.current;
 			const stats: BlackHoleStats = {
 				mode,
 				frame,
@@ -1467,12 +2132,29 @@ export default function BlackHoleShader({
 				dpr: currentDpr,
 				prepassScale: currentPrepassScale,
 				bloomScale: settings.bloomScale,
+				sceneScale: settings.sceneScale,
+				asciiEnabled,
+				asciiCellSize: activeAtlas.cellSize,
 				renderWidth,
 				renderHeight,
+				sceneWidth,
+				sceneHeight,
 				prepassWidth,
 				prepassHeight,
 				bloomWidth,
 				bloomHeight,
+				cameraPosition: [...camera.position],
+				cameraForward: [...camera.forward],
+				timeScale: activeControls.timeScale,
+				exposure: activeControls.exposure,
+				bloomStrength: activeControls.bloomStrength,
+				paletteMode: activeControls.paletteMode,
+				glyphCount: Array.from(activeAtlas.glyphs).length,
+				fontFamily: activeAtlas.fontFamily,
+				textSize: activeAtlas.textSize,
+				asciiBrightness: activeControls.brightness,
+				asciiContrast: activeControls.contrast,
+				shaderTime,
 				fallbackReason,
 			};
 
@@ -1503,6 +2185,7 @@ export default function BlackHoleShader({
 				frame = 0;
 				startTime = performance.now();
 				lastTime = startTime;
+				shaderTime = 0;
 				lastRenderNow = 0;
 			}
 		};
@@ -1512,6 +2195,7 @@ export default function BlackHoleShader({
 			delta: number,
 			shouldUpdatePrepass: boolean,
 			shouldUpdateBloom: boolean,
+			activeRenderUniforms: RenderUniforms,
 		) => {
 			if (!optimizedPasses || !optimizedTargets) return;
 
@@ -1533,6 +2217,7 @@ export default function BlackHoleShader({
 					0.5,
 					0,
 					channelResolutionScratch,
+					activeRenderUniforms,
 				);
 			}
 
@@ -1541,8 +2226,8 @@ export default function BlackHoleShader({
 				optimizedPasses.composite,
 				vertexBuffer,
 				optimizedTargets.composite.write,
-				renderWidth,
-				renderHeight,
+				sceneWidth,
+				sceneHeight,
 				time,
 				delta,
 				frame,
@@ -1558,6 +2243,7 @@ export default function BlackHoleShader({
 				0.5,
 				0,
 				channelResolutionScratch,
+				activeRenderUniforms,
 			);
 
 			if (shouldUpdateBloom) {
@@ -1583,6 +2269,7 @@ export default function BlackHoleShader({
 					0.5,
 					0,
 					channelResolutionScratch,
+					activeRenderUniforms,
 				);
 				renderPass(
 					gl,
@@ -1606,6 +2293,7 @@ export default function BlackHoleShader({
 					0.5,
 					1,
 					channelResolutionScratch,
+					activeRenderUniforms,
 				);
 				renderPass(
 					gl,
@@ -1629,6 +2317,7 @@ export default function BlackHoleShader({
 					0.5,
 					2,
 					channelResolutionScratch,
+					activeRenderUniforms,
 				);
 			}
 
@@ -1636,9 +2325,9 @@ export default function BlackHoleShader({
 				gl,
 				optimizedPasses.image,
 				vertexBuffer,
-				null,
-				renderWidth,
-				renderHeight,
+				optimizedTargets.scene,
+				sceneWidth,
+				sceneHeight,
 				time,
 				delta,
 				frame,
@@ -1654,12 +2343,42 @@ export default function BlackHoleShader({
 				0.5,
 				0,
 				channelResolutionScratch,
+				activeRenderUniforms,
+			);
+
+			renderPass(
+				gl,
+				optimizedPasses.ascii,
+				vertexBuffer,
+				null,
+				renderWidth,
+				renderHeight,
+				time,
+				delta,
+				frame,
+				mouse,
+				[
+					optimizedTargets.scene,
+					glyphAtlasTexture,
+					fallbackTexture,
+					fallbackTexture,
+				],
+				camera,
+				settings.qualityValue,
+				0.5,
+				0,
+				channelResolutionScratch,
+				activeRenderUniforms,
 			);
 
 			optimizedTargets.composite.swap();
 		};
 
-		const renderFallback = (time: number, delta: number) => {
+		const renderFallback = (
+			time: number,
+			delta: number,
+			activeRenderUniforms: RenderUniforms,
+		) => {
 			if (!fallbackPasses || !fallbackTargets) return;
 
 			renderPass(
@@ -1667,8 +2386,8 @@ export default function BlackHoleShader({
 				fallbackPasses.a,
 				vertexBuffer,
 				fallbackTargets.a.write,
-				renderWidth,
-				renderHeight,
+				sceneWidth,
+				sceneHeight,
 				time,
 				delta,
 				frame,
@@ -1684,14 +2403,15 @@ export default function BlackHoleShader({
 				0.5,
 				0,
 				channelResolutionScratch,
+				activeRenderUniforms,
 			);
 			renderPass(
 				gl,
 				fallbackPasses.b,
 				vertexBuffer,
 				fallbackTargets.b.write,
-				renderWidth,
-				renderHeight,
+				sceneWidth,
+				sceneHeight,
 				time,
 				delta,
 				frame,
@@ -1707,14 +2427,15 @@ export default function BlackHoleShader({
 				0.5,
 				0,
 				channelResolutionScratch,
+				activeRenderUniforms,
 			);
 			renderPass(
 				gl,
 				fallbackPasses.c,
 				vertexBuffer,
 				fallbackTargets.c,
-				renderWidth,
-				renderHeight,
+				sceneWidth,
+				sceneHeight,
 				time,
 				delta,
 				frame,
@@ -1730,14 +2451,15 @@ export default function BlackHoleShader({
 				0.5,
 				0,
 				channelResolutionScratch,
+				activeRenderUniforms,
 			);
 			renderPass(
 				gl,
 				fallbackPasses.d,
 				vertexBuffer,
 				fallbackTargets.d,
-				renderWidth,
-				renderHeight,
+				sceneWidth,
+				sceneHeight,
 				time,
 				delta,
 				frame,
@@ -1748,14 +2470,15 @@ export default function BlackHoleShader({
 				0.5,
 				0,
 				channelResolutionScratch,
+				activeRenderUniforms,
 			);
 			renderPass(
 				gl,
 				fallbackPasses.image,
 				vertexBuffer,
-				null,
-				renderWidth,
-				renderHeight,
+				fallbackTargets.scene,
+				sceneWidth,
+				sceneHeight,
 				time,
 				delta,
 				frame,
@@ -1771,6 +2494,31 @@ export default function BlackHoleShader({
 				0.5,
 				0,
 				channelResolutionScratch,
+				activeRenderUniforms,
+			);
+			renderPass(
+				gl,
+				fallbackPasses.ascii,
+				vertexBuffer,
+				null,
+				renderWidth,
+				renderHeight,
+				time,
+				delta,
+				frame,
+				mouse,
+				[
+					fallbackTargets.scene,
+					glyphAtlasTexture,
+					fallbackTexture,
+					fallbackTexture,
+				],
+				camera,
+				settings.qualityValue,
+				0.5,
+				0,
+				channelResolutionScratch,
+				activeRenderUniforms,
 			);
 
 			fallbackTargets.a.swap();
@@ -1785,17 +2533,28 @@ export default function BlackHoleShader({
 
 			try {
 				resize();
+				syncGlyphAtlas();
 
 				if (keyboardDirty) {
 					updateKeyboardTexture(gl, keyboardTexture, keyboardData);
 					keyboardDirty = false;
 				}
 
-				const activeControls = hasActiveControls(keyboardData, pointerActive);
+				const liveControls = controlsRef.current;
+				const activeRenderUniforms = createRenderUniforms(
+					liveControls,
+					glyphAtlasConfig,
+					asciiEnabled,
+					asciiMix,
+				);
+				const activeControlInput = hasActiveControls(
+					keyboardData,
+					pointerActive,
+				);
 				if (
 					mode === "optimized" &&
 					frame > 2 &&
-					!activeControls &&
+					!activeControlInput &&
 					lastRenderNow > 0 &&
 					now - lastRenderNow < IDLE_RENDER_INTERVAL_MS
 				) {
@@ -1804,9 +2563,10 @@ export default function BlackHoleShader({
 				}
 				lastRenderNow = now;
 
-				const time = (now - startTime) / 1000;
 				const delta = Math.min(0.1, Math.max(0.001, (now - lastTime) / 1000));
+				const shaderDelta = delta * liveControls.timeScale;
 				lastTime = now;
+				shaderTime += shaderDelta;
 
 				updateCamera(camera, keyboardData, delta);
 
@@ -1815,7 +2575,7 @@ export default function BlackHoleShader({
 				gl.clearColor(0, 0, 0, 1);
 
 				if (mode === "optimized") {
-					const prepassStride = activeControls
+					const prepassStride = activeControlInput
 						? ACTIVE_PREPASS_STRIDE
 						: IDLE_PREPASS_STRIDE;
 					const shouldUpdatePrepass = frame < 2 || frame % prepassStride === 0;
@@ -1824,8 +2584,14 @@ export default function BlackHoleShader({
 						shouldUpdatePrepass ||
 						frame % BLOOM_FRAME_STRIDE === 0;
 
-					renderOptimized(time, delta, shouldUpdatePrepass, shouldUpdateBloom);
-				} else renderFallback(time, delta);
+					renderOptimized(
+						shaderTime,
+						shaderDelta,
+						shouldUpdatePrepass,
+						shouldUpdateBloom,
+						activeRenderUniforms,
+					);
+				} else renderFallback(shaderTime, shaderDelta, activeRenderUniforms);
 
 				const frameTimeMs = performance.now() - cpuFrameStart;
 				averageFrameTimeMs = averageFrameTimeMs * 0.94 + delta * 1000 * 0.06;
@@ -1850,8 +2616,10 @@ export default function BlackHoleShader({
 				animationFrame = requestAnimationFrame(renderFrame);
 			}
 		};
+		requestRenderRef.current = requestRender;
 
 		const setKey = (event: KeyboardEvent, pressed: boolean) => {
+			if (isControlKeyboardTarget(event.target)) return;
 			if (event.keyCode < 0 || event.keyCode > 255) return;
 			if (CONTROL_KEY_CODES.has(event.keyCode)) event.preventDefault();
 			keyboardData[event.keyCode * 4] = pressed ? 255 : 0;
@@ -1861,11 +2629,13 @@ export default function BlackHoleShader({
 
 		const pointerPosition = (event: PointerEvent) => {
 			const rect = canvas.getBoundingClientRect();
+			const mouseWidth = Math.max(sceneWidth, 1);
+			const mouseHeight = Math.max(sceneHeight, 1);
 			const x =
-				((event.clientX - rect.left) / Math.max(rect.width, 1)) * renderWidth;
+				((event.clientX - rect.left) / Math.max(rect.width, 1)) * mouseWidth;
 			const y =
 				((rect.bottom - event.clientY) / Math.max(rect.height, 1)) *
-				renderHeight;
+				mouseHeight;
 			mouse[0] = x;
 			mouse[1] = y;
 		};
@@ -1952,6 +2722,8 @@ export default function BlackHoleShader({
 			Object.values(fallbackPasses ?? {}).forEach((pass) => {
 				gl.deleteProgram(pass.program);
 			});
+			gl.deleteTexture(glyphAtlasTexture.texture);
+			requestRenderRef.current = () => {};
 			delete window.__blackHoleStats;
 		};
 	}, [
@@ -1960,8 +2732,22 @@ export default function BlackHoleShader({
 		prepassScale,
 		bloomScale,
 		maxDevicePixelRatio,
+		asciiEnabled,
+		asciiMix,
+		sceneScale,
 		debugStats,
 	]);
+
+	const glyphPresetOptions: Array<{ label: string; value: GlyphPreset }> = [
+		{ label: "Gargantua", value: "gargantua" },
+		{ label: "Classic", value: "classic" },
+		{ label: "Dense", value: "dense" },
+		{ label: "Custom", value: "custom" },
+	];
+	const fontOptions = FONT_OPTIONS.map((font) => ({
+		label: font,
+		value: font,
+	}));
 
 	return (
 		<div className={`relative h-full w-full bg-black ${className}`}>
@@ -1970,6 +2756,130 @@ export default function BlackHoleShader({
 				className="block h-full w-full cursor-crosshair touch-none bg-black"
 				aria-label="Interactive black hole shader"
 			/>
+			<div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 grid gap-2 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[22rem]">
+				<div className="pointer-events-auto overflow-hidden rounded-md">
+					<ControlPanel
+						title="Black Hole"
+						icon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
+						open={blackHolePanelOpen}
+						onToggle={() => setBlackHolePanelOpen((open) => !open)}
+					>
+						<RangeControl
+							label="Speed"
+							value={controls.timeScale}
+							min={0}
+							max={2}
+							step={0.05}
+							onChange={(value) => updateControl("timeScale", value)}
+						/>
+						<RangeControl
+							label="Exposure"
+							value={controls.exposure}
+							min={0.2}
+							max={2.5}
+							step={0.05}
+							onChange={(value) => updateControl("exposure", value)}
+						/>
+						<RangeControl
+							label="Bloom"
+							value={controls.bloomStrength}
+							min={0}
+							max={3}
+							step={0.05}
+							onChange={(value) => updateControl("bloomStrength", value)}
+						/>
+						<SelectControl
+							label="Color"
+							value={controls.paletteMode}
+							options={[
+								{ label: "Source", value: "source" },
+								{ label: "Custom", value: "custom" },
+							]}
+							onChange={(value) => updateControl("paletteMode", value)}
+						/>
+						{controls.paletteMode === "custom" ? (
+							<div className="grid grid-cols-3 gap-2">
+								<ColorControl
+									label="Shadow"
+									value={controls.shadowColor}
+									onChange={(value) => updateControl("shadowColor", value)}
+								/>
+								<ColorControl
+									label="Mid"
+									value={controls.midColor}
+									onChange={(value) => updateControl("midColor", value)}
+								/>
+								<ColorControl
+									label="High"
+									value={controls.highlightColor}
+									onChange={(value) => updateControl("highlightColor", value)}
+								/>
+							</div>
+						) : null}
+					</ControlPanel>
+				</div>
+
+				<div className="pointer-events-auto overflow-hidden rounded-md">
+					<ControlPanel
+						title="ASCII"
+						icon={<Type aria-hidden className="h-4 w-4" />}
+						open={asciiPanelOpen}
+						onToggle={() => setAsciiPanelOpen((open) => !open)}
+					>
+						<SelectControl
+							label="Text"
+							value={controls.glyphPreset}
+							options={glyphPresetOptions}
+							onChange={(value) => updateControl("glyphPreset", value)}
+						/>
+						<label className="grid gap-1 font-mono text-[11px] text-white/70">
+							<span>Custom</span>
+							<input
+								type="text"
+								value={controls.customGlyphs}
+								disabled={controls.glyphPreset !== "custom"}
+								onChange={(event) =>
+									updateControl("customGlyphs", event.currentTarget.value)
+								}
+								className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none disabled:cursor-not-allowed disabled:opacity-40 focus:border-cyan-300"
+							/>
+						</label>
+						<SelectControl
+							label="Font"
+							value={controls.fontFamily}
+							options={fontOptions}
+							onChange={(value) => updateControl("fontFamily", value)}
+						/>
+						<RangeControl
+							label="Size"
+							value={controls.textSize}
+							min={8}
+							max={28}
+							step={1}
+							formatValue={(value) => `${Math.round(value)}px`}
+							onChange={(value) => updateControl("textSize", value)}
+						/>
+						<div className="grid grid-cols-2 gap-3">
+							<RangeControl
+								label="Bright"
+								value={controls.brightness}
+								min={-0.5}
+								max={0.5}
+								step={0.01}
+								onChange={(value) => updateControl("brightness", value)}
+							/>
+							<RangeControl
+								label="Contrast"
+								value={controls.contrast}
+								min={0.25}
+								max={3}
+								step={0.05}
+								onChange={(value) => updateControl("contrast", value)}
+							/>
+						</div>
+					</ControlPanel>
+				</div>
+			</div>
 			{error ? (
 				<div className="absolute inset-x-4 bottom-4 border border-red-500/60 bg-black/85 p-3 font-mono text-xs text-red-200">
 					{error}
