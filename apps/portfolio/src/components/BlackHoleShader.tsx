@@ -253,6 +253,7 @@ type BlackHoleStats = {
 	maxDevicePixelRatio: number;
 	resolutionScale: number;
 	fallbackReason: string | null;
+	lastAllocationFailure: string | null;
 	animationMode: AnimationMode;
 	animationRoute: BlackHoleAnimationRouteKey;
 	animationPhase: AnimationPhase;
@@ -2067,6 +2068,7 @@ function createMultiRenderTarget(
 				throw new Error(
 					`Could not create multi render target texture ${i + 1}/${count} (${width}x${height}).`,
 				);
+			textures.push({ texture, width, height });
 
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -2103,7 +2105,6 @@ function createMultiRenderTarget(
 				0,
 			);
 			attachments.push(attachment);
-			textures.push({ texture, width, height });
 		}
 
 		gl.drawBuffers(attachments);
@@ -2145,26 +2146,34 @@ function createPingPongTarget(
 	format: TextureFormat,
 	filter: "linear" | "nearest",
 ): PingPongTarget {
-	let read = createRenderTarget(gl, width, height, format, filter);
-	let write = createRenderTarget(gl, width, height, format, filter);
+	const initialRead = createRenderTarget(gl, width, height, format, filter);
 
-	return {
-		get read() {
-			return read;
-		},
-		get write() {
-			return write;
-		},
-		swap: () => {
-			const nextRead = write;
-			write = read;
-			read = nextRead;
-		},
-		dispose: () => {
-			disposeRenderTarget(gl, read);
-			disposeRenderTarget(gl, write);
-		},
-	};
+	try {
+		const initialWrite = createRenderTarget(gl, width, height, format, filter);
+		let read = initialRead;
+		let write = initialWrite;
+
+		return {
+			get read() {
+				return read;
+			},
+			get write() {
+				return write;
+			},
+			swap: () => {
+				const nextRead = write;
+				write = read;
+				read = nextRead;
+			},
+			dispose: () => {
+				disposeRenderTarget(gl, read);
+				disposeRenderTarget(gl, write);
+			},
+		};
+	} catch (error) {
+		disposeRenderTarget(gl, initialRead);
+		throw error;
+	}
 }
 
 function disposeRenderTarget(
@@ -2795,6 +2804,7 @@ export default function BlackHoleShader({
 	const [blackHolePanelOpen, setBlackHolePanelOpen] = useState(true);
 	const [asciiPanelOpen, setAsciiPanelOpen] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [contextRestoreToken, setContextRestoreToken] = useState(0);
 	const controlsRef = useRef(controls);
 	const renderSettingsRef = useRef(renderSettings);
 	const atlasConfigRef = useRef(createGlyphAtlasConfig(controls));
@@ -2935,6 +2945,8 @@ export default function BlackHoleShader({
 	};
 
 	useEffect(() => {
+		void contextRestoreToken;
+
 		const initialCameraChanged =
 			initialCameraKeyRef.current !== initialCameraKey;
 		initialCameraKeyRef.current = initialCameraKey;
@@ -3031,6 +3043,7 @@ export default function BlackHoleShader({
 		let currentDpr = 1;
 		let targetAllocationScale = 1;
 		let allocationScaleReason: string | null = null;
+		let lastAllocationFailure: string | null = null;
 		let currentPrepassScale = settings.initialPrepassScale;
 		let averageFrameTimeMs = 16.7;
 		let cpuAverageFrameTimeMs = 16.7;
@@ -3149,6 +3162,7 @@ export default function BlackHoleShader({
 		let fallbackPasses: FallbackPassSet | null = null;
 		let optimizedTargets: OptimizedTargets | null = null;
 		let fallbackTargets: FallbackTargets | null = null;
+		let contextLost = false;
 
 		const ensureFallbackPasses = () => {
 			if (fallbackPasses) return;
@@ -3336,6 +3350,25 @@ export default function BlackHoleShader({
 		const disposeTargets = () => {
 			disposeOptimizedTargets();
 			disposeFallbackTargets();
+		};
+
+		const disposeOptimizedTargetGroup = (
+			targets: Partial<OptimizedTargets>,
+		) => {
+			targets.prepass?.dispose();
+			targets.composite?.dispose();
+			disposeRenderTarget(gl, targets.bloomMip ?? null);
+			disposeRenderTarget(gl, targets.bloomHorizontal ?? null);
+			disposeRenderTarget(gl, targets.bloomVertical ?? null);
+			disposeRenderTarget(gl, targets.scene ?? null);
+		};
+
+		const disposeFallbackTargetGroup = (targets: Partial<FallbackTargets>) => {
+			targets.a?.dispose();
+			targets.b?.dispose();
+			disposeRenderTarget(gl, targets.c ?? null);
+			disposeRenderTarget(gl, targets.d ?? null);
+			disposeRenderTarget(gl, targets.scene ?? null);
 		};
 
 		const syncGlyphAtlasConfig = (nextConfig: GlyphAtlasConfig) => {
@@ -3681,6 +3714,7 @@ export default function BlackHoleShader({
 
 				try {
 					createTargets();
+					if (scale === 1) lastAllocationFailure = null;
 					allocationScaleReason =
 						scale < 1
 							? `Render targets reduced to ${Math.round(
@@ -3690,6 +3724,7 @@ export default function BlackHoleShader({
 					return;
 				} catch (error) {
 					lastError = error;
+					lastAllocationFailure = formatError(error);
 					disposeTargets();
 				}
 			}
@@ -3727,50 +3762,57 @@ export default function BlackHoleShader({
 			bloomWidth = nextBloomWidth;
 			bloomHeight = nextBloomHeight;
 
-			optimizedTargets = {
-				prepass: createMultiRenderTarget(
+			const nextTargets: Partial<OptimizedTargets> = {};
+
+			try {
+				nextTargets.prepass = createMultiRenderTarget(
 					gl,
 					prepassWidth,
 					prepassHeight,
 					floatFormat,
 					2,
-				),
-				composite: createPingPongTarget(
+				);
+				nextTargets.composite = createPingPongTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
 					floatFormat,
 					"linear",
-				),
-				bloomMip: createRenderTarget(
+				);
+				nextTargets.bloomMip = createRenderTarget(
 					gl,
 					bloomWidth,
 					bloomHeight,
 					floatFormat,
 					"linear",
-				),
-				bloomHorizontal: createRenderTarget(
+				);
+				nextTargets.bloomHorizontal = createRenderTarget(
 					gl,
 					bloomWidth,
 					bloomHeight,
 					floatFormat,
 					"linear",
-				),
-				bloomVertical: createRenderTarget(
+				);
+				nextTargets.bloomVertical = createRenderTarget(
 					gl,
 					bloomWidth,
 					bloomHeight,
 					floatFormat,
 					"linear",
-				),
-				scene: createRenderTarget(
+				);
+				nextTargets.scene = createRenderTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
 					floatFormat,
 					"linear",
-				),
-			};
+				);
+
+				optimizedTargets = nextTargets as OptimizedTargets;
+			} catch (error) {
+				disposeOptimizedTargetGroup(nextTargets);
+				throw error;
+			}
 		};
 
 		const createFallbackTargets = () => {
@@ -3782,43 +3824,50 @@ export default function BlackHoleShader({
 			prepassHeight = sceneHeight;
 			bloomWidth = sceneWidth;
 			bloomHeight = sceneHeight;
-			fallbackTargets = {
-				a: createPingPongTarget(
+			const nextTargets: Partial<FallbackTargets> = {};
+
+			try {
+				nextTargets.a = createPingPongTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
 					fallbackFormat,
 					"linear",
-				),
-				b: createPingPongTarget(
+				);
+				nextTargets.b = createPingPongTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
 					fallbackFormat,
 					"linear",
-				),
-				c: createRenderTarget(
+				);
+				nextTargets.c = createRenderTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
 					fallbackFormat,
 					"linear",
-				),
-				d: createRenderTarget(
+				);
+				nextTargets.d = createRenderTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
 					fallbackFormat,
 					"linear",
-				),
-				scene: createRenderTarget(
+				);
+				nextTargets.scene = createRenderTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
 					fallbackFormat,
 					"linear",
-				),
-			};
+				);
+
+				fallbackTargets = nextTargets as FallbackTargets;
+			} catch (error) {
+				disposeFallbackTargetGroup(nextTargets);
+				throw error;
+			}
 		};
 
 		const resize = () => {
@@ -3956,6 +4005,7 @@ export default function BlackHoleShader({
 				fallbackReason:
 					[fallbackReason, allocationScaleReason].filter(Boolean).join("; ") ||
 					null,
+				lastAllocationFailure,
 				animationMode: activeAnimationMode(),
 				animationRoute: activeAnimationRoute,
 				animationPhase,
@@ -4506,7 +4556,7 @@ export default function BlackHoleShader({
 		};
 
 		const requestRender = () => {
-			if (!disposed && !animationFrame && !document.hidden) {
+			if (!disposed && !contextLost && !animationFrame && !document.hidden) {
 				animationFrame = requestAnimationFrame(renderFrame);
 			}
 		};
@@ -4595,6 +4645,21 @@ export default function BlackHoleShader({
 			requestRender();
 		};
 
+		const handleContextLost = (event: Event) => {
+			event.preventDefault();
+			contextLost = true;
+			disposed = true;
+			if (animationFrame) cancelAnimationFrame(animationFrame);
+			animationFrame = 0;
+			setError("WebGL context lost. Restoring renderer...");
+		};
+
+		const handleContextRestored = () => {
+			contextLost = false;
+			setError(null);
+			setContextRestoreToken((token) => token + 1);
+		};
+
 		const resizeObserver = new ResizeObserver(requestRender);
 		resizeObserver.observe(canvas);
 
@@ -4610,6 +4675,8 @@ export default function BlackHoleShader({
 			canvas.addEventListener("pointercancel", handlePointerUp);
 		}
 		document.addEventListener("visibilitychange", handleVisibilityChange);
+		canvas.addEventListener("webglcontextlost", handleContextLost);
+		canvas.addEventListener("webglcontextrestored", handleContextRestored);
 
 		updateCameraReadout(performance.now(), true);
 		requestRender();
@@ -4628,6 +4695,8 @@ export default function BlackHoleShader({
 				canvas.removeEventListener("pointercancel", handlePointerUp);
 			}
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
+			canvas.removeEventListener("webglcontextlost", handleContextLost);
+			canvas.removeEventListener("webglcontextrestored", handleContextRestored);
 			disposeTargets();
 			gl.deleteBuffer(vertexBuffer);
 			gl.deleteTexture(fallbackTexture.texture);
@@ -4660,6 +4729,7 @@ export default function BlackHoleShader({
 		initialCameraPosition,
 		initialCameraForward,
 		initialUniverseSign,
+		contextRestoreToken,
 	]);
 
 	const glyphPresetOptions: Array<{ label: string; value: GlyphPreset }> = [
