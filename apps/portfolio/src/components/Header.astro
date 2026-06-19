@@ -1,9 +1,13 @@
 ---
-const { navbarActiveItemID } = Astro.props;
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
+const { navbarActiveItemID, disableClock = false } = Astro.props;
+// biome-ignore lint/correctness/noUnusedVariables: Astro passes this value into the inline script.
 const activeClasses = ["text-white", "opacity-100"];
 
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import { SquareArrowOutUpRight } from "lucide-react";
 
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const links: Array<{
 	title: string;
 	id?: string;
@@ -39,7 +43,9 @@ const links: Array<{
   >
     <span class="mb-4 lg:mb-0">
       <a href="/" target="_self" class="text-white font-medium text-md">
-        <span id="perth-time">--:--</span>
+        <span id="perth-time" aria-label="Current time in Perth">
+          <span data-clock-hour>--</span><span class="clock-colon" data-clock-colon>:</span><span data-clock-minute>--</span><span class="clock-colon" data-clock-colon>:</span><span data-clock-second>--</span>
+        </span>
       </a>
     </span>
     <span class="flex flex-wrap gap-6 text-sm">
@@ -52,7 +58,7 @@ const links: Array<{
               href={link.redirect ? link.redirect : link.url}
               target={link.redirect ? "_blank" : "_self"}
               id={link.id}
-              class="text-gray-400 opacity-70 hover:opacity-100 transition-opacity duration-200 inline-flex items-center gap-1"
+              class="text-gray-400 opacity-70 hover:opacity-100 inline-flex items-center gap-1"
             >
               {link.title}
               {!isActive && (
@@ -73,37 +79,63 @@ const links: Array<{
   define:vars={{
     navbarActiveItemID,
     activeClasses,
+    disableClock,
   }}
 >
   const activeItemElement = document.getElementById(navbarActiveItemID);
 
-  activeClasses.forEach((activeClass) => {
-    activeItemElement.classList.add(activeClass);
+  if (activeItemElement) {
+    activeClasses.forEach((activeClass) => {
+      activeItemElement.classList.add(activeClass);
+    });
+  }
+
+  const clockWindow = window;
+  const clock = document.getElementById("perth-time");
+  const hour = clock?.querySelector("[data-clock-hour]");
+  const minute = clock?.querySelector("[data-clock-minute]");
+  const second = clock?.querySelector("[data-clock-second]");
+  const colons = clock ? Array.from(clock.querySelectorAll("[data-clock-colon]")) : [];
+  const formatter = new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Perth",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
   });
 
+  function updateText(node, value) {
+    if (node && node.textContent !== value) node.textContent = value;
+  }
+
   function updatePerthTime() {
-      const now = new Date();
+    const now = new Date();
+    const parts = formatter.formatToParts(now);
 
-      const parts = new Intl.DateTimeFormat("en-AU", {
-        timeZone: "Australia/Perth",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }).formatToParts(now);
-
-      let h = "", m = "", s = "";
-      for (const p of parts) {
-        if (p.type === "hour") h = p.value;
-        if (p.type === "minute") m = p.value;
-        if (p.type === "second") s = p.value;
-      }
-
-      const colonClass = `clock-colon${now.getSeconds() % 2 === 0 ? "" : " off"}`;
-      const el = document.getElementById("perth-time");
-      if (el) el.innerHTML = `${h}<span class="${colonClass}">:</span>${m}<span class="${colonClass}">:</span>${s}`;
+    let h = "", m = "", s = "";
+    for (const p of parts) {
+      if (p.type === "hour") h = p.value;
+      if (p.type === "minute") m = p.value;
+      if (p.type === "second") s = p.value;
     }
 
+    updateText(hour, h);
+    updateText(minute, m);
+    updateText(second, s);
+
+    const colonHidden = now.getSeconds() % 2 !== 0;
+    for (const colon of colons) {
+      colon.classList.toggle("off", colonHidden);
+    }
+  }
+
+  if (clockWindow.__perthClockInterval) {
+    window.clearInterval(clockWindow.__perthClockInterval);
+    clockWindow.__perthClockInterval = undefined;
+  }
+
+  if (!disableClock) {
     updatePerthTime();
-    setInterval(updatePerthTime, 1000);
+    clockWindow.__perthClockInterval = window.setInterval(updatePerthTime, 1000);
+  }
 </script>

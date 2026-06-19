@@ -1,16 +1,57 @@
 ---
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import BaseHead from "../components/BaseHead.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import Header from "../components/Header.astro";
 import "../styles/global.css";
-import FaultyTerminal from "@/components/FaultyTerminal";
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
+import BlackHoleShader from "@/components/BlackHoleShader";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../config";
 
 const {
+	// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 	image,
+	// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 	title = SITE_TITLE,
+	// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 	description = SITE_DESCRIPTION,
+	// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 	navbarActiveItemID,
+	contentPlacement = "center",
 } = Astro.props;
+
+const isRightPlacement = contentPlacement === "right";
+const isHomeRoute = Astro.url.pathname === "/";
+const bhPerfFlags = new Set(
+	(isHomeRoute ? (Astro.url.searchParams.get("bhPerf") ?? "") : "")
+		.split(",")
+		.map((flag) => flag.trim())
+		.filter(Boolean),
+);
+const hideContent = bhPerfFlags.has("hide-content");
+const opaqueContent = bhPerfFlags.has("opaque-content");
+const noRouteAnimation = bhPerfFlags.has("no-route-animation");
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
+const noClock = bhPerfFlags.has("no-clock");
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
+const contentWrapperClass = [
+	"bh-foreground-layer pointer-events-none relative z-10 w-full md:px-4 mx-auto",
+	isRightPlacement
+		? "lg:ml-auto lg:mr-6 lg:w-[48rem] xl:mr-12 xl:w-[52rem] 2xl:mr-20"
+		: "xl:w-220 lg:w-4/5",
+	hideContent ? "hidden" : "",
+	opaqueContent ? "bh-perf-opaque-content" : "",
+]
+	.filter(Boolean)
+	.join(" ");
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
+const shellClass =
+	"bh-content-shell pointer-events-auto mt-6 rounded-2xl border border-white/10";
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
+const backgroundLayerClass =
+	"bh-background-layer pointer-events-none fixed inset-0 z-0 overflow-hidden";
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
+const shaderAnimationMode = noRouteAnimation ? "off" : "route";
 ---
 
 <!doctype html>
@@ -22,53 +63,77 @@ const {
 
     <BaseHead title={title} description={description} image={image} />
   </head>
-  <body class="relative min-h-screen font-Departure text-gray-400 dark selection:bg-cyan-700 selection:text-white">
+  <body class="relative min-h-screen font-Departure text-gray-400 dark selection:bg-cyan-700 selection:text-white" data-bh-perf={Array.from(bhPerfFlags).join(",")}>
 
   <!-- Background layer -->
-    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      <!-- effect goes here: -->
-    <FaultyTerminal
-      scale={3}
-      gridMul={[2, 1]}
-      digitSize={1.2}
-      timeScale={1}
-      pause={false}
-      scanlineIntensity={0.5}
-      glitchAmount={1}
-      flickerAmount={0.5}
-      noiseAmp={1}
-      chromaticAberration={0}
-      dither={0}
-      curvature={0.1}
-      tint="#6fd136"
-      mouseReact={false}
-      mouseStrength={0}
-      pageLoadAnimation={true}
-      brightness={0.8}
-      client:idle
-      client:only
-    />
+    <div class={backgroundLayerClass}>
+      <div class="absolute inset-0 bg-black" />
+      <div class="bh-background-canvas absolute inset-0">
+        <BlackHoleShader
+          showControls={false}
+          interactive={false}
+          forceActiveRender={true}
+          idleRenderIntervalMs={0}
+          animationMode={shaderAnimationMode}
+          animationRoute={Astro.url.pathname}
+          animationAutoplay={!noRouteAnimation}
+          quality="performance"
+          maxDevicePixelRatio={0.85}
+          sceneScale={0.3}
+          prepassScale={0.25}
+          bloomScale={0.25}
+          timeScale={2}
+          exposure={2}
+          bloomStrength={0}
+          temporalJitter={0}
+          glyphPreset="custom"
+          customGlyphs="voidCG08AA"
+          textSize={10}
+          brightness={0}
+          contrast={1}
+          initialCameraPosition={[11.256, 4.159, 18.440]}
+          initialCameraForward={[-0.566, -0.067, -0.822]}
+          initialUniverseSign={1}
+          className="bh-layout-shader h-full w-full"
+          client:only="react"
+          transition:persist="black-hole-background"
+        />
+      </div>
   </div>
 
   <!-- Foreground content -->
-  <div class="relative z-10 xl:w-220 lg:w-4/5 w-full md:px-4 mx-auto">
-  <div
-    class="
-      mt-6 rounded-2xl
-      bg-black/50
-      backdrop-blur-xl
-      backdrop-saturate-150
-      border border-white/10
-      shadow-2xl
-    "
-  >
-    <Header navbarActiveItemID={navbarActiveItemID} />
+  <div class={contentWrapperClass}>
+  <div class={shellClass}>
+    <Header navbarActiveItemID={navbarActiveItemID} disableClock={noClock} />
 
     <main id="main" class="px-4 md:px-8 pb-12 pt-4">
       <slot />
     </main>
   </div>
 </div>
+
+<script>
+  function applyBlackHolePerfFlags() {
+    const flags = new Set(
+      (new URLSearchParams(window.location.search).get("bhPerf") ?? "")
+        .split(",")
+        .map((flag) => flag.trim())
+        .filter(Boolean),
+    );
+
+    document.body.dataset.bhPerf = Array.from(flags).join(",");
+    document.body.classList.toggle(
+      "bh-perf-opaque-content",
+      flags.has("opaque-content"),
+    );
+    document
+      .querySelector(".bh-foreground-layer")
+      ?.classList.toggle("hidden", flags.has("hide-content"));
+  }
+
+  applyBlackHolePerfFlags();
+  document.addEventListener("astro:page-load", applyBlackHolePerfFlags);
+</script>
 
 </body>
 </html>

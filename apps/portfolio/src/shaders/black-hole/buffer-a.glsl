@@ -1252,7 +1252,7 @@ TraceResult TraceRay(vec2 FragUv, vec2 Resolution, mat4 iInverseCamRot, vec4 iBl
 
     float Fov = tan(iFovRadians / 2.0);
     vec2 Jitter = vec2(RandomStep(FragUv, fract(iTime * 1.0 + 0.5)), RandomStep(FragUv, fract(iTime * 1.0))) / Resolution;
-    vec3 ViewDirLocal = FragUvToDir(FragUv + 0.25 * Jitter, Fov, Resolution); 
+    vec3 ViewDirLocal = FragUvToDir(FragUv + uTemporalJitter * Jitter, Fov, Resolution); 
 
     float iSpinclamp = clamp(iSpin, -0.99, 0.99); float a2 = iSpinclamp * iSpinclamp; float abs_a = abs(iSpinclamp);
     float common_term = pow(1.0 - a2, 1.0/3.0); float Z1 = 1.0 + common_term * (pow(1.0 + abs_a, 1.0/3.0) + pow(1.0 - abs_a, 1.0/3.0));
@@ -1731,21 +1731,14 @@ void mainImage( out vec4 FragColor, in vec2 FragCoord )
     vec2 Resolution = iResolution.xy;
     vec2 Uv = FragCoord.xy / Resolution;
     
-    // 读取 Buffer B 相机数据
-    int iBufWidth = int(iChannelResolution[2].x);
-    // 注意：假设 Buffer B 绑定在 iChannel2（视你的 Shadertoy 纹理槽设置而定）
-    vec3 CamPosWorld   = texelFetch(iChannel2, ivec2(iBufWidth - 3, 0), 0).xyz;
-    vec3 CamRightWorld = texelFetch(iChannel2, ivec2(iBufWidth - 2, 0), 0).xyz;
-    vec3 CamUpWorld    = texelFetch(iChannel2, ivec2(iBufWidth - 1, 0), 0).xyz;
-    float iUniverseSign = texelFetch(iChannel2, ivec2(iBufWidth - 6, 0), 0).y;
-    
+    // The WebGL port keeps camera state on the CPU so the editor fields,
+    // homepage defaults, optimized path, and fallback path all use one source.
+    vec3 CamPosWorld = uCameraPosition;
+    vec3 CamRightWorld = normalize(uCameraRight);
+    vec3 CamUpWorld = normalize(uCameraUp);
+    float iUniverseSign = uUniverseSign;
+
     if (iUniverseSign == 0.0) iUniverseSign = 1.0;
-    if (iFrame <= 5 || length(CamRightWorld) < 0.01) {
-        CamPosWorld = vec3(-2.0, -3.6, 22.0); 
-        vec3 fwd = vec3(0.0, 0.15, -1.0);
-        CamRightWorld = normalize(cross(fwd, vec3(-0.5, 1.0, 0.0)));
-        CamUpWorld    = normalize(cross(CamRightWorld, fwd));
-    }
     vec3 CamBackWorld = normalize(cross(CamRightWorld, CamUpWorld));
     
     mat3 CamRotMat = mat3(CamRightWorld, CamUpWorld, CamBackWorld);
@@ -1761,7 +1754,7 @@ void mainImage( out vec4 FragColor, in vec2 FragCoord )
 
     vec2 Jitter = vec2(RandomStep(Uv, fract(iTime * 1.0 + 0.5)), RandomStep(Uv, fract(iTime * 1.0))) / Resolution;
 
-    TraceResult res = TraceRay(Uv + 0.5 * Jitter, Resolution,
+    TraceResult res = TraceRay(Uv + uTemporalJitter * Jitter, Resolution,
                                iInverseCamRot, iBlackHoleRelativePosRs,
                                iBlackHoleRelativeDiskNormal, iBlackHoleRelativeDiskTangen,
                                iUniverseSign);

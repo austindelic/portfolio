@@ -1,6 +1,23 @@
-import { ChevronDown, ChevronUp, SlidersHorizontal, Type } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+	ChevronDown,
+	ChevronUp,
+	Copy,
+	Pause,
+	Play,
+	RotateCcw,
+	SlidersHorizontal,
+	Type,
+} from "lucide-react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import {
+	BLACK_HOLE_ANIMATION_ROUTE_OPTIONS,
+	BLACK_HOLE_ANIMATION_ROUTES,
+	type BlackHoleAnimationKeyframe,
+	type BlackHoleAnimationRouteKey,
+	getBlackHoleRouteAnimation,
+	normalizeBlackHoleAnimationRoute,
+} from "../config/black-hole-animation";
 import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
 import bloomSource from "../shaders/black-hole/bloom.glsl?raw";
 import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
@@ -18,6 +35,10 @@ type AsciiCellSize = {
 
 type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
 type PaletteMode = "source" | "custom";
+type QualityPreset = "performance" | "balanced" | "visual" | "custom";
+type QualityProp = Exclude<QualityPreset, "custom"> | number;
+type AnimationMode = "off" | "route" | "editor";
+type AnimationPhase = "off" | "intro" | "transition" | "idle";
 type FontFamily =
 	| "Departure Mono"
 	| "DSEG14Modern"
@@ -29,6 +50,8 @@ type ShaderControls = {
 	timeScale: number;
 	exposure: number;
 	bloomStrength: number;
+	temporalJitter: number;
+	invertControls: boolean;
 	paletteMode: PaletteMode;
 	shadowColor: string;
 	midColor: string;
@@ -41,8 +64,20 @@ type ShaderControls = {
 	contrast: number;
 };
 
+type RenderSettings = {
+	asciiEnabled: boolean;
+	qualityPreset: QualityPreset;
+	qualityValue: number;
+	maxDevicePixelRatio: number;
+	sceneScale: number;
+	prepassScale: number;
+	bloomScale: number;
+	resolutionScale: number;
+};
+
 type GlyphAtlasConfig = {
 	glyphs: string;
+	glyphCount: number;
 	fontFamily: FontFamily;
 	textSize: number;
 	cellSize: AsciiCellSize;
@@ -53,6 +88,7 @@ type RenderUniforms = {
 	asciiCellSize: AsciiCellSize;
 	asciiMix: number;
 	glyphCount: number;
+	temporalJitter: number;
 	exposure: number;
 	bloomStrength: number;
 	asciiBrightness: number;
@@ -112,6 +148,7 @@ type ProgramPass = {
 		uCameraUp: WebGLUniformLocation | null;
 		uUniverseSign: WebGLUniformLocation | null;
 		uQuality: WebGLUniformLocation | null;
+		uTemporalJitter: WebGLUniformLocation | null;
 		uBlendWeight: WebGLUniformLocation | null;
 		uBloomMode: WebGLUniformLocation | null;
 		uAsciiCellSize: WebGLUniformLocation | null;
@@ -176,7 +213,10 @@ type BlackHoleStats = {
 	mode: "optimized" | "fallback";
 	frame: number;
 	frameTimeMs: number;
+	cpuAverageFrameTimeMs: number;
 	averageFrameTimeMs: number;
+	fps: number;
+	reactRenderCount: number;
 	dpr: number;
 	prepassScale: number;
 	bloomScale: number;
@@ -193,9 +233,13 @@ type BlackHoleStats = {
 	bloomHeight: number;
 	cameraPosition: Vec3;
 	cameraForward: Vec3;
+	universeSign: number;
+	movementSpeed: number;
 	timeScale: number;
 	exposure: number;
 	bloomStrength: number;
+	temporalJitter: number;
+	invertControls: boolean;
 	paletteMode: PaletteMode;
 	glyphCount: number;
 	fontFamily: FontFamily;
@@ -203,16 +247,33 @@ type BlackHoleStats = {
 	asciiBrightness: number;
 	asciiContrast: number;
 	shaderTime: number;
+	qualityPreset: QualityPreset;
+	qualityValue: number;
+	maxDevicePixelRatio: number;
+	resolutionScale: number;
 	fallbackReason: string | null;
+	animationMode: AnimationMode;
+	animationRoute: BlackHoleAnimationRouteKey;
+	animationPhase: AnimationPhase;
+	animationPlaying: boolean;
+	animationFrameIndex: number;
+	animationSequenceTime: number;
 };
 
 type Props = {
 	className?: string;
-	quality?: "balanced" | "performance" | "visual" | number;
+	showControls?: boolean;
+	interactive?: boolean;
+	idleRenderIntervalMs?: number;
+	forceActiveRender?: boolean;
+	quality?: QualityProp;
 	resolutionScale?: number;
 	prepassScale?: number;
 	bloomScale?: number;
 	maxDevicePixelRatio?: number;
+	initialCameraPosition?: Vec3;
+	initialCameraForward?: Vec3;
+	initialUniverseSign?: number;
 	asciiEnabled?: boolean;
 	asciiCellSize?: AsciiCellSize;
 	asciiMix?: number;
@@ -220,6 +281,8 @@ type Props = {
 	timeScale?: number;
 	exposure?: number;
 	bloomStrength?: number;
+	temporalJitter?: number;
+	invertControls?: boolean;
 	paletteMode?: PaletteMode;
 	shadowColor?: string;
 	midColor?: string;
@@ -230,12 +293,45 @@ type Props = {
 	textSize?: number;
 	brightness?: number;
 	contrast?: number;
+	animationMode?: AnimationMode;
+	animationRoute?: string;
+	animationAutoplay?: boolean;
 	debugStats?: boolean;
+};
+
+type RuntimeSnapshot = {
+	cameraPosition?: Vec3;
+	cameraForward?: Vec3;
+	universeSign?: number;
+	shaderTime?: number;
+	movementSpeed?: number;
+};
+
+type PersistentAnimationSnapshot = Required<RuntimeSnapshot> & {
+	route: BlackHoleAnimationRouteKey;
+};
+
+type CameraEditorApi = {
+	applyPosition: (value: string) => boolean;
+	applyForward: (value: string) => boolean;
+	applyUniverse: (value: string) => boolean;
+	sync: () => void;
+};
+
+type AnimationEditorApi = {
+	play: () => void;
+	pause: () => void;
+	restartIntro: () => void;
+	previewIdle: () => void;
+	setRoute: (route: BlackHoleAnimationRouteKey) => void;
+	currentKeyframe: () => string;
+	routeConfig: () => string;
 };
 
 declare global {
 	interface Window {
 		__blackHoleStats?: BlackHoleStats;
+		__blackHoleAnimationSnapshot?: PersistentAnimationSnapshot;
 	}
 }
 
@@ -266,6 +362,7 @@ uniform vec3 uCameraRight;
 uniform vec3 uCameraUp;
 uniform float uUniverseSign;
 uniform float uQuality;
+uniform float uTemporalJitter;
 uniform float uBlendWeight;
 uniform int uBloomMode;
 uniform vec2 uAsciiCellSize;
@@ -304,7 +401,7 @@ TraceResult TraceFromCamera(vec2 uv, vec2 resolution, float jitterScale, out mat
 	BuildCameraFrame(inverseCamRot, relativePos, relativeDiskNormal, relativeDiskTangent, mapCamDir);
 
 	vec2 jitter = vec2(RandomStep(uv, fract(iTime * 1.0 + 0.5)), RandomStep(uv, fract(iTime * 1.0))) / resolution;
-	return TraceRay(uv + jitterScale * jitter, resolution, inverseCamRot, relativePos, relativeDiskNormal, relativeDiskTangent, uUniverseSign);
+	return TraceRay(uv + jitterScale * uTemporalJitter * jitter, resolution, inverseCamRot, relativePos, relativeDiskNormal, relativeDiskTangent, uUniverseSign);
 }
 
 vec4 FinalizeTrace(TraceResult res, vec2 uv, mat4 inverseCamRot, vec3 mapCamDir)
@@ -462,17 +559,22 @@ const FALLBACK_CHANNEL_RESOLUTIONS = new Float32Array(12);
 const CONTROL_KEY_CODES = new Set([65, 68, 69, 70, 81, 82, 83, 87]);
 
 const MOVE_SPEED = 2.5;
+const MOVE_SPEED_FACTOR = 1.25;
 const MOUSE_SENSITIVITY = 0.003;
 const ROLL_SPEED = 2.0;
 const FRAME_TARGET_MS = 22;
-const MIN_PREPASS_SCALE = 0.25;
-const MAX_PREPASS_SCALE = 0.67;
+const MIN_RENDER_SCALE = 0.01;
+const MIN_DPR = 0.01;
+const MIN_TEXT_SIZE = 1;
+const MIN_QUALITY_VALUE = 0.01;
+const MAX_GLYPH_ATLAS_DIMENSION = 4096;
+const MIN_PREPASS_SCALE = MIN_RENDER_SCALE;
 const DIRECT_FALLBACK_DPR = 0.85;
 const IDLE_PREPASS_STRIDE = 4;
 const ACTIVE_PREPASS_STRIDE = 2;
 const BLOOM_FRAME_STRIDE = 3;
-const IDLE_RENDER_INTERVAL_MS = 24;
-const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 8, y: 12 };
+const DEFAULT_IDLE_RENDER_INTERVAL_MS = 24;
+const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 7, y: 10 };
 const MAX_GLYPHS = 96;
 const GLYPH_PRESETS: Record<Exclude<GlyphPreset, "custom">, string> = {
 	gargantua: " CGO08@",
@@ -488,26 +590,29 @@ const FONT_OPTIONS: FontFamily[] = [
 	"monospace",
 ];
 const DEFAULT_SHADER_CONTROLS: ShaderControls = {
-	timeScale: 1,
-	exposure: 1,
-	bloomStrength: 1,
+	timeScale: 2,
+	exposure: 2,
+	bloomStrength: 0,
+	temporalJitter: 0,
+	invertControls: false,
 	paletteMode: "source",
 	shadowColor: "#08162d",
 	midColor: "#35c7ff",
 	highlightColor: "#fffaf2",
-	glyphPreset: "gargantua",
-	customGlyphs: GLYPH_PRESETS.gargantua,
+	glyphPreset: "custom",
+	customGlyphs: "voidCG08AA",
 	fontFamily: "Departure Mono",
-	textSize: 12,
+	textSize: 10,
 	brightness: 0,
 	contrast: 1,
 };
 const DEFAULT_RENDER_UNIFORMS: RenderUniforms = {
 	asciiCellSize: DEFAULT_ASCII_CELL_SIZE,
 	asciiMix: 1,
-	glyphCount: GLYPH_PRESETS.gargantua.length,
-	exposure: 1,
-	bloomStrength: 1,
+	glyphCount: 10,
+	temporalJitter: 0,
+	exposure: 2,
+	bloomStrength: 0,
 	asciiBrightness: 0,
 	asciiContrast: 1,
 	paletteMode: 0,
@@ -515,6 +620,15 @@ const DEFAULT_RENDER_UNIFORMS: RenderUniforms = {
 	midColor: [0.207, 0.78, 1],
 	highlightColor: [1, 0.98, 0.949],
 };
+
+function glyphControlsKey(controls: ShaderControls): string {
+	return [
+		controls.glyphPreset,
+		controls.customGlyphs,
+		controls.fontFamily,
+		controls.textSize,
+	].join("\n");
+}
 
 function add(a: Vec3, b: Vec3): Vec3 {
 	return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -544,6 +658,42 @@ function length(v: Vec3): number {
 	return Math.hypot(v[0], v[1], v[2]);
 }
 
+function copyVec3Into(target: Vec3, source: Vec3): Vec3 {
+	target[0] = source[0];
+	target[1] = source[1];
+	target[2] = source[2];
+	return target;
+}
+
+function cloneVec3(source: Vec3): Vec3 {
+	return [source[0], source[1], source[2]];
+}
+
+function normalizeInto(target: Vec3, source: Vec3): Vec3 {
+	const magnitude = length(source);
+	if (magnitude < 1e-9) {
+		target[0] = 0;
+		target[1] = 0;
+		target[2] = 0;
+		return target;
+	}
+	const scaleValue = 1 / magnitude;
+	target[0] = source[0] * scaleValue;
+	target[1] = source[1] * scaleValue;
+	target[2] = source[2] * scaleValue;
+	return target;
+}
+
+function crossInto(target: Vec3, a: Vec3, b: Vec3): Vec3 {
+	const x = a[1] * b[2] - a[2] * b[1];
+	const y = a[2] * b[0] - a[0] * b[2];
+	const z = a[0] * b[1] - a[1] * b[0];
+	target[0] = x;
+	target[1] = y;
+	target[2] = z;
+	return target;
+}
+
 function normalize(v: Vec3): Vec3 {
 	const magnitude = length(v);
 	if (magnitude < 1e-9) return [0, 0, 0];
@@ -565,10 +715,29 @@ function rotateAxis(v: Vec3, axis: Vec3, angle: number): Vec3 {
 	];
 }
 
-function createInitialCamera(): CameraState {
-	const position: Vec3 = [-2.0, -3.6, 22.0];
-	const forward = normalize([0.0, 0.15, -1.0]);
-	const right = normalize(cross(forward, [-0.5, 1.0, 0.0]));
+function coerceVec3(value: Vec3 | undefined, fallback: Vec3): Vec3 {
+	if (!value || value.some((component) => !Number.isFinite(component))) {
+		return [...fallback];
+	}
+
+	return [value[0], value[1], value[2]];
+}
+
+function createInitialCamera({
+	position: initialPosition,
+	forward: initialForward,
+	universeSign,
+}: {
+	position?: Vec3;
+	forward?: Vec3;
+	universeSign?: number;
+} = {}): CameraState {
+	const position = coerceVec3(initialPosition, [-2.0, -3.6, 22.0]);
+	let forward = normalize(coerceVec3(initialForward, [0.0, 0.15, -1.0]));
+	if (length(forward) < 1e-9) forward = normalize([0.0, 0.15, -1.0]);
+	let right = normalize(cross(forward, [-0.5, 1.0, 0.0]));
+	if (length(right) < 1e-9) right = normalize(cross(forward, [0.0, 1.0, 0.0]));
+	if (length(right) < 1e-9) right = normalize(cross(forward, [1.0, 0.0, 0.0]));
 	const up = normalize(cross(right, forward));
 
 	return {
@@ -576,10 +745,573 @@ function createInitialCamera(): CameraState {
 		right,
 		up,
 		forward,
-		universeSign: 1,
+		universeSign: universeSign !== undefined && universeSign < 0 ? -1 : 1,
 		pendingYaw: 0,
 		pendingPitch: 0,
 	};
+}
+
+function setCameraForward(camera: CameraState, forward: Vec3) {
+	normalizeInto(camera.forward, forward);
+	if (length(camera.forward) < 1e-9)
+		normalizeInto(camera.forward, [0, 0.15, -1]);
+	crossInto(camera.right, camera.forward, [-0.5, 1, 0]);
+	normalizeInto(camera.right, camera.right);
+	if (length(camera.right) < 1e-9) {
+		crossInto(camera.right, camera.forward, [0, 1, 0]);
+		normalizeInto(camera.right, camera.right);
+	}
+	if (length(camera.right) < 1e-9) {
+		crossInto(camera.right, camera.forward, [1, 0, 0]);
+		normalizeInto(camera.right, camera.right);
+	}
+	crossInto(camera.up, camera.right, camera.forward);
+	normalizeInto(camera.up, camera.up);
+	camera.pendingYaw = 0;
+	camera.pendingPitch = 0;
+}
+
+function formatCameraNumber(value: number): string {
+	const normalizedValue = Math.abs(value) < 0.0005 ? 0 : value;
+	return normalizedValue.toFixed(3);
+}
+
+function formatCameraVec3(value: Vec3): string {
+	return `[${value.map(formatCameraNumber).join(", ")}]`;
+}
+
+function parseCameraVec3(value: string): Vec3 | null {
+	const matches = value.match(/[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/gi);
+	if (!matches || matches.length !== 3) return null;
+
+	const parsed = matches.map(Number);
+	if (parsed.some((component) => !Number.isFinite(component))) return null;
+
+	return [parsed[0], parsed[1], parsed[2]];
+}
+
+function parseUniverseSign(value: string): number | null {
+	const parsed = Number(value.trim());
+	if (!Number.isFinite(parsed)) return null;
+	return parsed < 0 ? -1 : 1;
+}
+
+function cameraDefaultsKey(
+	position: Vec3 | undefined,
+	forward: Vec3 | undefined,
+	universeSign: number | undefined,
+): string {
+	return [
+		position?.map(String).join(",") ?? "",
+		forward?.map(String).join(",") ?? "",
+		universeSign ?? "",
+	].join("|");
+}
+
+function lerpNumber(a: number, b: number, t: number): number {
+	return a + (b - a) * t;
+}
+
+function lerpVec3Into(target: Vec3, a: Vec3, b: Vec3, t: number): Vec3 {
+	target[0] = lerpNumber(a[0], b[0], t);
+	target[1] = lerpNumber(a[1], b[1], t);
+	target[2] = lerpNumber(a[2], b[2], t);
+	return target;
+}
+
+function catmullRomVec3Into(
+	target: Vec3,
+	p0: Vec3,
+	p1: Vec3,
+	p2: Vec3,
+	p3: Vec3,
+	t: number,
+): Vec3 {
+	const t2 = t * t;
+	const t3 = t2 * t;
+	target[0] =
+		0.5 *
+		(2 * p1[0] +
+			(-p0[0] + p2[0]) * t +
+			(2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+			(-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3);
+	target[1] =
+		0.5 *
+		(2 * p1[1] +
+			(-p0[1] + p2[1]) * t +
+			(2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+			(-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3);
+	target[2] =
+		0.5 *
+		(2 * p1[2] +
+			(-p0[2] + p2[2]) * t +
+			(2 * p0[2] - 5 * p1[2] + 4 * p2[2] - p3[2]) * t2 +
+			(-p0[2] + 3 * p1[2] - 3 * p2[2] + p3[2]) * t3);
+	return target;
+}
+
+function smootherStep(t: number): number {
+	const x = clamp(t, 0, 1);
+	return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+function easeAnimationValue(
+	t: number,
+	ease: BlackHoleAnimationKeyframe["ease"],
+): number {
+	const x = clamp(t, 0, 1);
+	if (ease === "linear") return x;
+	if (ease === "smoothstep") return x * x * (3 - 2 * x);
+	if (ease === "easeInOutCubic") {
+		return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
+	}
+	return smootherStep(x);
+}
+
+function keyframeDuration(frame: BlackHoleAnimationKeyframe): number {
+	return Math.max(0.001, finiteNumber(frame.duration, 0.001));
+}
+
+function animationLoopDuration(sequence: BlackHoleAnimationKeyframe[]): number {
+	if (sequence.length < 2) return 0;
+	let total = keyframeDuration(sequence[0]);
+	for (let index = 1; index < sequence.length; index += 1) {
+		total += keyframeDuration(sequence[index]);
+	}
+	return total;
+}
+
+function animationOneShotDuration(
+	sequence: BlackHoleAnimationKeyframe[],
+): number {
+	if (sequence.length < 2) return 0;
+	let total = 0;
+	for (let index = 1; index < sequence.length; index += 1) {
+		total += keyframeDuration(sequence[index]);
+	}
+	return total;
+}
+
+function modularIndex(index: number, lengthValue: number): number {
+	return ((index % lengthValue) + lengthValue) % lengthValue;
+}
+
+function numberVisualValue(
+	previous: number | undefined,
+	next: number | undefined,
+	fallback: number | undefined,
+	t: number,
+): number | undefined {
+	if (previous === undefined && next === undefined) return undefined;
+	const from = finiteNumber(previous ?? fallback, fallback ?? 0);
+	const to = finiteNumber(next ?? previous ?? fallback, from);
+	return lerpNumber(from, to, t);
+}
+
+function discreteVisualValue<T>(
+	previous: T | undefined,
+	next: T | undefined,
+	t: number,
+): T | undefined {
+	if (previous === undefined && next === undefined) return undefined;
+	return t >= 0.999 ? (next ?? previous) : (previous ?? next);
+}
+
+function interpolateAnimationSegmentInto(
+	output: BlackHoleAnimationKeyframe,
+	sequence: BlackHoleAnimationKeyframe[],
+	targetIndex: number,
+	t: number,
+	loop: boolean,
+	baseControls: ShaderControls,
+	baseAsciiEnabled: boolean,
+): BlackHoleAnimationKeyframe {
+	const easedT = easeAnimationValue(t, sequence[targetIndex]?.ease);
+	const lengthValue = sequence.length;
+	const previousIndex = loop
+		? modularIndex(targetIndex - 1, lengthValue)
+		: Math.max(0, targetIndex - 1);
+	const p0Index = loop
+		? modularIndex(targetIndex - 2, lengthValue)
+		: Math.max(0, targetIndex - 2);
+	const p3Index = loop
+		? modularIndex(targetIndex + 1, lengthValue)
+		: Math.min(lengthValue - 1, targetIndex + 1);
+	const previous = sequence[previousIndex];
+	const next = sequence[targetIndex];
+
+	if (loop || (targetIndex > 1 && targetIndex < lengthValue - 1)) {
+		catmullRomVec3Into(
+			output.position,
+			sequence[p0Index].position,
+			previous.position,
+			next.position,
+			sequence[p3Index].position,
+			easedT,
+		);
+	} else {
+		lerpVec3Into(output.position, previous.position, next.position, easedT);
+	}
+
+	lerpVec3Into(output.forward, previous.forward, next.forward, easedT);
+	normalizeInto(output.forward, output.forward);
+	if (length(output.forward) <= 1e-9) {
+		normalizeInto(output.forward, next.forward);
+	}
+
+	output.duration = next.duration;
+	output.universeSign =
+		easedT >= 0.5 ? next.universeSign : previous.universeSign;
+	output.ease = next.ease;
+	output.timeScale = numberVisualValue(
+		previous.timeScale,
+		next.timeScale,
+		baseControls.timeScale,
+		easedT,
+	);
+	output.exposure = numberVisualValue(
+		previous.exposure,
+		next.exposure,
+		baseControls.exposure,
+		easedT,
+	);
+	output.bloomStrength = numberVisualValue(
+		previous.bloomStrength,
+		next.bloomStrength,
+		baseControls.bloomStrength,
+		easedT,
+	);
+	output.temporalJitter = numberVisualValue(
+		previous.temporalJitter,
+		next.temporalJitter,
+		baseControls.temporalJitter,
+		easedT,
+	);
+	output.asciiEnabled =
+		discreteVisualValue(previous.asciiEnabled, next.asciiEnabled, easedT) ??
+		baseAsciiEnabled;
+	output.textSize = numberVisualValue(
+		previous.textSize,
+		next.textSize,
+		baseControls.textSize,
+		easedT,
+	);
+	output.brightness = numberVisualValue(
+		previous.brightness,
+		next.brightness,
+		baseControls.brightness,
+		easedT,
+	);
+	output.contrast = numberVisualValue(
+		previous.contrast,
+		next.contrast,
+		baseControls.contrast,
+		easedT,
+	);
+	output.glyphPreset = discreteVisualValue(
+		previous.glyphPreset,
+		next.glyphPreset,
+		easedT,
+	);
+	output.customGlyphs = discreteVisualValue(
+		previous.customGlyphs,
+		next.customGlyphs,
+		easedT,
+	);
+	output.paletteMode = discreteVisualValue(
+		previous.paletteMode,
+		next.paletteMode,
+		easedT,
+	);
+	output.shadowColor = discreteVisualValue(
+		previous.shadowColor,
+		next.shadowColor,
+		easedT,
+	);
+	output.midColor = discreteVisualValue(
+		previous.midColor,
+		next.midColor,
+		easedT,
+	);
+	output.highlightColor = discreteVisualValue(
+		previous.highlightColor,
+		next.highlightColor,
+		easedT,
+	);
+
+	return output;
+}
+
+function copyAnimationFrameInto(
+	output: BlackHoleAnimationKeyframe,
+	frame: BlackHoleAnimationKeyframe,
+): BlackHoleAnimationKeyframe {
+	output.duration = frame.duration;
+	copyVec3Into(output.position, frame.position);
+	copyVec3Into(output.forward, frame.forward);
+	output.universeSign = frame.universeSign;
+	output.ease = frame.ease;
+	output.timeScale = frame.timeScale;
+	output.exposure = frame.exposure;
+	output.bloomStrength = frame.bloomStrength;
+	output.temporalJitter = frame.temporalJitter;
+	output.asciiEnabled = frame.asciiEnabled;
+	output.textSize = frame.textSize;
+	output.brightness = frame.brightness;
+	output.contrast = frame.contrast;
+	output.glyphPreset = frame.glyphPreset;
+	output.customGlyphs = frame.customGlyphs;
+	output.paletteMode = frame.paletteMode;
+	output.shadowColor = frame.shadowColor;
+	output.midColor = frame.midColor;
+	output.highlightColor = frame.highlightColor;
+	return output;
+}
+
+function evaluateAnimationSequenceInto(
+	output: {
+		frame: BlackHoleAnimationKeyframe | null;
+		frameIndex: number;
+		done: boolean;
+		sequenceTime: number;
+	},
+	scratchFrame: BlackHoleAnimationKeyframe,
+	{
+		sequence,
+		time,
+		loop,
+		baseControls,
+		baseAsciiEnabled,
+	}: {
+		sequence: BlackHoleAnimationKeyframe[];
+		time: number;
+		loop: boolean;
+		baseControls: ShaderControls;
+		baseAsciiEnabled: boolean;
+	},
+) {
+	if (sequence.length === 0) {
+		output.frame = null;
+		output.frameIndex = 0;
+		output.done = true;
+		output.sequenceTime = 0;
+		return output;
+	}
+	if (sequence.length === 1) {
+		output.frame = sequence[0];
+		output.frameIndex = 0;
+		output.done = true;
+		output.sequenceTime = 0;
+		return output;
+	}
+
+	if (loop) {
+		const total = animationLoopDuration(sequence);
+		const sequenceTime = total > 0 ? ((time % total) + total) % total : 0;
+		let cursor = 0;
+		for (let index = 1; index < sequence.length; index += 1) {
+			const duration = keyframeDuration(sequence[index]);
+			if (sequenceTime <= cursor + duration) {
+				output.frame = interpolateAnimationSegmentInto(
+					scratchFrame,
+					sequence,
+					index,
+					(sequenceTime - cursor) / duration,
+					true,
+					baseControls,
+					baseAsciiEnabled,
+				);
+				output.frameIndex = index;
+				output.done = false;
+				output.sequenceTime = sequenceTime;
+				return output;
+			}
+			cursor += duration;
+		}
+
+		const duration = keyframeDuration(sequence[0]);
+		output.frame = interpolateAnimationSegmentInto(
+			scratchFrame,
+			sequence,
+			0,
+			(sequenceTime - cursor) / duration,
+			true,
+			baseControls,
+			baseAsciiEnabled,
+		);
+		output.frameIndex = 0;
+		output.done = false;
+		output.sequenceTime = sequenceTime;
+		return output;
+	}
+
+	const total = animationOneShotDuration(sequence);
+	if (time >= total) {
+		output.frame = copyAnimationFrameInto(
+			scratchFrame,
+			sequence[sequence.length - 1],
+		);
+		output.frameIndex = sequence.length - 1;
+		output.done = true;
+		output.sequenceTime = total;
+		return output;
+	}
+
+	let cursor = 0;
+	for (let index = 1; index < sequence.length; index += 1) {
+		const duration = keyframeDuration(sequence[index]);
+		if (time <= cursor + duration) {
+			output.frame = interpolateAnimationSegmentInto(
+				scratchFrame,
+				sequence,
+				index,
+				(time - cursor) / duration,
+				false,
+				baseControls,
+				baseAsciiEnabled,
+			);
+			output.frameIndex = index;
+			output.done = false;
+			output.sequenceTime = time;
+			return output;
+		}
+		cursor += duration;
+	}
+
+	output.frame = copyAnimationFrameInto(
+		scratchFrame,
+		sequence[sequence.length - 1],
+	);
+	output.frameIndex = sequence.length - 1;
+	output.done = true;
+	output.sequenceTime = total;
+	return output;
+}
+
+function writeAnimationControlsFromFrame(
+	target: ShaderControls,
+	baseControls: ShaderControls,
+	frame: BlackHoleAnimationKeyframe | null,
+): ShaderControls {
+	if (!frame) {
+		Object.assign(target, baseControls);
+		return target;
+	}
+
+	target.timeScale = finiteNumber(frame.timeScale, baseControls.timeScale);
+	target.exposure = finiteNumber(frame.exposure, baseControls.exposure);
+	target.bloomStrength = finiteNumber(
+		frame.bloomStrength,
+		baseControls.bloomStrength,
+	);
+	target.temporalJitter = floorNumber(
+		frame.temporalJitter ?? baseControls.temporalJitter,
+		0,
+		baseControls.temporalJitter,
+	);
+	target.invertControls = baseControls.invertControls;
+	target.paletteMode = frame.paletteMode ?? baseControls.paletteMode;
+	target.shadowColor = normalizeHexColor(
+		frame.shadowColor ?? baseControls.shadowColor,
+		baseControls.shadowColor,
+	);
+	target.midColor = normalizeHexColor(
+		frame.midColor ?? baseControls.midColor,
+		baseControls.midColor,
+	);
+	target.highlightColor = normalizeHexColor(
+		frame.highlightColor ?? baseControls.highlightColor,
+		baseControls.highlightColor,
+	);
+	target.glyphPreset = frame.glyphPreset ?? baseControls.glyphPreset;
+	target.customGlyphs = frame.customGlyphs ?? baseControls.customGlyphs;
+	target.fontFamily = baseControls.fontFamily;
+	target.textSize = floorNumber(
+		frame.textSize ?? baseControls.textSize,
+		MIN_TEXT_SIZE,
+		baseControls.textSize,
+	);
+	target.brightness = finiteNumber(frame.brightness, baseControls.brightness);
+	target.contrast = finiteNumber(frame.contrast, baseControls.contrast);
+	return target;
+}
+
+function applyAnimationCamera(
+	camera: CameraState,
+	frame: BlackHoleAnimationKeyframe | null,
+) {
+	if (!frame) return;
+	copyVec3Into(camera.position, frame.position);
+	setCameraForward(camera, frame.forward);
+	camera.universeSign = frame.universeSign < 0 ? -1 : 1;
+	camera.pendingYaw = 0;
+	camera.pendingPitch = 0;
+}
+
+function animationKeyframeFromCamera(
+	camera: CameraState,
+	controls: ShaderControls,
+	asciiEnabled: boolean,
+	duration = 0,
+): BlackHoleAnimationKeyframe {
+	return {
+		duration,
+		position: [...camera.position],
+		forward: [...camera.forward],
+		universeSign: camera.universeSign,
+		ease: "cinematic",
+		timeScale: controls.timeScale,
+		exposure: controls.exposure,
+		bloomStrength: controls.bloomStrength,
+		temporalJitter: controls.temporalJitter,
+		asciiEnabled,
+		textSize: controls.textSize,
+		brightness: controls.brightness,
+		contrast: controls.contrast,
+		glyphPreset: controls.glyphPreset,
+		customGlyphs: controls.customGlyphs,
+		paletteMode: controls.paletteMode,
+		shadowColor: controls.shadowColor,
+		midColor: controls.midColor,
+		highlightColor: controls.highlightColor,
+	};
+}
+
+function framesRoughlyEqual(
+	a: BlackHoleAnimationKeyframe,
+	b: BlackHoleAnimationKeyframe,
+): boolean {
+	return (
+		length(subtract(a.position, b.position)) < 0.001 &&
+		length(subtract(a.forward, b.forward)) < 0.001 &&
+		a.universeSign === b.universeSign
+	);
+}
+
+function buildRouteTransitionSequence(
+	current: BlackHoleAnimationKeyframe,
+	route: BlackHoleAnimationRouteKey,
+): BlackHoleAnimationKeyframe[] {
+	const config = getBlackHoleRouteAnimation(route);
+	const introStart = config.intro[0];
+	if (!introStart) return [current];
+
+	const sequence = [
+		current,
+		...config.transition.map((frame) => ({ ...frame })),
+	] satisfies BlackHoleAnimationKeyframe[];
+	const lastFrame = sequence[sequence.length - 1];
+	if (!framesRoughlyEqual(lastFrame, introStart)) {
+		sequence.push({
+			...introStart,
+			duration: Math.max(1.2, introStart.duration),
+		});
+	}
+	return sequence;
+}
+
+function stringifyAnimationValue(value: unknown): string {
+	return JSON.stringify(value, null, "\t");
 }
 
 function formatError(error: unknown): string {
@@ -588,6 +1320,19 @@ function formatError(error: unknown): string {
 
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
+}
+
+function finiteNumber(value: number | undefined, fallback: number): number {
+	return Number.isFinite(value) ? Number(value) : fallback;
+}
+
+function floorNumber(
+	value: number | undefined,
+	floor: number,
+	fallback = floor,
+): number {
+	const nextValue = finiteNumber(value, fallback);
+	return nextValue < floor ? floor : nextValue;
 }
 
 function sanitizeGlyphs(value: string): string {
@@ -620,21 +1365,40 @@ function glyphsForControls(controls: ShaderControls): string {
 	return sanitizeGlyphs(GLYPH_PRESETS[controls.glyphPreset]);
 }
 
-function cellSizeForText(textSize: number): AsciiCellSize {
-	const height = Math.round(clamp(textSize, 8, 28));
+function cellSizeForText(textSize: number, glyphCount: number): AsciiCellSize {
+	const requestedHeight = Math.max(
+		MIN_TEXT_SIZE,
+		Math.round(
+			floorNumber(textSize, MIN_TEXT_SIZE, DEFAULT_SHADER_CONTROLS.textSize),
+		),
+	);
+	const safeGlyphCount = Math.max(1, glyphCount);
+	const maxCellWidth = Math.max(
+		1,
+		Math.floor(MAX_GLYPH_ATLAS_DIMENSION / safeGlyphCount),
+	);
+	const requestedWidth = Math.max(1, Math.round(requestedHeight * 0.67));
+	const width = Math.min(requestedWidth, maxCellWidth);
+	const height = Math.min(
+		requestedHeight,
+		MAX_GLYPH_ATLAS_DIMENSION,
+		Math.max(MIN_TEXT_SIZE, Math.round(width / 0.67)),
+	);
 	return {
-		x: Math.max(4, Math.round(height * 0.67)),
-		y: Math.max(6, height),
+		x: width,
+		y: height,
 	};
 }
 
 function createGlyphAtlasConfig(controls: ShaderControls): GlyphAtlasConfig {
-	const textSize = Math.round(clamp(controls.textSize, 8, 28));
 	const glyphs = glyphsForControls(controls);
-	const cellSize = cellSizeForText(textSize);
+	const glyphCount = Array.from(glyphs).length;
+	const cellSize = cellSizeForText(controls.textSize, glyphCount);
+	const textSize = cellSize.y;
 
 	return {
 		glyphs,
+		glyphCount,
 		fontFamily: controls.fontFamily,
 		textSize,
 		cellSize,
@@ -657,24 +1421,37 @@ function hexToVec3(value: string, fallback: string): Vec3 {
 	];
 }
 
+function writeHexToVec3(target: Vec3, value: string, fallback: string): Vec3 {
+	const hex = normalizeHexColor(value, fallback);
+	const numberValue = Number.parseInt(hex.slice(1), 16);
+	target[0] = ((numberValue >> 16) & 255) / 255;
+	target[1] = ((numberValue >> 8) & 255) / 255;
+	target[2] = (numberValue & 255) / 255;
+	return target;
+}
+
 function createInitialControls(props: Props): ShaderControls {
 	return {
 		...DEFAULT_SHADER_CONTROLS,
-		timeScale: clamp(
+		timeScale: finiteNumber(
 			props.timeScale ?? DEFAULT_SHADER_CONTROLS.timeScale,
-			0,
-			2,
+			DEFAULT_SHADER_CONTROLS.timeScale,
 		),
-		exposure: clamp(
+		exposure: finiteNumber(
 			props.exposure ?? DEFAULT_SHADER_CONTROLS.exposure,
-			0.2,
-			2.5,
+			DEFAULT_SHADER_CONTROLS.exposure,
 		),
-		bloomStrength: clamp(
+		bloomStrength: finiteNumber(
 			props.bloomStrength ?? DEFAULT_SHADER_CONTROLS.bloomStrength,
-			0,
-			3,
+			DEFAULT_SHADER_CONTROLS.bloomStrength,
 		),
+		temporalJitter: floorNumber(
+			props.temporalJitter ?? DEFAULT_SHADER_CONTROLS.temporalJitter,
+			0,
+			DEFAULT_SHADER_CONTROLS.temporalJitter,
+		),
+		invertControls:
+			props.invertControls ?? DEFAULT_SHADER_CONTROLS.invertControls,
 		paletteMode: props.paletteMode ?? DEFAULT_SHADER_CONTROLS.paletteMode,
 		shadowColor: normalizeHexColor(
 			props.shadowColor ?? DEFAULT_SHADER_CONTROLS.shadowColor,
@@ -691,16 +1468,18 @@ function createInitialControls(props: Props): ShaderControls {
 		glyphPreset: props.glyphPreset ?? DEFAULT_SHADER_CONTROLS.glyphPreset,
 		customGlyphs: props.customGlyphs ?? DEFAULT_SHADER_CONTROLS.customGlyphs,
 		fontFamily: props.fontFamily ?? DEFAULT_SHADER_CONTROLS.fontFamily,
-		textSize: clamp(props.textSize ?? DEFAULT_SHADER_CONTROLS.textSize, 8, 28),
-		brightness: clamp(
-			props.brightness ?? DEFAULT_SHADER_CONTROLS.brightness,
-			-0.5,
-			0.5,
+		textSize: floorNumber(
+			props.textSize ?? DEFAULT_SHADER_CONTROLS.textSize,
+			MIN_TEXT_SIZE,
+			DEFAULT_SHADER_CONTROLS.textSize,
 		),
-		contrast: clamp(
+		brightness: finiteNumber(
+			props.brightness ?? DEFAULT_SHADER_CONTROLS.brightness,
+			DEFAULT_SHADER_CONTROLS.brightness,
+		),
+		contrast: finiteNumber(
 			props.contrast ?? DEFAULT_SHADER_CONTROLS.contrast,
-			0.25,
-			3,
+			DEFAULT_SHADER_CONTROLS.contrast,
 		),
 	};
 }
@@ -714,11 +1493,25 @@ function createRenderUniforms(
 	return {
 		asciiCellSize: atlasConfig.cellSize,
 		asciiMix: asciiEnabled ? clamp(asciiMix, 0, 1) : 0,
-		glyphCount: Math.max(1, Array.from(atlasConfig.glyphs).length),
-		exposure: clamp(controls.exposure, 0.2, 2.5),
-		bloomStrength: clamp(controls.bloomStrength, 0, 3),
-		asciiBrightness: clamp(controls.brightness, -0.5, 0.5),
-		asciiContrast: clamp(controls.contrast, 0.25, 3),
+		glyphCount: Math.max(1, atlasConfig.glyphCount),
+		exposure: finiteNumber(controls.exposure, DEFAULT_SHADER_CONTROLS.exposure),
+		bloomStrength: finiteNumber(
+			controls.bloomStrength,
+			DEFAULT_SHADER_CONTROLS.bloomStrength,
+		),
+		temporalJitter: floorNumber(
+			controls.temporalJitter,
+			0,
+			DEFAULT_SHADER_CONTROLS.temporalJitter,
+		),
+		asciiBrightness: finiteNumber(
+			controls.brightness,
+			DEFAULT_SHADER_CONTROLS.brightness,
+		),
+		asciiContrast: finiteNumber(
+			controls.contrast,
+			DEFAULT_SHADER_CONTROLS.contrast,
+		),
 		paletteMode: controls.paletteMode === "custom" ? 1 : 0,
 		shadowColor: hexToVec3(
 			controls.shadowColor,
@@ -730,6 +1523,56 @@ function createRenderUniforms(
 			DEFAULT_SHADER_CONTROLS.highlightColor,
 		),
 	};
+}
+
+function writeRenderUniforms(
+	target: RenderUniforms,
+	controls: ShaderControls,
+	atlasConfig: GlyphAtlasConfig,
+	asciiEnabled: boolean,
+	asciiMix: number,
+): RenderUniforms {
+	target.asciiCellSize = atlasConfig.cellSize;
+	target.asciiMix = asciiEnabled ? clamp(asciiMix, 0, 1) : 0;
+	target.glyphCount = Math.max(1, atlasConfig.glyphCount);
+	target.exposure = finiteNumber(
+		controls.exposure,
+		DEFAULT_SHADER_CONTROLS.exposure,
+	);
+	target.bloomStrength = finiteNumber(
+		controls.bloomStrength,
+		DEFAULT_SHADER_CONTROLS.bloomStrength,
+	);
+	target.temporalJitter = floorNumber(
+		controls.temporalJitter,
+		0,
+		DEFAULT_SHADER_CONTROLS.temporalJitter,
+	);
+	target.asciiBrightness = finiteNumber(
+		controls.brightness,
+		DEFAULT_SHADER_CONTROLS.brightness,
+	);
+	target.asciiContrast = finiteNumber(
+		controls.contrast,
+		DEFAULT_SHADER_CONTROLS.contrast,
+	);
+	target.paletteMode = controls.paletteMode === "custom" ? 1 : 0;
+	writeHexToVec3(
+		target.shadowColor,
+		controls.shadowColor,
+		DEFAULT_SHADER_CONTROLS.shadowColor,
+	);
+	writeHexToVec3(
+		target.midColor,
+		controls.midColor,
+		DEFAULT_SHADER_CONTROLS.midColor,
+	);
+	writeHexToVec3(
+		target.highlightColor,
+		controls.highlightColor,
+		DEFAULT_SHADER_CONTROLS.highlightColor,
+	);
+	return target;
 }
 
 function isControlKeyboardTarget(target: EventTarget | null): boolean {
@@ -748,6 +1591,7 @@ function resolveQualitySettings({
 	sceneScale,
 	maxDevicePixelRatio,
 	asciiEnabled = true,
+	resolutionScale = 1,
 }: Pick<
 	Props,
 	| "quality"
@@ -756,59 +1600,168 @@ function resolveQualitySettings({
 	| "sceneScale"
 	| "maxDevicePixelRatio"
 	| "asciiEnabled"
+	| "resolutionScale"
 >) {
 	if (typeof quality === "number") {
+		const qualityValue = floorNumber(quality, MIN_QUALITY_VALUE, 0.72);
 		return {
-			qualityValue: clamp(quality, 0.6, 1.15),
-			initialPrepassScale: clamp(
-				prepassScale ?? (asciiEnabled ? 0.3 * quality : 0.5 * quality),
+			qualityValue,
+			initialPrepassScale: floorNumber(
+				prepassScale ??
+					(asciiEnabled ? 0.3 * qualityValue : 0.5 * qualityValue),
 				MIN_PREPASS_SCALE,
-				MAX_PREPASS_SCALE,
 			),
-			bloomScale: clamp(bloomScale ?? (asciiEnabled ? 0.3 : 0.5), 0.25, 0.75),
-			sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.4 : 1), 0.25, 1),
-			maxDevicePixelRatio: maxDevicePixelRatio ?? (asciiEnabled ? 1 : 1.25),
+			bloomScale: floorNumber(
+				bloomScale ?? (asciiEnabled ? 0.3 : 0.5),
+				MIN_RENDER_SCALE,
+			),
+			sceneScale: floorNumber(
+				sceneScale ?? (asciiEnabled ? 0.4 : 1),
+				MIN_RENDER_SCALE,
+			),
+			maxDevicePixelRatio: floorNumber(
+				maxDevicePixelRatio ?? (asciiEnabled ? 1 : 1.25),
+				MIN_DPR,
+			),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
 		};
 	}
 
 	if (quality === "performance") {
 		return {
 			qualityValue: 0.65,
-			initialPrepassScale: clamp(
+			initialPrepassScale: floorNumber(
 				prepassScale ?? (asciiEnabled ? 0.25 : MIN_PREPASS_SCALE),
 				MIN_PREPASS_SCALE,
-				MAX_PREPASS_SCALE,
 			),
-			bloomScale: clamp(bloomScale ?? (asciiEnabled ? 0.25 : 0.35), 0.25, 0.75),
-			sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.28 : 0.8), 0.25, 1),
-			maxDevicePixelRatio: maxDevicePixelRatio ?? 1,
+			bloomScale: floorNumber(
+				bloomScale ?? (asciiEnabled ? 0.25 : 0.35),
+				MIN_RENDER_SCALE,
+			),
+			sceneScale: floorNumber(
+				sceneScale ?? (asciiEnabled ? 0.28 : 0.8),
+				MIN_RENDER_SCALE,
+			),
+			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 1, MIN_DPR),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
 		};
 	}
 
 	if (quality === "visual") {
 		return {
 			qualityValue: 1,
-			initialPrepassScale: clamp(
-				prepassScale ?? MAX_PREPASS_SCALE,
-				MIN_PREPASS_SCALE,
-				MAX_PREPASS_SCALE,
+			initialPrepassScale: floorNumber(prepassScale ?? 0.67, MIN_PREPASS_SCALE),
+			bloomScale: floorNumber(bloomScale ?? 0.67, MIN_RENDER_SCALE),
+			sceneScale: floorNumber(
+				sceneScale ?? (asciiEnabled ? 0.65 : 1),
+				MIN_RENDER_SCALE,
 			),
-			bloomScale: clamp(bloomScale ?? 0.67, 0.35, 0.75),
-			sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.65 : 1), 0.25, 1),
-			maxDevicePixelRatio: maxDevicePixelRatio ?? 1.5,
+			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 1.5, MIN_DPR),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
 		};
 	}
 
 	return {
 		qualityValue: 0.72,
-		initialPrepassScale: clamp(
+		initialPrepassScale: floorNumber(
 			prepassScale ?? (asciiEnabled ? 0.3 : MIN_PREPASS_SCALE),
 			MIN_PREPASS_SCALE,
-			MAX_PREPASS_SCALE,
 		),
-		bloomScale: clamp(bloomScale ?? (asciiEnabled ? 0.3 : 0.4), 0.25, 0.75),
-		sceneScale: clamp(sceneScale ?? (asciiEnabled ? 0.36 : 1), 0.25, 1),
-		maxDevicePixelRatio: maxDevicePixelRatio ?? (asciiEnabled ? 1 : 1.25),
+		bloomScale: floorNumber(
+			bloomScale ?? (asciiEnabled ? 0.3 : 0.4),
+			MIN_RENDER_SCALE,
+		),
+		sceneScale: floorNumber(
+			sceneScale ?? (asciiEnabled ? 0.36 : 1),
+			MIN_RENDER_SCALE,
+		),
+		maxDevicePixelRatio: floorNumber(
+			maxDevicePixelRatio ?? (asciiEnabled ? 1 : 1.25),
+			MIN_DPR,
+		),
+		resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+	};
+}
+
+function qualityPresetFromProp(
+	quality: QualityProp | undefined,
+): QualityPreset {
+	return typeof quality === "string" ? quality : "custom";
+}
+
+function createRenderSettingsFromQuality({
+	quality,
+	asciiEnabled,
+	prepassScale,
+	bloomScale,
+	sceneScale,
+	maxDevicePixelRatio,
+	resolutionScale,
+}: Pick<
+	Props,
+	| "quality"
+	| "asciiEnabled"
+	| "prepassScale"
+	| "bloomScale"
+	| "sceneScale"
+	| "maxDevicePixelRatio"
+	| "resolutionScale"
+>): RenderSettings {
+	const activeAsciiEnabled = asciiEnabled ?? true;
+	const resolved = resolveQualitySettings({
+		quality: quality ?? "balanced",
+		prepassScale,
+		bloomScale,
+		sceneScale,
+		maxDevicePixelRatio,
+		asciiEnabled: activeAsciiEnabled,
+		resolutionScale,
+	});
+
+	return {
+		asciiEnabled: activeAsciiEnabled,
+		qualityPreset: qualityPresetFromProp(quality ?? "balanced"),
+		qualityValue: resolved.qualityValue,
+		maxDevicePixelRatio: resolved.maxDevicePixelRatio,
+		sceneScale: resolved.sceneScale,
+		prepassScale: resolved.initialPrepassScale,
+		bloomScale: resolved.bloomScale,
+		resolutionScale: resolved.resolutionScale,
+	};
+}
+
+function createPresetRenderSettings(
+	preset: Exclude<QualityPreset, "custom">,
+	asciiEnabled: boolean,
+): Omit<RenderSettings, "asciiEnabled" | "qualityPreset"> {
+	const resolved = resolveQualitySettings({
+		quality: preset,
+		asciiEnabled,
+	});
+
+	return {
+		qualityValue: resolved.qualityValue,
+		maxDevicePixelRatio: resolved.maxDevicePixelRatio,
+		sceneScale: resolved.sceneScale,
+		prepassScale: resolved.initialPrepassScale,
+		bloomScale: resolved.bloomScale,
+		resolutionScale: resolved.resolutionScale,
+	};
+}
+
+function resolveRenderSettings(settings: RenderSettings) {
+	return {
+		...settings,
+		qualityValue: floorNumber(settings.qualityValue, MIN_QUALITY_VALUE, 0.72),
+		maxDevicePixelRatio: floorNumber(settings.maxDevicePixelRatio, MIN_DPR, 1),
+		sceneScale: floorNumber(settings.sceneScale, MIN_RENDER_SCALE, 1),
+		prepassScale: floorNumber(
+			settings.prepassScale,
+			MIN_PREPASS_SCALE,
+			MIN_PREPASS_SCALE,
+		),
+		bloomScale: floorNumber(settings.bloomScale, MIN_RENDER_SCALE, 0.3),
+		resolutionScale: floorNumber(settings.resolutionScale, MIN_RENDER_SCALE, 1),
 	};
 }
 
@@ -942,6 +1895,7 @@ function createPass(
 			uCameraUp: gl.getUniformLocation(program, "uCameraUp"),
 			uUniverseSign: gl.getUniformLocation(program, "uUniverseSign"),
 			uQuality: gl.getUniformLocation(program, "uQuality"),
+			uTemporalJitter: gl.getUniformLocation(program, "uTemporalJitter"),
 			uBlendWeight: gl.getUniformLocation(program, "uBlendWeight"),
 			uBloomMode: gl.getUniformLocation(program, "uBloomMode"),
 			uAsciiCellSize: gl.getUniformLocation(program, "uAsciiCellSize"),
@@ -1363,6 +2317,8 @@ function renderPass(
 		gl.uniform1f(pass.locations.uUniverseSign, camera.universeSign);
 	if (pass.locations.uQuality)
 		gl.uniform1f(pass.locations.uQuality, qualityValue);
+	if (pass.locations.uTemporalJitter)
+		gl.uniform1f(pass.locations.uTemporalJitter, renderUniforms.temporalJitter);
 	if (pass.locations.uBlendWeight)
 		gl.uniform1f(pass.locations.uBlendWeight, blendWeight);
 	if (pass.locations.uBloomMode)
@@ -1419,6 +2375,7 @@ function updateCamera(
 	camera: CameraState,
 	keyboardData: Uint8Array,
 	delta: number,
+	movementSpeed: number,
 ) {
 	if (camera.pendingYaw !== 0 || camera.pendingPitch !== 0) {
 		camera.forward = normalize(
@@ -1464,7 +2421,7 @@ function updateCamera(
 					: 0.1;
 		camera.position = add(
 			camera.position,
-			scale(normalize(moveDir), MOVE_SPEED * delta * speedScale),
+			scale(normalize(moveDir), movementSpeed * delta * speedScale),
 		);
 
 		const spinRadius = Math.abs(0.997114514 * 0.5);
@@ -1524,37 +2481,84 @@ function ControlPanel({
 	);
 }
 
-function RangeControl({
+function formatNumericInput(value: number): string {
+	if (!Number.isFinite(value)) return "";
+	if (Number.isInteger(value)) return String(value);
+	return String(Number(value.toFixed(4)));
+}
+
+function NumberControl({
 	label,
 	value,
 	min,
-	max,
-	step,
+	step = 0.01,
 	onChange,
-	formatValue = (nextValue) => nextValue.toFixed(2),
 }: {
 	label: string;
 	value: number;
-	min: number;
-	max: number;
-	step: number;
+	min?: number;
+	step?: number;
 	onChange: (value: number) => void;
-	formatValue?: (value: number) => string;
 }) {
+	const [draftValue, setDraftValue] = useState(() => formatNumericInput(value));
+
+	useEffect(() => {
+		setDraftValue(formatNumericInput(value));
+	}, [value]);
+
+	const applyDraft = (nextDraft: string) => {
+		setDraftValue(nextDraft);
+		const parsedValue = Number(nextDraft);
+		if (!Number.isFinite(parsedValue)) return;
+		onChange(min === undefined ? parsedValue : Math.max(min, parsedValue));
+	};
+
+	const syncFromValue = () => {
+		const parsedValue = Number(draftValue);
+		if (!Number.isFinite(parsedValue)) {
+			setDraftValue(formatNumericInput(value));
+			return;
+		}
+
+		const normalizedValue =
+			min === undefined ? parsedValue : Math.max(min, parsedValue);
+		onChange(normalizedValue);
+		setDraftValue(formatNumericInput(normalizedValue));
+	};
+
 	return (
 		<label className="grid gap-1 font-mono text-[11px] text-white/70">
-			<span className="flex items-center justify-between gap-3">
-				<span>{label}</span>
-				<span className="tabular-nums text-white/45">{formatValue(value)}</span>
-			</span>
+			<span>{label}</span>
 			<input
-				type="range"
+				type="number"
 				min={min}
-				max={max}
 				step={step}
-				value={value}
-				onChange={(event) => onChange(Number(event.currentTarget.value))}
-				className="h-4 w-full accent-cyan-300"
+				value={draftValue}
+				onChange={(event) => applyDraft(event.currentTarget.value)}
+				onBlur={syncFromValue}
+				className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
+			/>
+		</label>
+	);
+}
+
+function ToggleControl({
+	label,
+	checked,
+	onChange,
+}: {
+	label: string;
+	checked: boolean;
+	onChange: (checked: boolean) => void;
+}) {
+	return (
+		<label className="flex items-center justify-between gap-3 font-mono text-[11px] text-white/70">
+			<span>{label}</span>
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={(event) => onChange(event.currentTarget.checked)}
+				className="h-4 w-4 accent-cyan-300"
 			/>
 		</label>
 	);
@@ -1617,11 +2621,18 @@ function ColorControl({
 
 export default function BlackHoleShader({
 	className = "",
+	showControls = true,
+	interactive = true,
+	idleRenderIntervalMs = DEFAULT_IDLE_RENDER_INTERVAL_MS,
+	forceActiveRender = false,
 	quality = "balanced",
 	resolutionScale = 1,
 	prepassScale,
 	bloomScale,
 	maxDevicePixelRatio,
+	initialCameraPosition,
+	initialCameraForward,
+	initialUniverseSign,
 	asciiEnabled = true,
 	asciiCellSize = DEFAULT_ASCII_CELL_SIZE,
 	asciiMix = 1,
@@ -1629,6 +2640,8 @@ export default function BlackHoleShader({
 	timeScale,
 	exposure,
 	bloomStrength,
+	temporalJitter,
+	invertControls,
 	paletteMode,
 	shadowColor,
 	midColor,
@@ -1639,14 +2652,48 @@ export default function BlackHoleShader({
 	textSize,
 	brightness,
 	contrast,
+	animationMode = "off",
+	animationRoute,
+	animationAutoplay = true,
 	debugStats = false,
 }: Props) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const reactRenderCountRef = useRef(0);
 	const requestRenderRef = useRef<() => void>(() => {});
+	const animationEditorRef = useRef<AnimationEditorApi>({
+		play: () => {},
+		pause: () => {},
+		restartIntro: () => {},
+		previewIdle: () => {},
+		setRoute: () => {},
+		currentKeyframe: () => "",
+		routeConfig: () => "",
+	});
+	const cameraEditorRef = useRef<CameraEditorApi>({
+		applyPosition: () => false,
+		applyForward: () => false,
+		applyUniverse: () => false,
+		sync: () => {},
+	});
+	const cameraPositionInputRef = useRef<HTMLInputElement>(null);
+	const cameraForwardInputRef = useRef<HTMLInputElement>(null);
+	const cameraUniverseInputRef = useRef<HTMLInputElement>(null);
+	const runtimeSnapshotRef = useRef<RuntimeSnapshot>({});
+	const initialCameraKey = cameraDefaultsKey(
+		initialCameraPosition,
+		initialCameraForward,
+		initialUniverseSign,
+	);
+	const initialCameraKeyRef = useRef(initialCameraKey);
 	const initialPropsRef = useRef<Props>({
+		initialCameraPosition,
+		initialCameraForward,
+		initialUniverseSign,
 		timeScale,
 		exposure,
 		bloomStrength,
+		temporalJitter,
+		invertControls,
 		paletteMode,
 		shadowColor,
 		midColor,
@@ -1658,17 +2705,67 @@ export default function BlackHoleShader({
 		brightness,
 		contrast,
 	});
+	const initialRenderSettingsRef = useRef<RenderSettings>(
+		createRenderSettingsFromQuality({
+			quality,
+			asciiEnabled,
+			prepassScale,
+			bloomScale,
+			sceneScale,
+			maxDevicePixelRatio,
+			resolutionScale,
+		}),
+	);
+	const hasFixedPrepassScaleRef = useRef(prepassScale !== undefined);
 	const [controls, setControls] = useState<ShaderControls>(() =>
 		createInitialControls(initialPropsRef.current),
 	);
+	const [renderSettings, setRenderSettings] = useState<RenderSettings>(
+		initialRenderSettingsRef.current,
+	);
+	const [animationPlaying, setAnimationPlayingState] = useState(
+		animationAutoplay && animationMode !== "off",
+	);
+	const [animationEditorRoute, setAnimationEditorRouteState] =
+		useState<BlackHoleAnimationRouteKey>(() =>
+			normalizeBlackHoleAnimationRoute(animationRoute),
+		);
+	const [animationEditorStatus, setAnimationEditorStatus] =
+		useState("animation idle");
 	const [blackHolePanelOpen, setBlackHolePanelOpen] = useState(true);
 	const [asciiPanelOpen, setAsciiPanelOpen] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const controlsRef = useRef(controls);
+	const renderSettingsRef = useRef(renderSettings);
 	const atlasConfigRef = useRef(createGlyphAtlasConfig(controls));
+	const animationModeRef = useRef(animationMode);
+	const animationRouteRef = useRef(
+		animationRoute ?? animationEditorRoute ?? "/",
+	);
+	const animationAutoplayRef = useRef(animationAutoplay);
+	const animationPlayingRef = useRef(animationPlaying);
+	const animationEditorRouteRef = useRef(animationEditorRoute);
 
+	reactRenderCountRef.current += 1;
 	controlsRef.current = controls;
+	renderSettingsRef.current = renderSettings;
 	atlasConfigRef.current = createGlyphAtlasConfig(controls);
+	animationModeRef.current = animationMode;
+	animationAutoplayRef.current = animationAutoplay;
+	animationPlayingRef.current = animationPlaying;
+	animationEditorRouteRef.current = animationEditorRoute;
+	animationRouteRef.current =
+		animationMode === "editor"
+			? animationEditorRoute
+			: (animationRoute ??
+				(typeof window !== "undefined" ? window.location.pathname : "/"));
+
+	const setAnimationEditorRoute = (route: BlackHoleAnimationRouteKey) => {
+		animationEditorRouteRef.current = route;
+		setAnimationEditorRouteState(route);
+		animationEditorRef.current.setRoute(route);
+		requestRenderRef.current();
+	};
 
 	const updateControl = <Key extends keyof ShaderControls>(
 		key: Key,
@@ -1678,7 +2775,123 @@ export default function BlackHoleShader({
 		requestRenderRef.current();
 	};
 
+	const updateRenderSetting = <Key extends keyof RenderSettings>(
+		key: Key,
+		value: RenderSettings[Key],
+	) => {
+		setRenderSettings((current) => ({
+			...current,
+			qualityPreset:
+				key === "qualityPreset" ? (value as QualityPreset) : "custom",
+			[key]: value,
+		}));
+		requestRenderRef.current();
+	};
+
+	const applyQualityPreset = (preset: QualityPreset) => {
+		setRenderSettings((current) => {
+			if (preset === "custom") return { ...current, qualityPreset: "custom" };
+			return {
+				...current,
+				...createPresetRenderSettings(preset, current.asciiEnabled),
+				qualityPreset: preset,
+			};
+		});
+		requestRenderRef.current();
+	};
+
+	const updateAsciiEnabled = (enabled: boolean) => {
+		setRenderSettings((current) => {
+			if (current.qualityPreset === "custom") {
+				return { ...current, asciiEnabled: enabled };
+			}
+
+			return {
+				...current,
+				...createPresetRenderSettings(current.qualityPreset, enabled),
+				asciiEnabled: enabled,
+			};
+		});
+		requestRenderRef.current();
+	};
+
+	const applyCameraPositionInput = () => {
+		const input = cameraPositionInputRef.current;
+		if (!input) return;
+		if (animationModeRef.current === "editor") {
+			animationEditorRef.current.pause();
+		}
+		if (!cameraEditorRef.current.applyPosition(input.value)) {
+			cameraEditorRef.current.sync();
+		}
+	};
+
+	const applyCameraForwardInput = () => {
+		const input = cameraForwardInputRef.current;
+		if (!input) return;
+		if (animationModeRef.current === "editor") {
+			animationEditorRef.current.pause();
+		}
+		if (!cameraEditorRef.current.applyForward(input.value)) {
+			cameraEditorRef.current.sync();
+		}
+	};
+
+	const applyCameraUniverseInput = () => {
+		const input = cameraUniverseInputRef.current;
+		if (!input) return;
+		if (animationModeRef.current === "editor") {
+			animationEditorRef.current.pause();
+		}
+		if (!cameraEditorRef.current.applyUniverse(input.value)) {
+			cameraEditorRef.current.sync();
+		}
+	};
+
+	const copyAnimationText = async (label: string, value: string) => {
+		if (!value) return;
+		try {
+			await navigator.clipboard.writeText(value);
+			setAnimationEditorStatus(`${label} copied`);
+		} catch {
+			setAnimationEditorStatus(`${label} copy failed`);
+		}
+	};
+
+	const handleCameraInputKeyDown = (
+		event: ReactKeyboardEvent<HTMLInputElement>,
+		apply: () => void,
+	) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			apply();
+			event.currentTarget.blur();
+		}
+		if (event.key === "Escape") {
+			event.preventDefault();
+			cameraEditorRef.current.sync();
+			event.currentTarget.blur();
+		}
+	};
+
 	useEffect(() => {
+		const initialCameraChanged =
+			initialCameraKeyRef.current !== initialCameraKey;
+		initialCameraKeyRef.current = initialCameraKey;
+		initialPropsRef.current = {
+			...initialPropsRef.current,
+			initialCameraPosition,
+			initialCameraForward,
+			initialUniverseSign,
+		};
+
+		if (initialCameraChanged) {
+			runtimeSnapshotRef.current = {
+				shaderTime: runtimeSnapshotRef.current.shaderTime,
+				movementSpeed: runtimeSnapshotRef.current.movementSpeed,
+			};
+		}
+
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 
@@ -1695,14 +2908,46 @@ export default function BlackHoleShader({
 			return;
 		}
 
-		const settings = resolveQualitySettings({
-			quality,
-			prepassScale,
-			bloomScale,
-			sceneScale,
-			maxDevicePixelRatio,
-			asciiEnabled,
-		});
+		const settings = resolveRenderSettings(renderSettings);
+		const idleRenderInterval = Math.max(
+			0,
+			finiteNumber(idleRenderIntervalMs, DEFAULT_IDLE_RENDER_INTERVAL_MS),
+		);
+		const rootPerfFlagActive = (flag: string) => {
+			if (window.location.pathname !== "/") return false;
+			return (new URLSearchParams(window.location.search).get("bhPerf") ?? "")
+				.split(",")
+				.map((value) => value.trim())
+				.includes(flag);
+		};
+		const activeAnimationMode = (): AnimationMode =>
+			animationModeRef.current === "route" &&
+			rootPerfFlagActive("no-route-animation")
+				? "off"
+				: animationModeRef.current;
+		const activeAnimationAutoplay = () =>
+			activeAnimationMode() !== "off" && animationAutoplayRef.current;
+		const currentAnimationRoute = () =>
+			normalizeBlackHoleAnimationRoute(
+				activeAnimationMode() === "editor"
+					? animationRouteRef.current
+					: window.location.pathname || animationRouteRef.current,
+			);
+		const persistedAnimationSnapshot =
+			activeAnimationMode() === "route"
+				? window.__blackHoleAnimationSnapshot
+				: undefined;
+		const initialAnimationRoute = currentAnimationRoute();
+		let shouldStartWithRouteTransition =
+			Boolean(persistedAnimationSnapshot) &&
+			persistedAnimationSnapshot?.route !== initialAnimationRoute;
+		const routeIntroStartFrame =
+			activeAnimationMode() === "route" &&
+			activeAnimationAutoplay() &&
+			!shouldStartWithRouteTransition
+				? (getBlackHoleRouteAnimation(initialAnimationRoute).intro[0] ?? null)
+				: null;
+		let activeAnimationRoute = initialAnimationRoute;
 
 		let disposed = false;
 		let animationFrame = 0;
@@ -1711,7 +2956,10 @@ export default function BlackHoleShader({
 		let fallbackReason: string | null = null;
 		let startTime = performance.now();
 		let lastTime = startTime;
-		let shaderTime = 0;
+		let shaderTime =
+			runtimeSnapshotRef.current.shaderTime ??
+			persistedAnimationSnapshot?.shaderTime ??
+			0;
 		let renderWidth = 1;
 		let renderHeight = 1;
 		let sceneWidth = 1;
@@ -1723,21 +2971,99 @@ export default function BlackHoleShader({
 		let currentDpr = 1;
 		let currentPrepassScale = settings.initialPrepassScale;
 		let averageFrameTimeMs = 16.7;
+		let cpuAverageFrameTimeMs = 16.7;
 		let lastRenderNow = 0;
+		let lastStatsPublish = 0;
+		let lastRuntimeSnapshotUpdate = 0;
+		let lastPersistentSnapshotUpdate = 0;
 		let keyboardDirty = true;
 		let pointerActive = false;
 		let lastPointerX = 0;
 		let lastPointerY = 0;
+		let lastCameraReadoutUpdate = 0;
+		let movementSpeed =
+			runtimeSnapshotRef.current.movementSpeed ??
+			persistedAnimationSnapshot?.movementSpeed ??
+			MOVE_SPEED;
+		const maxTextureSize = Math.max(
+			2,
+			Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) || MAX_GLYPH_ATLAS_DIMENSION,
+		);
 
 		const keyboardData = new Uint8Array(256 * 4);
 		const mouse = new Float32Array([0, 0, -1, -1]);
-		const camera = createInitialCamera();
+		const camera = createInitialCamera({
+			position:
+				routeIntroStartFrame?.position ??
+				runtimeSnapshotRef.current.cameraPosition ??
+				persistedAnimationSnapshot?.cameraPosition ??
+				initialPropsRef.current.initialCameraPosition,
+			forward:
+				routeIntroStartFrame?.forward ??
+				runtimeSnapshotRef.current.cameraForward ??
+				persistedAnimationSnapshot?.cameraForward ??
+				initialPropsRef.current.initialCameraForward,
+			universeSign:
+				routeIntroStartFrame?.universeSign ??
+				runtimeSnapshotRef.current.universeSign ??
+				persistedAnimationSnapshot?.universeSign ??
+				initialPropsRef.current.initialUniverseSign,
+		});
+
+		const snapshotRuntime = (
+			forcePersistent = false,
+			now = performance.now(),
+		) => {
+			if (!forcePersistent && now - lastRuntimeSnapshotUpdate < 250) return;
+			lastRuntimeSnapshotUpdate = now;
+
+			const snapshot = runtimeSnapshotRef.current;
+			snapshot.cameraPosition = snapshot.cameraPosition
+				? copyVec3Into(snapshot.cameraPosition, camera.position)
+				: cloneVec3(camera.position);
+			snapshot.cameraForward = snapshot.cameraForward
+				? copyVec3Into(snapshot.cameraForward, camera.forward)
+				: cloneVec3(camera.forward);
+			snapshot.universeSign = camera.universeSign;
+			snapshot.shaderTime = shaderTime;
+			snapshot.movementSpeed = movementSpeed;
+
+			if (activeAnimationMode() !== "route") return;
+			if (
+				!forcePersistent &&
+				window.__blackHoleAnimationSnapshot &&
+				now - lastPersistentSnapshotUpdate < 500
+			) {
+				return;
+			}
+
+			lastPersistentSnapshotUpdate = now;
+			const persistent = window.__blackHoleAnimationSnapshot;
+			if (persistent) {
+				copyVec3Into(persistent.cameraPosition, camera.position);
+				copyVec3Into(persistent.cameraForward, camera.forward);
+				persistent.universeSign = camera.universeSign;
+				persistent.shaderTime = shaderTime;
+				persistent.movementSpeed = movementSpeed;
+				persistent.route = activeAnimationRoute;
+			} else {
+				window.__blackHoleAnimationSnapshot = {
+					cameraPosition: cloneVec3(camera.position),
+					cameraForward: cloneVec3(camera.forward),
+					universeSign: camera.universeSign,
+					shaderTime,
+					movementSpeed,
+					route: activeAnimationRoute,
+				};
+			}
+		};
 		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 		const floatFormat = chooseFloatTextureFormat(gl);
 		const fallbackFormat = chooseFallbackTextureFormat(gl);
 		const fallbackTexture = createSolidTexture(gl, [0, 0, 0, 255]);
 		const keyboardTexture = createKeyboardTexture(gl, keyboardData);
 		let glyphAtlasConfig = atlasConfigRef.current;
+		let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
 		let glyphAtlasTexture = createGlyphAtlasTexture(gl, glyphAtlasConfig);
 		const vertexBuffer = gl.createBuffer();
 		const channelResolutionScratch = new Float32Array(12);
@@ -1761,6 +3087,81 @@ export default function BlackHoleShader({
 		let fallbackPasses: FallbackPassSet | null = null;
 		let optimizedTargets: OptimizedTargets | null = null;
 		let fallbackTargets: FallbackTargets | null = null;
+
+		const writeCameraReadout = (force = false) => {
+			const activeElement = document.activeElement;
+			if (!showControls) return;
+
+			if (
+				cameraPositionInputRef.current &&
+				(force || activeElement !== cameraPositionInputRef.current)
+			) {
+				cameraPositionInputRef.current.value = formatCameraVec3(
+					camera.position,
+				);
+			}
+			if (
+				cameraForwardInputRef.current &&
+				(force || activeElement !== cameraForwardInputRef.current)
+			) {
+				cameraForwardInputRef.current.value = formatCameraVec3(camera.forward);
+			}
+			if (
+				cameraUniverseInputRef.current &&
+				(force || activeElement !== cameraUniverseInputRef.current)
+			) {
+				cameraUniverseInputRef.current.value = formatCameraNumber(
+					camera.universeSign,
+				);
+			}
+		};
+
+		const updateCameraReadout = (now: number, force = false) => {
+			if (!showControls) return;
+			if (!force && now - lastCameraReadoutUpdate < 250) return;
+			lastCameraReadoutUpdate = now;
+			writeCameraReadout(force);
+		};
+
+		cameraEditorRef.current = {
+			applyPosition: (value: string) => {
+				const nextPosition = parseCameraVec3(value);
+				if (!nextPosition) {
+					writeCameraReadout(true);
+					return false;
+				}
+				camera.position = nextPosition;
+				snapshotRuntime();
+				writeCameraReadout(true);
+				requestRender();
+				return true;
+			},
+			applyForward: (value: string) => {
+				const nextForward = parseCameraVec3(value);
+				if (!nextForward || length(nextForward) <= 1e-9) {
+					writeCameraReadout(true);
+					return false;
+				}
+				setCameraForward(camera, nextForward);
+				snapshotRuntime();
+				writeCameraReadout(true);
+				requestRender();
+				return true;
+			},
+			applyUniverse: (value: string) => {
+				const nextUniverseSign = parseUniverseSign(value);
+				if (nextUniverseSign === null) {
+					writeCameraReadout(true);
+					return false;
+				}
+				camera.universeSign = nextUniverseSign;
+				snapshotRuntime();
+				writeCameraReadout(true);
+				requestRender();
+				return true;
+			},
+			sync: () => writeCameraReadout(true),
+		};
 
 		try {
 			if (!floatFormat)
@@ -1869,8 +3270,7 @@ export default function BlackHoleShader({
 			disposeFallbackTargets();
 		};
 
-		const syncGlyphAtlas = () => {
-			const nextConfig = atlasConfigRef.current;
+		const syncGlyphAtlasConfig = (nextConfig: GlyphAtlasConfig) => {
 			if (nextConfig.key === glyphAtlasConfig.key) return;
 
 			gl.deleteTexture(glyphAtlasTexture.texture);
@@ -1878,31 +3278,344 @@ export default function BlackHoleShader({
 			glyphAtlasConfig = nextConfig;
 		};
 
+		let animationPhase: AnimationPhase = "off";
+		let animationSequence: BlackHoleAnimationKeyframe[] = [];
+		let animationSequenceTime = 0;
+		let animationSequenceLoops = false;
+		let animationFrameIndex = 0;
+		let animationSequenceJustStarted = false;
+		const scratchAnimationFrame: BlackHoleAnimationKeyframe = {
+			duration: 0,
+			position: [0, 0, 0],
+			forward: [0, 0, -1],
+			universeSign: 1,
+		};
+		const scratchAnimationResult: {
+			frame: BlackHoleAnimationKeyframe | null;
+			frameIndex: number;
+			done: boolean;
+			sequenceTime: number;
+		} = {
+			frame: null,
+			frameIndex: 0,
+			done: false,
+			sequenceTime: 0,
+		};
+		const lastAnimatedControls: ShaderControls = { ...controlsRef.current };
+		let lastAnimatedAsciiEnabled = settings.asciiEnabled;
+		let lastAnimationStatus = "";
+		const activeRenderUniforms = createRenderUniforms(
+			lastAnimatedControls,
+			glyphAtlasConfig,
+			lastAnimatedAsciiEnabled,
+			asciiMix,
+		);
+
+		const publishAnimationStatus = (status: string) => {
+			if (!showControls || status === lastAnimationStatus) return;
+			lastAnimationStatus = status;
+			setAnimationEditorStatus(status);
+		};
+
+		const setAnimationPlaying = (playing: boolean) => {
+			animationPlayingRef.current = playing;
+			if (showControls) setAnimationPlayingState(playing);
+		};
+
+		const animationIsEnabled = () => activeAnimationMode() !== "off";
+
+		const animationIsOwningCamera = () =>
+			animationIsEnabled() &&
+			animationPhase !== "off" &&
+			(animationPlayingRef.current || animationSequence.length > 0);
+
+		const currentAnimationKeyframe = (duration = 0) =>
+			animationKeyframeFromCamera(
+				camera,
+				lastAnimatedControls,
+				lastAnimatedAsciiEnabled,
+				duration,
+			);
+
+		const setAnimationSequence = ({
+			phase,
+			route,
+			sequence,
+			loop,
+			playing,
+		}: {
+			phase: AnimationPhase;
+			route: BlackHoleAnimationRouteKey;
+			sequence: BlackHoleAnimationKeyframe[];
+			loop: boolean;
+			playing: boolean;
+		}) => {
+			activeAnimationRoute = route;
+			animationPhase = sequence.length > 0 ? phase : "off";
+			animationSequence = sequence.map((frame) => ({ ...frame }));
+			animationSequenceTime = 0;
+			animationSequenceLoops = loop;
+			animationFrameIndex = 0;
+			animationSequenceJustStarted = true;
+			setAnimationPlaying(playing && animationSequence.length > 0);
+
+			const firstFrame = animationSequence[0] ?? null;
+			applyAnimationCamera(camera, firstFrame);
+			writeAnimationControlsFromFrame(
+				lastAnimatedControls,
+				controlsRef.current,
+				firstFrame,
+			);
+			lastAnimatedAsciiEnabled =
+				firstFrame?.asciiEnabled ?? settings.asciiEnabled;
+			snapshotRuntime();
+			writeCameraReadout(true);
+			publishAnimationStatus(
+				animationPhase === "off"
+					? "animation idle"
+					: `${activeAnimationRoute} ${animationPhase}`,
+			);
+		};
+
+		const startIdle = (
+			route = activeAnimationRoute,
+			playing = activeAnimationAutoplay(),
+		) => {
+			const config = getBlackHoleRouteAnimation(route);
+			setAnimationSequence({
+				phase: "idle",
+				route,
+				sequence: config.idle,
+				loop: true,
+				playing,
+			});
+		};
+
+		const startIntro = (
+			route = activeAnimationRoute,
+			playing = activeAnimationAutoplay(),
+		) => {
+			const config = getBlackHoleRouteAnimation(route);
+			setAnimationSequence({
+				phase: "intro",
+				route,
+				sequence: config.intro,
+				loop: false,
+				playing,
+			});
+		};
+
+		const startTransition = (
+			route: BlackHoleAnimationRouteKey,
+			playing = activeAnimationAutoplay(),
+		) => {
+			setAnimationSequence({
+				phase: "transition",
+				route,
+				sequence: buildRouteTransitionSequence(
+					currentAnimationKeyframe(0),
+					route,
+				),
+				loop: false,
+				playing,
+			});
+		};
+
+		const stopEditorAnimationForManualInput = () => {
+			if (activeAnimationMode() !== "editor") return;
+			animationPhase = "off";
+			animationSequence = [];
+			animationSequenceTime = 0;
+			animationFrameIndex = 0;
+			setAnimationPlaying(false);
+			publishAnimationStatus("manual camera");
+		};
+
+		const applyReducedMotionAnimation = () => {
+			if (!animationIsEnabled()) return;
+			const route = currentAnimationRoute();
+			const idleFrame = getBlackHoleRouteAnimation(route).idle[0] ?? null;
+			activeAnimationRoute = route;
+			animationPhase = "idle";
+			animationSequence = idleFrame ? [idleFrame] : [];
+			animationSequenceTime = 0;
+			animationSequenceLoops = false;
+			animationFrameIndex = 0;
+			setAnimationPlaying(false);
+			applyAnimationCamera(camera, idleFrame);
+			writeAnimationControlsFromFrame(
+				lastAnimatedControls,
+				controlsRef.current,
+				idleFrame,
+			);
+			lastAnimatedAsciiEnabled =
+				idleFrame?.asciiEnabled ?? settings.asciiEnabled;
+			publishAnimationStatus(`${route} reduced motion`);
+		};
+
+		const syncAnimationRoute = () => {
+			if (!animationIsEnabled()) return;
+			const nextRoute = currentAnimationRoute();
+			if (activeAnimationMode() === "editor") {
+				if (nextRoute !== activeAnimationRoute && animationPhase !== "off") {
+					startIntro(nextRoute, animationPlayingRef.current);
+				}
+				return;
+			}
+
+			if (animationPhase === "off" && activeAnimationAutoplay()) {
+				if (shouldStartWithRouteTransition) {
+					shouldStartWithRouteTransition = false;
+					startTransition(nextRoute, true);
+					return;
+				}
+				startIntro(nextRoute, true);
+				return;
+			}
+
+			if (nextRoute !== activeAnimationRoute) {
+				startTransition(nextRoute, activeAnimationAutoplay());
+			}
+		};
+
+		const finishAnimationPhase = () => {
+			if (animationPhase === "transition") {
+				startIntro(activeAnimationRoute, activeAnimationAutoplay());
+				return;
+			}
+			if (animationPhase === "intro") {
+				startIdle(activeAnimationRoute, activeAnimationAutoplay());
+			}
+		};
+
+		const evaluateAnimationFrame = (delta: number) => {
+			if (!animationIsEnabled()) {
+				animationPhase = "off";
+				animationSequenceJustStarted = false;
+				return {
+					controls: controlsRef.current,
+					asciiEnabled: settings.asciiEnabled,
+					active: false,
+				};
+			}
+
+			syncAnimationRoute();
+
+			if (reducedMotion.matches) {
+				applyReducedMotionAnimation();
+			}
+
+			if (animationPlayingRef.current && !animationSequenceJustStarted) {
+				animationSequenceTime += delta;
+			}
+			animationSequenceJustStarted = false;
+
+			const result = evaluateAnimationSequenceInto(
+				scratchAnimationResult,
+				scratchAnimationFrame,
+				{
+					sequence: animationSequence,
+					time: animationSequenceTime,
+					loop: animationSequenceLoops,
+					baseControls: controlsRef.current,
+					baseAsciiEnabled: settings.asciiEnabled,
+				},
+			);
+
+			animationFrameIndex = result.frameIndex;
+			animationSequenceTime = result.sequenceTime;
+			applyAnimationCamera(camera, result.frame);
+			writeAnimationControlsFromFrame(
+				lastAnimatedControls,
+				controlsRef.current,
+				result.frame,
+			);
+			lastAnimatedAsciiEnabled =
+				result.frame?.asciiEnabled ?? settings.asciiEnabled;
+
+			if (
+				result.done &&
+				animationPlayingRef.current &&
+				!animationSequenceLoops
+			) {
+				finishAnimationPhase();
+			}
+
+			return {
+				controls: lastAnimatedControls,
+				asciiEnabled: lastAnimatedAsciiEnabled,
+				active: animationPhase !== "off",
+			};
+		};
+
+		animationEditorRef.current = {
+			play: () => {
+				if (!animationIsEnabled()) return;
+				if (animationPhase === "off") {
+					startIntro(
+						normalizeBlackHoleAnimationRoute(animationRouteRef.current),
+						true,
+					);
+				} else {
+					setAnimationPlaying(true);
+					publishAnimationStatus(`${activeAnimationRoute} ${animationPhase}`);
+				}
+				requestRender();
+			},
+			pause: () => {
+				setAnimationPlaying(false);
+				publishAnimationStatus(`${activeAnimationRoute} paused`);
+				requestRender();
+			},
+			restartIntro: () => {
+				startIntro(
+					normalizeBlackHoleAnimationRoute(animationRouteRef.current),
+					true,
+				);
+				requestRender();
+			},
+			previewIdle: () => {
+				startIdle(
+					normalizeBlackHoleAnimationRoute(animationRouteRef.current),
+					true,
+				);
+				requestRender();
+			},
+			setRoute: (route) => {
+				activeAnimationRoute = route;
+				if (activeAnimationMode() === "editor") {
+					startIntro(route, animationPlayingRef.current);
+				}
+				requestRender();
+			},
+			currentKeyframe: () =>
+				stringifyAnimationValue(currentAnimationKeyframe(2.5)),
+			routeConfig: () =>
+				stringifyAnimationValue(
+					BLACK_HOLE_ANIMATION_ROUTES[activeAnimationRoute],
+				),
+		};
+
+		const targetDimension = (value: number) =>
+			Math.min(maxTextureSize, Math.max(2, Math.floor(value)));
+
 		const createOptimizedTargets = () => {
 			if (!floatFormat) throw new Error("Float targets are unavailable.");
-			const nextSceneWidth = Math.max(
-				2,
-				Math.floor(renderWidth * settings.sceneScale),
+			const nextSceneWidth = targetDimension(renderWidth * settings.sceneScale);
+			const nextSceneHeight = targetDimension(
+				renderHeight * settings.sceneScale,
 			);
-			const nextSceneHeight = Math.max(
-				2,
-				Math.floor(renderHeight * settings.sceneScale),
+			const nextPrepassWidth = targetDimension(
+				nextSceneWidth * currentPrepassScale,
 			);
-			const nextPrepassWidth = Math.max(
-				2,
-				Math.floor(nextSceneWidth * currentPrepassScale),
+			const nextPrepassHeight = targetDimension(
+				nextSceneHeight * currentPrepassScale,
 			);
-			const nextPrepassHeight = Math.max(
-				2,
-				Math.floor(nextSceneHeight * currentPrepassScale),
+			const nextBloomWidth = targetDimension(
+				nextSceneWidth * settings.bloomScale,
 			);
-			const nextBloomWidth = Math.max(
-				2,
-				Math.floor(nextSceneWidth * settings.bloomScale),
-			);
-			const nextBloomHeight = Math.max(
-				2,
-				Math.floor(nextSceneHeight * settings.bloomScale),
+			const nextBloomHeight = targetDimension(
+				nextSceneHeight * settings.bloomScale,
 			);
 
 			sceneWidth = nextSceneWidth;
@@ -1959,8 +3672,8 @@ export default function BlackHoleShader({
 		};
 
 		const createFallbackTargets = () => {
-			sceneWidth = Math.max(2, Math.floor(renderWidth * settings.sceneScale));
-			sceneHeight = Math.max(2, Math.floor(renderHeight * settings.sceneScale));
+			sceneWidth = targetDimension(renderWidth * settings.sceneScale);
+			sceneHeight = targetDimension(renderHeight * settings.sceneScale);
 			prepassWidth = sceneWidth;
 			prepassHeight = sceneHeight;
 			bloomWidth = sceneWidth;
@@ -2011,37 +3724,49 @@ export default function BlackHoleShader({
 					? Math.min(settings.maxDevicePixelRatio, DIRECT_FALLBACK_DPR)
 					: settings.maxDevicePixelRatio;
 			const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
-			const nextWidth = Math.max(
-				1,
-				Math.floor(rect.width * dpr * resolutionScale),
+			const nextWidth = Math.min(
+				maxTextureSize,
+				Math.max(1, Math.floor(rect.width * dpr * settings.resolutionScale)),
 			);
-			const nextHeight = Math.max(
-				1,
-				Math.floor(rect.height * dpr * resolutionScale),
+			const nextHeight = Math.min(
+				maxTextureSize,
+				Math.max(1, Math.floor(rect.height * dpr * settings.resolutionScale)),
 			);
-			const nextSceneWidth = Math.max(
-				2,
-				Math.floor(nextWidth * settings.sceneScale),
+			const nextSceneWidth = Math.min(
+				maxTextureSize,
+				Math.max(2, Math.floor(nextWidth * settings.sceneScale)),
 			);
-			const nextSceneHeight = Math.max(
-				2,
-				Math.floor(nextHeight * settings.sceneScale),
+			const nextSceneHeight = Math.min(
+				maxTextureSize,
+				Math.max(2, Math.floor(nextHeight * settings.sceneScale)),
 			);
 			const nextPrepassWidth =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextSceneWidth * currentPrepassScale))
+					? Math.min(
+							maxTextureSize,
+							Math.max(2, Math.floor(nextSceneWidth * currentPrepassScale)),
+						)
 					: nextSceneWidth;
 			const nextPrepassHeight =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextSceneHeight * currentPrepassScale))
+					? Math.min(
+							maxTextureSize,
+							Math.max(2, Math.floor(nextSceneHeight * currentPrepassScale)),
+						)
 					: nextSceneHeight;
 			const nextBloomWidth =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextSceneWidth * settings.bloomScale))
+					? Math.min(
+							maxTextureSize,
+							Math.max(2, Math.floor(nextSceneWidth * settings.bloomScale)),
+						)
 					: nextSceneWidth;
 			const nextBloomHeight =
 				mode === "optimized"
-					? Math.max(2, Math.floor(nextSceneHeight * settings.bloomScale))
+					? Math.min(
+							maxTextureSize,
+							Math.max(2, Math.floor(nextSceneHeight * settings.bloomScale)),
+						)
 					: nextSceneHeight;
 
 			if (
@@ -2119,21 +3844,26 @@ export default function BlackHoleShader({
 			lastRenderNow = 0;
 		};
 
-		const publishStats = (frameTimeMs: number) => {
+		const publishStats = (frameTimeMs: number, now: number) => {
 			if (!debugStats && !import.meta.env.DEV) return;
+			if (!showControls && now - lastStatsPublish < 250) return;
+			lastStatsPublish = now;
 
-			const activeControls = controlsRef.current;
-			const activeAtlas = atlasConfigRef.current;
+			const activeControls = lastAnimatedControls;
+			const activeAtlas = glyphAtlasConfig;
 			const stats: BlackHoleStats = {
 				mode,
 				frame,
 				frameTimeMs,
+				cpuAverageFrameTimeMs,
 				averageFrameTimeMs,
+				fps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : 0,
+				reactRenderCount: reactRenderCountRef.current,
 				dpr: currentDpr,
 				prepassScale: currentPrepassScale,
 				bloomScale: settings.bloomScale,
 				sceneScale: settings.sceneScale,
-				asciiEnabled,
+				asciiEnabled: lastAnimatedAsciiEnabled,
 				asciiCellSize: activeAtlas.cellSize,
 				renderWidth,
 				renderHeight,
@@ -2145,17 +3875,31 @@ export default function BlackHoleShader({
 				bloomHeight,
 				cameraPosition: [...camera.position],
 				cameraForward: [...camera.forward],
+				universeSign: camera.universeSign,
+				movementSpeed,
 				timeScale: activeControls.timeScale,
 				exposure: activeControls.exposure,
 				bloomStrength: activeControls.bloomStrength,
+				temporalJitter: activeControls.temporalJitter,
+				invertControls: activeControls.invertControls,
 				paletteMode: activeControls.paletteMode,
-				glyphCount: Array.from(activeAtlas.glyphs).length,
+				glyphCount: activeAtlas.glyphCount,
 				fontFamily: activeAtlas.fontFamily,
 				textSize: activeAtlas.textSize,
 				asciiBrightness: activeControls.brightness,
 				asciiContrast: activeControls.contrast,
 				shaderTime,
+				qualityPreset: settings.qualityPreset,
+				qualityValue: settings.qualityValue,
+				maxDevicePixelRatio: settings.maxDevicePixelRatio,
+				resolutionScale: settings.resolutionScale,
 				fallbackReason,
+				animationMode: activeAnimationMode(),
+				animationRoute: activeAnimationRoute,
+				animationPhase,
+				animationPlaying: animationPlayingRef.current,
+				animationFrameIndex,
+				animationSequenceTime,
 			};
 
 			window.__blackHoleStats = stats;
@@ -2166,16 +3910,16 @@ export default function BlackHoleShader({
 				mode !== "optimized" ||
 				frame < 120 ||
 				frame % 90 !== 0 ||
-				prepassScale !== undefined
+				hasFixedPrepassScaleRef.current ||
+				settings.qualityPreset === "custom"
 			)
 				return;
 
 			const previousScale = currentPrepassScale;
 			if (averageFrameTimeMs > FRAME_TARGET_MS * 1.15) {
-				currentPrepassScale = clamp(
-					currentPrepassScale - 0.06,
+				currentPrepassScale = Math.max(
 					MIN_PREPASS_SCALE,
-					MAX_PREPASS_SCALE,
+					currentPrepassScale - 0.06,
 				);
 			}
 
@@ -2196,6 +3940,7 @@ export default function BlackHoleShader({
 			shouldUpdatePrepass: boolean,
 			shouldUpdateBloom: boolean,
 			activeRenderUniforms: RenderUniforms,
+			activeAsciiEnabled: boolean,
 		) => {
 			if (!optimizedPasses || !optimizedTargets) return;
 
@@ -2321,55 +4066,82 @@ export default function BlackHoleShader({
 				);
 			}
 
-			renderPass(
-				gl,
-				optimizedPasses.image,
-				vertexBuffer,
-				optimizedTargets.scene,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[
-					optimizedTargets.composite.write,
-					fallbackTexture,
-					fallbackTexture,
-					optimizedTargets.bloomVertical,
-				],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-
-			renderPass(
-				gl,
-				optimizedPasses.ascii,
-				vertexBuffer,
-				null,
-				renderWidth,
-				renderHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[
+			if (activeAsciiEnabled) {
+				renderPass(
+					gl,
+					optimizedPasses.image,
+					vertexBuffer,
 					optimizedTargets.scene,
-					glyphAtlasTexture,
-					fallbackTexture,
-					fallbackTexture,
-				],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
+					sceneWidth,
+					sceneHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					[
+						optimizedTargets.composite.write,
+						fallbackTexture,
+						fallbackTexture,
+						optimizedTargets.bloomVertical,
+					],
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+
+				renderPass(
+					gl,
+					optimizedPasses.ascii,
+					vertexBuffer,
+					null,
+					renderWidth,
+					renderHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					[
+						optimizedTargets.scene,
+						glyphAtlasTexture,
+						fallbackTexture,
+						fallbackTexture,
+					],
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+			} else {
+				renderPass(
+					gl,
+					optimizedPasses.image,
+					vertexBuffer,
+					null,
+					renderWidth,
+					renderHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					[
+						optimizedTargets.composite.write,
+						fallbackTexture,
+						fallbackTexture,
+						optimizedTargets.bloomVertical,
+					],
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+			}
 
 			optimizedTargets.composite.swap();
 		};
@@ -2378,6 +4150,7 @@ export default function BlackHoleShader({
 			time: number,
 			delta: number,
 			activeRenderUniforms: RenderUniforms,
+			activeAsciiEnabled: boolean,
 		) => {
 			if (!fallbackPasses || !fallbackTargets) return;
 
@@ -2472,54 +4245,81 @@ export default function BlackHoleShader({
 				channelResolutionScratch,
 				activeRenderUniforms,
 			);
-			renderPass(
-				gl,
-				fallbackPasses.image,
-				vertexBuffer,
-				fallbackTargets.scene,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[
-					fallbackTargets.a.write,
-					fallbackTargets.b.write,
-					fallbackTargets.c,
-					fallbackTargets.d,
-				],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-			renderPass(
-				gl,
-				fallbackPasses.ascii,
-				vertexBuffer,
-				null,
-				renderWidth,
-				renderHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[
+			if (activeAsciiEnabled) {
+				renderPass(
+					gl,
+					fallbackPasses.image,
+					vertexBuffer,
 					fallbackTargets.scene,
-					glyphAtlasTexture,
-					fallbackTexture,
-					fallbackTexture,
-				],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
+					sceneWidth,
+					sceneHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					[
+						fallbackTargets.a.write,
+						fallbackTargets.b.write,
+						fallbackTargets.c,
+						fallbackTargets.d,
+					],
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+				renderPass(
+					gl,
+					fallbackPasses.ascii,
+					vertexBuffer,
+					null,
+					renderWidth,
+					renderHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					[
+						fallbackTargets.scene,
+						glyphAtlasTexture,
+						fallbackTexture,
+						fallbackTexture,
+					],
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+			} else {
+				renderPass(
+					gl,
+					fallbackPasses.image,
+					vertexBuffer,
+					null,
+					renderWidth,
+					renderHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					[
+						fallbackTargets.a.write,
+						fallbackTargets.b.write,
+						fallbackTargets.c,
+						fallbackTargets.d,
+					],
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+			}
 
 			fallbackTargets.a.swap();
 			fallbackTargets.b.swap();
@@ -2533,30 +4333,25 @@ export default function BlackHoleShader({
 
 			try {
 				resize();
-				syncGlyphAtlas();
 
 				if (keyboardDirty) {
 					updateKeyboardTexture(gl, keyboardTexture, keyboardData);
 					keyboardDirty = false;
 				}
 
-				const liveControls = controlsRef.current;
-				const activeRenderUniforms = createRenderUniforms(
-					liveControls,
-					glyphAtlasConfig,
-					asciiEnabled,
-					asciiMix,
-				);
-				const activeControlInput = hasActiveControls(
-					keyboardData,
-					pointerActive,
-				);
+				syncAnimationRoute();
+				const animationActiveBeforeFrame = animationIsOwningCamera();
+				const activeControlInput =
+					forceActiveRender ||
+					animationActiveBeforeFrame ||
+					hasActiveControls(keyboardData, pointerActive);
 				if (
 					mode === "optimized" &&
 					frame > 2 &&
 					!activeControlInput &&
 					lastRenderNow > 0 &&
-					now - lastRenderNow < IDLE_RENDER_INTERVAL_MS
+					idleRenderInterval > 0 &&
+					now - lastRenderNow < idleRenderInterval
 				) {
 					animationFrame = requestAnimationFrame(renderFrame);
 					return;
@@ -2564,11 +4359,29 @@ export default function BlackHoleShader({
 				lastRenderNow = now;
 
 				const delta = Math.min(0.1, Math.max(0.001, (now - lastTime) / 1000));
+				const animationFrameState = evaluateAnimationFrame(delta);
+				const liveControls = animationFrameState.controls;
+				const activeAsciiEnabled = animationFrameState.asciiEnabled;
+				const nextGlyphControlsKey = glyphControlsKey(liveControls);
+				if (nextGlyphControlsKey !== liveGlyphControlsKey) {
+					liveGlyphControlsKey = nextGlyphControlsKey;
+					syncGlyphAtlasConfig(createGlyphAtlasConfig(liveControls));
+				}
+				writeRenderUniforms(
+					activeRenderUniforms,
+					liveControls,
+					glyphAtlasConfig,
+					activeAsciiEnabled,
+					asciiMix,
+				);
 				const shaderDelta = delta * liveControls.timeScale;
 				lastTime = now;
 				shaderTime += shaderDelta;
 
-				updateCamera(camera, keyboardData, delta);
+				if (!animationFrameState.active) {
+					updateCamera(camera, keyboardData, delta, movementSpeed);
+				}
+				snapshotRuntime(false, now);
 
 				gl.disable(gl.DEPTH_TEST);
 				gl.disable(gl.BLEND);
@@ -2590,12 +4403,22 @@ export default function BlackHoleShader({
 						shouldUpdatePrepass,
 						shouldUpdateBloom,
 						activeRenderUniforms,
+						activeAsciiEnabled,
 					);
-				} else renderFallback(shaderTime, shaderDelta, activeRenderUniforms);
+				} else
+					renderFallback(
+						shaderTime,
+						shaderDelta,
+						activeRenderUniforms,
+						activeAsciiEnabled,
+					);
 
 				const frameTimeMs = performance.now() - cpuFrameStart;
+				cpuAverageFrameTimeMs =
+					cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
 				averageFrameTimeMs = averageFrameTimeMs * 0.94 + delta * 1000 * 0.06;
-				publishStats(frameTimeMs);
+				publishStats(frameTimeMs, now);
+				updateCameraReadout(now);
 				maybeAdaptQuality();
 
 				frame += 1;
@@ -2619,8 +4442,19 @@ export default function BlackHoleShader({
 		requestRenderRef.current = requestRender;
 
 		const setKey = (event: KeyboardEvent, pressed: boolean) => {
+			if (!interactive) return;
 			if (isControlKeyboardTarget(event.target)) return;
 			if (event.keyCode < 0 || event.keyCode > 255) return;
+			if (pressed) stopEditorAnimationForManualInput();
+			if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+				event.preventDefault();
+				if (pressed) {
+					movementSpeed *=
+						event.key === "ArrowUp" ? MOVE_SPEED_FACTOR : 1 / MOVE_SPEED_FACTOR;
+					requestRender();
+				}
+				return;
+			}
 			if (CONTROL_KEY_CODES.has(event.keyCode)) event.preventDefault();
 			keyboardData[event.keyCode * 4] = pressed ? 255 : 0;
 			keyboardDirty = true;
@@ -2641,6 +4475,8 @@ export default function BlackHoleShader({
 		};
 
 		const handlePointerDown = (event: PointerEvent) => {
+			if (!interactive) return;
+			stopEditorAnimationForManualInput();
 			canvas.setPointerCapture(event.pointerId);
 			pointerActive = true;
 			lastPointerX = event.clientX;
@@ -2652,6 +4488,7 @@ export default function BlackHoleShader({
 		};
 
 		const handlePointerMove = (event: PointerEvent) => {
+			if (!interactive) return;
 			pointerPosition(event);
 			if (pointerActive) {
 				const dx = event.clientX - lastPointerX;
@@ -2659,12 +4496,14 @@ export default function BlackHoleShader({
 				lastPointerX = event.clientX;
 				lastPointerY = event.clientY;
 				camera.pendingYaw += -dx * MOUSE_SENSITIVITY;
-				camera.pendingPitch += dy * MOUSE_SENSITIVITY;
+				camera.pendingPitch +=
+					(controlsRef.current.invertControls ? dy : -dy) * MOUSE_SENSITIVITY;
 			}
 			requestRender();
 		};
 
 		const handlePointerUp = (event: PointerEvent) => {
+			if (!interactive) return;
 			if (canvas.hasPointerCapture(event.pointerId))
 				canvas.releasePointerCapture(event.pointerId);
 			pointerActive = false;
@@ -2691,26 +4530,32 @@ export default function BlackHoleShader({
 		const handleKeyDown = (event: KeyboardEvent) => setKey(event, true);
 		const handleKeyUp = (event: KeyboardEvent) => setKey(event, false);
 
-		window.addEventListener("keydown", handleKeyDown);
-		window.addEventListener("keyup", handleKeyUp);
-		canvas.addEventListener("pointerdown", handlePointerDown);
-		canvas.addEventListener("pointermove", handlePointerMove);
-		canvas.addEventListener("pointerup", handlePointerUp);
-		canvas.addEventListener("pointercancel", handlePointerUp);
+		if (interactive) {
+			window.addEventListener("keydown", handleKeyDown);
+			window.addEventListener("keyup", handleKeyUp);
+			canvas.addEventListener("pointerdown", handlePointerDown);
+			canvas.addEventListener("pointermove", handlePointerMove);
+			canvas.addEventListener("pointerup", handlePointerUp);
+			canvas.addEventListener("pointercancel", handlePointerUp);
+		}
 		document.addEventListener("visibilitychange", handleVisibilityChange);
 
+		updateCameraReadout(performance.now(), true);
 		requestRender();
 
 		return () => {
+			snapshotRuntime(true);
 			disposed = true;
 			if (animationFrame) cancelAnimationFrame(animationFrame);
 			resizeObserver.disconnect();
-			window.removeEventListener("keydown", handleKeyDown);
-			window.removeEventListener("keyup", handleKeyUp);
-			canvas.removeEventListener("pointerdown", handlePointerDown);
-			canvas.removeEventListener("pointermove", handlePointerMove);
-			canvas.removeEventListener("pointerup", handlePointerUp);
-			canvas.removeEventListener("pointercancel", handlePointerUp);
+			if (interactive) {
+				window.removeEventListener("keydown", handleKeyDown);
+				window.removeEventListener("keyup", handleKeyUp);
+				canvas.removeEventListener("pointerdown", handlePointerDown);
+				canvas.removeEventListener("pointermove", handlePointerMove);
+				canvas.removeEventListener("pointerup", handlePointerUp);
+				canvas.removeEventListener("pointercancel", handlePointerUp);
+			}
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 			disposeTargets();
 			gl.deleteBuffer(vertexBuffer);
@@ -2724,24 +4569,38 @@ export default function BlackHoleShader({
 			});
 			gl.deleteTexture(glyphAtlasTexture.texture);
 			requestRenderRef.current = () => {};
+			cameraEditorRef.current = {
+				applyPosition: () => false,
+				applyForward: () => false,
+				applyUniverse: () => false,
+				sync: () => {},
+			};
 			delete window.__blackHoleStats;
 		};
 	}, [
-		quality,
-		resolutionScale,
-		prepassScale,
-		bloomScale,
-		maxDevicePixelRatio,
-		asciiEnabled,
+		renderSettings,
 		asciiMix,
-		sceneScale,
+		showControls,
+		interactive,
 		debugStats,
+		idleRenderIntervalMs,
+		forceActiveRender,
+		initialCameraKey,
+		initialCameraPosition,
+		initialCameraForward,
+		initialUniverseSign,
 	]);
 
 	const glyphPresetOptions: Array<{ label: string; value: GlyphPreset }> = [
 		{ label: "Gargantua", value: "gargantua" },
 		{ label: "Classic", value: "classic" },
 		{ label: "Dense", value: "dense" },
+		{ label: "Custom", value: "custom" },
+	];
+	const qualityPresetOptions: Array<{ label: string; value: QualityPreset }> = [
+		{ label: "Performance", value: "performance" },
+		{ label: "Balanced", value: "balanced" },
+		{ label: "Visual", value: "visual" },
 		{ label: "Custom", value: "custom" },
 	];
 	const fontOptions = FONT_OPTIONS.map((font) => ({
@@ -2753,133 +4612,334 @@ export default function BlackHoleShader({
 		<div className={`relative h-full w-full bg-black ${className}`}>
 			<canvas
 				ref={canvasRef}
-				className="block h-full w-full cursor-crosshair touch-none bg-black"
+				className={`block h-full w-full bg-black ${
+					interactive ? "cursor-crosshair touch-none" : "pointer-events-none"
+				}`}
 				aria-label="Interactive black hole shader"
 			/>
-			<div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 grid gap-2 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[22rem]">
-				<div className="pointer-events-auto overflow-hidden rounded-md">
-					<ControlPanel
-						title="Black Hole"
-						icon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
-						open={blackHolePanelOpen}
-						onToggle={() => setBlackHolePanelOpen((open) => !open)}
-					>
-						<RangeControl
-							label="Speed"
-							value={controls.timeScale}
-							min={0}
-							max={2}
-							step={0.05}
-							onChange={(value) => updateControl("timeScale", value)}
-						/>
-						<RangeControl
-							label="Exposure"
-							value={controls.exposure}
-							min={0.2}
-							max={2.5}
-							step={0.05}
-							onChange={(value) => updateControl("exposure", value)}
-						/>
-						<RangeControl
-							label="Bloom"
-							value={controls.bloomStrength}
-							min={0}
-							max={3}
-							step={0.05}
-							onChange={(value) => updateControl("bloomStrength", value)}
-						/>
-						<SelectControl
-							label="Color"
-							value={controls.paletteMode}
-							options={[
-								{ label: "Source", value: "source" },
-								{ label: "Custom", value: "custom" },
-							]}
-							onChange={(value) => updateControl("paletteMode", value)}
-						/>
-						{controls.paletteMode === "custom" ? (
-							<div className="grid grid-cols-3 gap-2">
-								<ColorControl
-									label="Shadow"
-									value={controls.shadowColor}
-									onChange={(value) => updateControl("shadowColor", value)}
+			{showControls ? (
+				<div className="pointer-events-auto absolute inset-x-3 bottom-3 z-20 grid max-h-[calc(100dvh-1.5rem)] gap-2 overflow-y-auto overscroll-contain pr-1 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:max-h-[calc(100dvh-2rem)] sm:w-[22rem]">
+					<div className="pointer-events-auto overflow-hidden rounded-md">
+						<ControlPanel
+							title="Black Hole"
+							icon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
+							open={blackHolePanelOpen}
+							onToggle={() => setBlackHolePanelOpen((open) => !open)}
+						>
+							<NumberControl
+								label="Speed"
+								value={controls.timeScale}
+								step={0.05}
+								onChange={(value) => updateControl("timeScale", value)}
+							/>
+							<NumberControl
+								label="Exposure"
+								value={controls.exposure}
+								step={0.05}
+								onChange={(value) => updateControl("exposure", value)}
+							/>
+							<NumberControl
+								label="Bloom"
+								value={controls.bloomStrength}
+								step={0.05}
+								onChange={(value) => updateControl("bloomStrength", value)}
+							/>
+							<ToggleControl
+								label="Invert Look"
+								checked={controls.invertControls}
+								onChange={(checked) => updateControl("invertControls", checked)}
+							/>
+							<SelectControl
+								label="Color"
+								value={controls.paletteMode}
+								options={[
+									{ label: "Source", value: "source" },
+									{ label: "Custom", value: "custom" },
+								]}
+								onChange={(value) => updateControl("paletteMode", value)}
+							/>
+							{controls.paletteMode === "custom" ? (
+								<div className="grid grid-cols-3 gap-2">
+									<ColorControl
+										label="Shadow"
+										value={controls.shadowColor}
+										onChange={(value) => updateControl("shadowColor", value)}
+									/>
+									<ColorControl
+										label="Mid"
+										value={controls.midColor}
+										onChange={(value) => updateControl("midColor", value)}
+									/>
+									<ColorControl
+										label="High"
+										value={controls.highlightColor}
+										onChange={(value) => updateControl("highlightColor", value)}
+									/>
+								</div>
+							) : null}
+							<div className="grid gap-3 border-t border-white/10 pt-3">
+								<ToggleControl
+									label="ASCII Effect"
+									checked={renderSettings.asciiEnabled}
+									onChange={updateAsciiEnabled}
 								/>
-								<ColorControl
-									label="Mid"
-									value={controls.midColor}
-									onChange={(value) => updateControl("midColor", value)}
+								<SelectControl
+									label="Quality"
+									value={renderSettings.qualityPreset}
+									options={qualityPresetOptions}
+									onChange={applyQualityPreset}
 								/>
-								<ColorControl
-									label="High"
-									value={controls.highlightColor}
-									onChange={(value) => updateControl("highlightColor", value)}
+								<div className="grid gap-1">
+									<NumberControl
+										label="Temporal jitter"
+										value={controls.temporalJitter}
+										min={0}
+										step={0.01}
+										onChange={(value) => updateControl("temporalJitter", value)}
+									/>
+									<p className="font-mono text-[10px] leading-snug text-white/35">
+										0 stable, 0.05 tiny AA, 0.25+ shimmer
+									</p>
+								</div>
+								{renderSettings.qualityPreset === "custom" ? (
+									<div className="grid grid-cols-2 gap-3">
+										<NumberControl
+											label="Trace"
+											value={renderSettings.qualityValue}
+											min={MIN_QUALITY_VALUE}
+											step={0.01}
+											onChange={(value) =>
+												updateRenderSetting("qualityValue", value)
+											}
+										/>
+										<NumberControl
+											label="DPR"
+											value={renderSettings.maxDevicePixelRatio}
+											min={MIN_DPR}
+											step={0.05}
+											onChange={(value) =>
+												updateRenderSetting("maxDevicePixelRatio", value)
+											}
+										/>
+										<NumberControl
+											label="Scene"
+											value={renderSettings.sceneScale}
+											min={MIN_RENDER_SCALE}
+											step={0.01}
+											onChange={(value) =>
+												updateRenderSetting("sceneScale", value)
+											}
+										/>
+										<NumberControl
+											label="Prepass"
+											value={renderSettings.prepassScale}
+											min={MIN_RENDER_SCALE}
+											step={0.01}
+											onChange={(value) =>
+												updateRenderSetting("prepassScale", value)
+											}
+										/>
+										<NumberControl
+											label="Bloom Res"
+											value={renderSettings.bloomScale}
+											min={MIN_RENDER_SCALE}
+											step={0.01}
+											onChange={(value) =>
+												updateRenderSetting("bloomScale", value)
+											}
+										/>
+										<NumberControl
+											label="Canvas"
+											value={renderSettings.resolutionScale}
+											min={MIN_RENDER_SCALE}
+											step={0.05}
+											onChange={(value) =>
+												updateRenderSetting("resolutionScale", value)
+											}
+										/>
+									</div>
+								) : null}
+							</div>
+							{animationMode !== "off" ? (
+								<div className="grid gap-3 border-t border-white/10 pt-3">
+									<div className="flex items-center justify-between gap-3 font-mono text-[11px] text-white/70">
+										<span>Animation</span>
+										<span className="truncate text-white/35">
+											{animationEditorStatus}
+										</span>
+									</div>
+									<SelectControl
+										label="Route"
+										value={animationEditorRoute}
+										options={[...BLACK_HOLE_ANIMATION_ROUTE_OPTIONS]}
+										onChange={setAnimationEditorRoute}
+									/>
+									<div className="grid grid-cols-2 gap-2">
+										<button
+											type="button"
+											onClick={() =>
+												animationPlaying
+													? animationEditorRef.current.pause()
+													: animationEditorRef.current.play()
+											}
+											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
+										>
+											{animationPlaying ? (
+												<Pause aria-hidden className="h-3.5 w-3.5" />
+											) : (
+												<Play aria-hidden className="h-3.5 w-3.5" />
+											)}
+											{animationPlaying ? "Pause" : "Play"}
+										</button>
+										<button
+											type="button"
+											onClick={() => animationEditorRef.current.restartIntro()}
+											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
+										>
+											<RotateCcw aria-hidden className="h-3.5 w-3.5" />
+											Intro
+										</button>
+										<button
+											type="button"
+											onClick={() => animationEditorRef.current.previewIdle()}
+											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
+										>
+											<Play aria-hidden className="h-3.5 w-3.5" />
+											Idle
+										</button>
+										<button
+											type="button"
+											onClick={() =>
+												copyAnimationText(
+													"route",
+													animationEditorRef.current.routeConfig(),
+												)
+											}
+											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
+										>
+											<Copy aria-hidden className="h-3.5 w-3.5" />
+											Route
+										</button>
+									</div>
+									<button
+										type="button"
+										onClick={() =>
+											copyAnimationText(
+												"keyframe",
+												animationEditorRef.current.currentKeyframe(),
+											)
+										}
+										className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
+									>
+										<Copy aria-hidden className="h-3.5 w-3.5" />
+										Copy Current Keyframe
+									</button>
+								</div>
+							) : null}
+							<div className="grid gap-2 border-t border-white/10 pt-3 font-mono text-[11px] text-white/70">
+								<div className="flex items-center justify-between gap-3">
+									<span>Camera</span>
+									<span className="text-white/35">enter to apply</span>
+								</div>
+								<label className="grid gap-1">
+									<span>Position</span>
+									<input
+										ref={cameraPositionInputRef}
+										type="text"
+										onFocus={(event) => event.currentTarget.select()}
+										onBlur={applyCameraPositionInput}
+										onKeyDown={(event) =>
+											handleCameraInputKeyDown(event, applyCameraPositionInput)
+										}
+										className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
+									/>
+								</label>
+								<label className="grid gap-1">
+									<span>Forward</span>
+									<input
+										ref={cameraForwardInputRef}
+										type="text"
+										onFocus={(event) => event.currentTarget.select()}
+										onBlur={applyCameraForwardInput}
+										onKeyDown={(event) =>
+											handleCameraInputKeyDown(event, applyCameraForwardInput)
+										}
+										className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
+									/>
+								</label>
+								<label className="grid gap-1">
+									<span>Universe</span>
+									<input
+										ref={cameraUniverseInputRef}
+										type="text"
+										onFocus={(event) => event.currentTarget.select()}
+										onBlur={applyCameraUniverseInput}
+										onKeyDown={(event) =>
+											handleCameraInputKeyDown(event, applyCameraUniverseInput)
+										}
+										className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
+									/>
+								</label>
+							</div>
+						</ControlPanel>
+					</div>
+
+					<div className="pointer-events-auto overflow-hidden rounded-md">
+						<ControlPanel
+							title="ASCII"
+							icon={<Type aria-hidden className="h-4 w-4" />}
+							open={asciiPanelOpen}
+							onToggle={() => setAsciiPanelOpen((open) => !open)}
+						>
+							<SelectControl
+								label="Text"
+								value={controls.glyphPreset}
+								options={glyphPresetOptions}
+								onChange={(value) => updateControl("glyphPreset", value)}
+							/>
+							<label className="grid gap-1 font-mono text-[11px] text-white/70">
+								<span>Custom</span>
+								<input
+									type="text"
+									value={controls.customGlyphs}
+									disabled={controls.glyphPreset !== "custom"}
+									onChange={(event) =>
+										updateControl("customGlyphs", event.currentTarget.value)
+									}
+									className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none disabled:cursor-not-allowed disabled:opacity-40 focus:border-cyan-300"
+								/>
+							</label>
+							<SelectControl
+								label="Font"
+								value={controls.fontFamily}
+								options={fontOptions}
+								onChange={(value) => updateControl("fontFamily", value)}
+							/>
+							<NumberControl
+								label="Size"
+								value={controls.textSize}
+								min={MIN_TEXT_SIZE}
+								step={1}
+								onChange={(value) => updateControl("textSize", value)}
+							/>
+							<div className="grid grid-cols-2 gap-3">
+								<NumberControl
+									label="Bright"
+									value={controls.brightness}
+									step={0.01}
+									onChange={(value) => updateControl("brightness", value)}
+								/>
+								<NumberControl
+									label="Contrast"
+									value={controls.contrast}
+									step={0.05}
+									onChange={(value) => updateControl("contrast", value)}
 								/>
 							</div>
-						) : null}
-					</ControlPanel>
+						</ControlPanel>
+					</div>
 				</div>
-
-				<div className="pointer-events-auto overflow-hidden rounded-md">
-					<ControlPanel
-						title="ASCII"
-						icon={<Type aria-hidden className="h-4 w-4" />}
-						open={asciiPanelOpen}
-						onToggle={() => setAsciiPanelOpen((open) => !open)}
-					>
-						<SelectControl
-							label="Text"
-							value={controls.glyphPreset}
-							options={glyphPresetOptions}
-							onChange={(value) => updateControl("glyphPreset", value)}
-						/>
-						<label className="grid gap-1 font-mono text-[11px] text-white/70">
-							<span>Custom</span>
-							<input
-								type="text"
-								value={controls.customGlyphs}
-								disabled={controls.glyphPreset !== "custom"}
-								onChange={(event) =>
-									updateControl("customGlyphs", event.currentTarget.value)
-								}
-								className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none disabled:cursor-not-allowed disabled:opacity-40 focus:border-cyan-300"
-							/>
-						</label>
-						<SelectControl
-							label="Font"
-							value={controls.fontFamily}
-							options={fontOptions}
-							onChange={(value) => updateControl("fontFamily", value)}
-						/>
-						<RangeControl
-							label="Size"
-							value={controls.textSize}
-							min={8}
-							max={28}
-							step={1}
-							formatValue={(value) => `${Math.round(value)}px`}
-							onChange={(value) => updateControl("textSize", value)}
-						/>
-						<div className="grid grid-cols-2 gap-3">
-							<RangeControl
-								label="Bright"
-								value={controls.brightness}
-								min={-0.5}
-								max={0.5}
-								step={0.01}
-								onChange={(value) => updateControl("brightness", value)}
-							/>
-							<RangeControl
-								label="Contrast"
-								value={controls.contrast}
-								min={0.25}
-								max={3}
-								step={0.05}
-								onChange={(value) => updateControl("contrast", value)}
-							/>
-						</div>
-					</ControlPanel>
-				</div>
-			</div>
+			) : null}
 			{error ? (
 				<div className="absolute inset-x-4 bottom-4 border border-red-500/60 bg-black/85 p-3 font-mono text-xs text-red-200">
 					{error}

@@ -137,93 +137,19 @@ vec2 CalcOffset(float octave)
 void UpdateCameraState(out vec4 fragColor, in vec2 fragCoord)
 {
     int pxIndex = int(iResolution.x) - int(fragCoord.x);
-    int width = int(iResolution.x);
-    vec3  up      = texelFetch(iChannel1, ivec2(width - OFFSET_UP, 0), 0).xyz;
-    vec3  right   = texelFetch(iChannel1, ivec2(width - OFFSET_RIGHT, 0), 0).xyz;
-    vec3  pos     = texelFetch(iChannel1, ivec2(width - OFFSET_POS, 0), 0).xyz;
-    vec3  fwd     = texelFetch(iChannel1, ivec2(width - OFFSET_FWD, 0), 0).xyz;
-    vec4  lastMouse = texelFetch(iChannel1, ivec2(width - OFFSET_MOUSE, 0), 0);
-    vec4  timeData = texelFetch(iChannel1, ivec2(width - OFFSET_TIME, 0), 0);
-    float gTime   = timeData.x;
-    float uniSign = timeData.y; 
-    vec3 oldPos = pos; 
-    if (iFrame <= 5 || length(fwd) < 0.1) {
-        pos = vec3(-2.0, -3.6, 22.0); 
-        fwd = vec3(0.0, 0.15, -1.0);
-        fwd = normalize(fwd);
-        right = normalize(cross(fwd, vec3(-0.5, 1.0, 0.0)));
-        up    = normalize(cross(right, fwd));
-        gTime = 0.0;
-        lastMouse = iMouse;
-        uniSign = 1.0; 
-    }
+    vec3 right = normalize(uCameraRight);
+    vec3 up = normalize(uCameraUp);
+    vec3 fwd = normalize(-cross(right, up));
 
-    // 3. 处理鼠标旋转
-    if (iMouse.z > 0.0) {
-        vec2 mouseDelta = iMouse.xy - lastMouse.xy;
-        
-        // 防止点击瞬间跳变
-        if (lastMouse.z < 0.0) mouseDelta = vec2(0.0);
-        
-        float yaw = -mouseDelta.x * MOUSE_SENSITIVITY;
-        float pitch = mouseDelta.y * MOUSE_SENSITIVITY;
-        
-        // 绕 Up 轴偏航 (Yaw)
-        fwd = rotAxis(up, yaw) * fwd;
-        right = rotAxis(up, yaw) * right;
-        
-        // 绕 Right 轴俯仰 (Pitch)
-        fwd = rotAxis(right, pitch) * fwd;
-        
-        // 重新正交化，消除误差
-        up = normalize(cross(right, fwd));
-        right = normalize(cross(fwd, up));
-    }
-    
-    // 4. 处理滚转 (Roll Q/E)
-    float roll = 0.0;
-    if (isKeyPressed(KEY_Q)) roll -= ROLL_SPEED * iTimeDelta;
-    if (isKeyPressed(KEY_E)) roll += ROLL_SPEED * iTimeDelta;
-    
-    if (roll != 0.0) {
-        right = rotAxis(fwd, roll) * right;
-        up = normalize(cross(right, fwd));
-    }
-
-    // 5. 处理位移 (WSAD RF)
-    vec3 moveDir = vec3(0.0);
-    if (isKeyPressed(KEY_W)) moveDir += fwd;
-    if (isKeyPressed(KEY_S)) moveDir -= fwd;
-    if (isKeyPressed(KEY_A)) moveDir -= right;
-    if (isKeyPressed(KEY_D)) moveDir += right;
-    if (isKeyPressed(KEY_R)) moveDir += up; // 上浮
-    if (isKeyPressed(KEY_F)) moveDir -= up; // 下沉
-
-    pos += moveDir * MOVE_SPEED * iTimeDelta * (length(pos) > 3.0 ? 1.0 : (length(pos) > 0.5 ? 0.1 + 0.9 * (length(pos) - 0.5) / 2.5 : 0.1));
-    
-    float spinRadius = abs(iSpin * CONST_M);
-    if (oldPos.y * pos.y < 0.0) 
-    {
-        float t = oldPos.y / (oldPos.y - pos.y);
-        vec3 crossPoint = mix(oldPos, pos, t);
-        
-        if (length(crossPoint.xz) < spinRadius) {
-            uniSign *= -1.0;
-        }
-    }
-    // 6. 更新时间
-    gTime += iTimeDelta;
-
-    // 7. 写入数据 (根据 pxIndex 匹配 Buffer A 的读取位置)
+    // Camera movement is CPU-managed in the WebGL port. Keep these state pixels
+    // populated for Shadertoy-compatible wiring and diagnostics.
     fragColor = vec4(0.0);
-    
     if (pxIndex == OFFSET_UP)    fragColor = vec4(up, 1.0);     // W-1 -> Up
     if (pxIndex == OFFSET_RIGHT) fragColor = vec4(right, 1.0);  // W-2 -> Right
-    if (pxIndex == OFFSET_POS)   fragColor = vec4(pos, 1.0);    // W-3 -> Pos
+    if (pxIndex == OFFSET_POS)   fragColor = vec4(uCameraPosition, 1.0);    // W-3 -> Pos
     if (pxIndex == OFFSET_FWD)   fragColor = vec4(fwd, 1.0);    // W-4 -> Fwd (Internal)
     if (pxIndex == OFFSET_MOUSE) fragColor = iMouse;            // W-5 -> Mouse
-    if (pxIndex == OFFSET_TIME)  fragColor = vec4(gTime, 0.0, 0.0, 1.0); // W-6 -> Time
-    if (pxIndex == OFFSET_TIME)  fragColor = vec4(gTime, uniSign, 0.0, 1.0); 
+    if (pxIndex == OFFSET_TIME)  fragColor = vec4(iTime, uUniverseSign, 0.0, 1.0);
 }
 
 // =============================================================================

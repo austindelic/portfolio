@@ -15,7 +15,30 @@ import BlackHoleShader from "../components/BlackHoleShader";
   </head>
   <body class="h-full overflow-hidden bg-black text-white selection:bg-cyan-700 selection:text-white">
     <main class="relative h-dvh w-screen overflow-hidden bg-black">
-      <BlackHoleShader client:only="react" />
+      <BlackHoleShader
+        quality="performance"
+        maxDevicePixelRatio={0.85}
+        sceneScale={0.3}
+        prepassScale={0.25}
+        bloomScale={0.25}
+        timeScale={2}
+        exposure={2}
+        bloomStrength={0}
+        temporalJitter={0}
+        glyphPreset="custom"
+        customGlyphs="voidCG08AA"
+        textSize={10}
+        brightness={0}
+        contrast={1}
+        animationMode="editor"
+        animationRoute="/"
+        animationAutoplay={false}
+        initialCameraPosition={[11.256, 4.159, 18.44]}
+        initialCameraForward={[-0.871, 0.49, 0.028]}
+        initialUniverseSign={1}
+        className="h-full w-full"
+        client:only="react"
+      />
     </main>
   </body>
 </html>
