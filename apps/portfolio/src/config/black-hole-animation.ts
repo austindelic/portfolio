@@ -56,7 +56,7 @@ const baseVisual = {
 	bloomStrength: 0,
 	temporalJitter: 0,
 	asciiEnabled: true,
-	textSize: 10,
+	textSize: 9,
 	brightness: 0,
 	contrast: 1,
 	glyphPreset: "custom",
@@ -76,7 +76,7 @@ const routes = {
 				...baseVisual,
 			},
 			{
-				duration: 3.4,
+				duration: 5,
 				position: [8.613, 3.4, 21.229],
 				forward: [-0.272, 0.179, -0.946],
 				universeSign: 1,
