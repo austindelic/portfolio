@@ -218,6 +218,7 @@ type BlackHoleStats = {
 	fps: number;
 	reactRenderCount: number;
 	dpr: number;
+	targetAllocationScale: number;
 	prepassScale: number;
 	bloomScale: number;
 	sceneScale: number;
@@ -570,6 +571,7 @@ const MIN_QUALITY_VALUE = 0.01;
 const MAX_GLYPH_ATLAS_DIMENSION = 4096;
 const MIN_PREPASS_SCALE = MIN_RENDER_SCALE;
 const DIRECT_FALLBACK_DPR = 0.85;
+const TARGET_ALLOCATION_SCALE_STEPS = [1, 0.75, 0.5, 0.35, 0.25] as const;
 const IDLE_PREPASS_STRIDE = 4;
 const ACTIVE_PREPASS_STRIDE = 2;
 const BLOOM_FRAME_STRIDE = 3;
@@ -1927,17 +1929,44 @@ function chooseFloatTextureFormat(
 	};
 }
 
+function chooseByteTextureFormat(gl: WebGL2RenderingContext): TextureFormat {
+	return {
+		internalFormat: gl.RGBA8,
+		format: gl.RGBA,
+		type: gl.UNSIGNED_BYTE,
+		canFilterLinear: true,
+	};
+}
+
 function chooseFallbackTextureFormat(
 	gl: WebGL2RenderingContext,
 ): TextureFormat {
-	return (
-		chooseFloatTextureFormat(gl) ?? {
-			internalFormat: gl.RGBA8,
-			format: gl.RGBA,
-			type: gl.UNSIGNED_BYTE,
-			canFilterLinear: true,
-		}
-	);
+	return chooseByteTextureFormat(gl);
+}
+
+function formatGlError(gl: WebGL2RenderingContext, error: number): string {
+	switch (error) {
+		case gl.INVALID_ENUM:
+			return "INVALID_ENUM";
+		case gl.INVALID_VALUE:
+			return "INVALID_VALUE";
+		case gl.INVALID_OPERATION:
+			return "INVALID_OPERATION";
+		case gl.INVALID_FRAMEBUFFER_OPERATION:
+			return "INVALID_FRAMEBUFFER_OPERATION";
+		case gl.OUT_OF_MEMORY:
+			return "OUT_OF_MEMORY";
+		case gl.CONTEXT_LOST_WEBGL:
+			return "CONTEXT_LOST_WEBGL";
+		default:
+			return `0x${error.toString(16)}`;
+	}
+}
+
+function clearGlErrors(gl: WebGL2RenderingContext) {
+	for (let i = 0; i < 16; i++) {
+		if (gl.getError() === gl.NO_ERROR) return;
+	}
 }
 
 function createRenderTarget(
@@ -1950,11 +1979,15 @@ function createRenderTarget(
 	const texture = gl.createTexture();
 	const framebuffer = gl.createFramebuffer();
 
-	if (!texture || !framebuffer)
-		throw new Error("Could not create render target.");
+	if (!texture || !framebuffer) {
+		if (texture) gl.deleteTexture(texture);
+		if (framebuffer) gl.deleteFramebuffer(framebuffer);
+		throw new Error(`Could not create render target (${width}x${height}).`);
+	}
 
 	const glFilter =
 		filter === "linear" && format.canFilterLinear ? gl.LINEAR : gl.NEAREST;
+	clearGlErrors(gl);
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -1971,6 +2004,18 @@ function createRenderTarget(
 		format.type,
 		null,
 	);
+	const textureError = gl.getError();
+	if (textureError !== gl.NO_ERROR) {
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		gl.deleteTexture(texture);
+		gl.deleteFramebuffer(framebuffer);
+		throw new Error(
+			`Could not allocate render target texture (${width}x${height}, ${formatGlError(
+				gl,
+				textureError,
+			)}).`,
+		);
+	}
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
 	gl.framebufferTexture2D(
@@ -1984,9 +2029,12 @@ function createRenderTarget(
 
 	if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.deleteTexture(texture);
 		gl.deleteFramebuffer(framebuffer);
-		throw new Error("Render target framebuffer is incomplete.");
+		throw new Error(
+			`Render target framebuffer is incomplete (${width}x${height}).`,
+		);
 	}
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -2010,12 +2058,15 @@ function createMultiRenderTarget(
 	const attachments: number[] = [];
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+	clearGlErrors(gl);
 
 	try {
 		for (let i = 0; i < count; i++) {
 			const texture = gl.createTexture();
 			if (!texture)
-				throw new Error("Could not create multi render target texture.");
+				throw new Error(
+					`Could not create multi render target texture ${i + 1}/${count} (${width}x${height}).`,
+				);
 
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -2033,6 +2084,15 @@ function createMultiRenderTarget(
 				format.type,
 				null,
 			);
+			const textureError = gl.getError();
+			if (textureError !== gl.NO_ERROR) {
+				throw new Error(
+					`Could not allocate multi render target texture ${i + 1}/${count} (${width}x${height}, ${formatGlError(
+						gl,
+						textureError,
+					)}).`,
+				);
+			}
 
 			const attachment = gl.COLOR_ATTACHMENT0 + i;
 			gl.framebufferTexture2D(
@@ -2969,6 +3029,8 @@ export default function BlackHoleShader({
 		let bloomWidth = 1;
 		let bloomHeight = 1;
 		let currentDpr = 1;
+		let targetAllocationScale = 1;
+		let allocationScaleReason: string | null = null;
 		let currentPrepassScale = settings.initialPrepassScale;
 		let averageFrameTimeMs = 16.7;
 		let cpuAverageFrameTimeMs = 16.7;
@@ -3088,6 +3150,43 @@ export default function BlackHoleShader({
 		let optimizedTargets: OptimizedTargets | null = null;
 		let fallbackTargets: FallbackTargets | null = null;
 
+		const ensureFallbackPasses = () => {
+			if (fallbackPasses) return;
+
+			fallbackPasses = {
+				a: createPass(
+					gl,
+					"Buffer A",
+					createStandardFragmentSource("Buffer A", bufferASource),
+				),
+				b: createPass(
+					gl,
+					"Buffer B",
+					createStandardFragmentSource("Buffer B", bufferBSource),
+				),
+				c: createPass(
+					gl,
+					"Buffer C",
+					createStandardFragmentSource("Buffer C", bufferCSource),
+				),
+				d: createPass(
+					gl,
+					"Buffer D",
+					createStandardFragmentSource("Buffer D", bufferDSource),
+				),
+				image: createPass(
+					gl,
+					"Image",
+					createStandardFragmentSource("Image", imageSource),
+				),
+				ascii: createPass(
+					gl,
+					"ASCII",
+					createStandardFragmentSource("ASCII", asciiSource),
+				),
+			};
+		};
+
 		const writeCameraReadout = (force = false) => {
 			const activeElement = document.activeElement;
 			if (!showControls) return;
@@ -3204,38 +3303,7 @@ export default function BlackHoleShader({
 
 		if (mode === "fallback") {
 			try {
-				fallbackPasses = {
-					a: createPass(
-						gl,
-						"Buffer A",
-						createStandardFragmentSource("Buffer A", bufferASource),
-					),
-					b: createPass(
-						gl,
-						"Buffer B",
-						createStandardFragmentSource("Buffer B", bufferBSource),
-					),
-					c: createPass(
-						gl,
-						"Buffer C",
-						createStandardFragmentSource("Buffer C", bufferCSource),
-					),
-					d: createPass(
-						gl,
-						"Buffer D",
-						createStandardFragmentSource("Buffer D", bufferDSource),
-					),
-					image: createPass(
-						gl,
-						"Image",
-						createStandardFragmentSource("Image", imageSource),
-					),
-					ascii: createPass(
-						gl,
-						"ASCII",
-						createStandardFragmentSource("ASCII", asciiSource),
-					),
-				};
+				ensureFallbackPasses();
 			} catch (fallbackError) {
 				setError(formatError(fallbackError));
 				gl.deleteBuffer(vertexBuffer);
@@ -3598,11 +3666,45 @@ export default function BlackHoleShader({
 
 		const targetDimension = (value: number) =>
 			Math.min(maxTextureSize, Math.max(2, Math.floor(value)));
+		const allocatedTargetDimension = (value: number) =>
+			targetDimension(value * targetAllocationScale);
+
+		const createTargetsWithRetry = (createTargets: () => void) => {
+			let lastError: unknown = null;
+			const scaleSteps = TARGET_ALLOCATION_SCALE_STEPS.filter(
+				(scale) => scale <= targetAllocationScale + 1e-6,
+			);
+
+			for (const scale of scaleSteps) {
+				targetAllocationScale = scale;
+				disposeTargets();
+
+				try {
+					createTargets();
+					allocationScaleReason =
+						scale < 1
+							? `Render targets reduced to ${Math.round(
+									scale * 100,
+								)}% after allocation retry.`
+							: null;
+					return;
+				} catch (error) {
+					lastError = error;
+					disposeTargets();
+				}
+			}
+
+			throw lastError instanceof Error
+				? lastError
+				: new Error("Could not allocate render targets.");
+		};
 
 		const createOptimizedTargets = () => {
 			if (!floatFormat) throw new Error("Float targets are unavailable.");
-			const nextSceneWidth = targetDimension(renderWidth * settings.sceneScale);
-			const nextSceneHeight = targetDimension(
+			const nextSceneWidth = allocatedTargetDimension(
+				renderWidth * settings.sceneScale,
+			);
+			const nextSceneHeight = allocatedTargetDimension(
 				renderHeight * settings.sceneScale,
 			);
 			const nextPrepassWidth = targetDimension(
@@ -3672,8 +3774,10 @@ export default function BlackHoleShader({
 		};
 
 		const createFallbackTargets = () => {
-			sceneWidth = targetDimension(renderWidth * settings.sceneScale);
-			sceneHeight = targetDimension(renderHeight * settings.sceneScale);
+			sceneWidth = allocatedTargetDimension(renderWidth * settings.sceneScale);
+			sceneHeight = allocatedTargetDimension(
+				renderHeight * settings.sceneScale,
+			);
 			prepassWidth = sceneWidth;
 			prepassHeight = sceneHeight;
 			bloomWidth = sceneWidth;
@@ -3732,41 +3836,27 @@ export default function BlackHoleShader({
 				maxTextureSize,
 				Math.max(1, Math.floor(rect.height * dpr * settings.resolutionScale)),
 			);
-			const nextSceneWidth = Math.min(
-				maxTextureSize,
-				Math.max(2, Math.floor(nextWidth * settings.sceneScale)),
+			const nextSceneWidth = allocatedTargetDimension(
+				nextWidth * settings.sceneScale,
 			);
-			const nextSceneHeight = Math.min(
-				maxTextureSize,
-				Math.max(2, Math.floor(nextHeight * settings.sceneScale)),
+			const nextSceneHeight = allocatedTargetDimension(
+				nextHeight * settings.sceneScale,
 			);
 			const nextPrepassWidth =
 				mode === "optimized"
-					? Math.min(
-							maxTextureSize,
-							Math.max(2, Math.floor(nextSceneWidth * currentPrepassScale)),
-						)
+					? targetDimension(nextSceneWidth * currentPrepassScale)
 					: nextSceneWidth;
 			const nextPrepassHeight =
 				mode === "optimized"
-					? Math.min(
-							maxTextureSize,
-							Math.max(2, Math.floor(nextSceneHeight * currentPrepassScale)),
-						)
+					? targetDimension(nextSceneHeight * currentPrepassScale)
 					: nextSceneHeight;
 			const nextBloomWidth =
 				mode === "optimized"
-					? Math.min(
-							maxTextureSize,
-							Math.max(2, Math.floor(nextSceneWidth * settings.bloomScale)),
-						)
+					? targetDimension(nextSceneWidth * settings.bloomScale)
 					: nextSceneWidth;
 			const nextBloomHeight =
 				mode === "optimized"
-					? Math.min(
-							maxTextureSize,
-							Math.max(2, Math.floor(nextSceneHeight * settings.bloomScale)),
-						)
+					? targetDimension(nextSceneHeight * settings.bloomScale)
 					: nextSceneHeight;
 
 			if (
@@ -3790,48 +3880,17 @@ export default function BlackHoleShader({
 			disposeTargets();
 
 			try {
-				if (mode === "optimized") createOptimizedTargets();
-				else createFallbackTargets();
+				if (mode === "optimized")
+					createTargetsWithRetry(createOptimizedTargets);
+				else createTargetsWithRetry(createFallbackTargets);
 			} catch (targetError) {
 				if (mode === "optimized") {
 					mode = "fallback";
 					fallbackReason = formatError(targetError);
+					targetAllocationScale = 1;
 					disposeOptimizedTargets();
-					if (!fallbackPasses) {
-						fallbackPasses = {
-							a: createPass(
-								gl,
-								"Buffer A",
-								createStandardFragmentSource("Buffer A", bufferASource),
-							),
-							b: createPass(
-								gl,
-								"Buffer B",
-								createStandardFragmentSource("Buffer B", bufferBSource),
-							),
-							c: createPass(
-								gl,
-								"Buffer C",
-								createStandardFragmentSource("Buffer C", bufferCSource),
-							),
-							d: createPass(
-								gl,
-								"Buffer D",
-								createStandardFragmentSource("Buffer D", bufferDSource),
-							),
-							image: createPass(
-								gl,
-								"Image",
-								createStandardFragmentSource("Image", imageSource),
-							),
-							ascii: createPass(
-								gl,
-								"ASCII",
-								createStandardFragmentSource("ASCII", asciiSource),
-							),
-						};
-					}
-					createFallbackTargets();
+					ensureFallbackPasses();
+					createTargetsWithRetry(createFallbackTargets);
 				} else {
 					throw targetError;
 				}
@@ -3860,6 +3919,7 @@ export default function BlackHoleShader({
 				fps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : 0,
 				reactRenderCount: reactRenderCountRef.current,
 				dpr: currentDpr,
+				targetAllocationScale,
 				prepassScale: currentPrepassScale,
 				bloomScale: settings.bloomScale,
 				sceneScale: settings.sceneScale,
@@ -3893,7 +3953,9 @@ export default function BlackHoleShader({
 				qualityValue: settings.qualityValue,
 				maxDevicePixelRatio: settings.maxDevicePixelRatio,
 				resolutionScale: settings.resolutionScale,
-				fallbackReason,
+				fallbackReason:
+					[fallbackReason, allocationScaleReason].filter(Boolean).join("; ") ||
+					null,
 				animationMode: activeAnimationMode(),
 				animationRoute: activeAnimationRoute,
 				animationPhase,
@@ -3925,7 +3987,16 @@ export default function BlackHoleShader({
 
 			if (Math.abs(previousScale - currentPrepassScale) > 0.001) {
 				disposeOptimizedTargets();
-				createOptimizedTargets();
+				try {
+					createTargetsWithRetry(createOptimizedTargets);
+				} catch (targetError) {
+					mode = "fallback";
+					fallbackReason = formatError(targetError);
+					targetAllocationScale = 1;
+					disposeOptimizedTargets();
+					ensureFallbackPasses();
+					createTargetsWithRetry(createFallbackTargets);
+				}
 				frame = 0;
 				startTime = performance.now();
 				lastTime = startTime;
