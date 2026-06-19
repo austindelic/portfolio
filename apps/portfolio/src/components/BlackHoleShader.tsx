@@ -574,7 +574,7 @@ const IDLE_PREPASS_STRIDE = 4;
 const ACTIVE_PREPASS_STRIDE = 2;
 const BLOOM_FRAME_STRIDE = 3;
 const DEFAULT_IDLE_RENDER_INTERVAL_MS = 24;
-const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 7, y: 10 };
+const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 6, y: 9 };
 const MAX_GLYPHS = 96;
 const GLYPH_PRESETS: Record<Exclude<GlyphPreset, "custom">, string> = {
 	gargantua: " CGO08@",
@@ -602,7 +602,7 @@ const DEFAULT_SHADER_CONTROLS: ShaderControls = {
 	glyphPreset: "custom",
 	customGlyphs: "voidCG08AA",
 	fontFamily: "Departure Mono",
-	textSize: 10,
+	textSize: 9,
 	brightness: 0,
 	contrast: 1,
 };

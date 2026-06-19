@@ -66,23 +66,79 @@
 	backface-visibility: hidden;
 }
 
-.bh-content-shell,
-.bh-home-card,
-.bh-home-inset,
 .bh-hover-surface {
-	contain: layout paint style;
+	contain: layout style;
 }
 
-.bh-content-shell {
-	background-color: rgb(0 0 0 / 0.12);
+.bh-content-shell,
+.bh-home-card,
+.bh-home-inset {
+	position: relative;
+	overflow: hidden;
+	background-color: transparent;
+}
+
+.bh-content-shell::before,
+.bh-home-card::before,
+.bh-home-inset::before {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	content: "";
+}
+
+.bh-content-shell::before {
+	background: rgb(0 0 0 / 0.18);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.07),
+		inset 0 0 0 1px rgb(255 255 255 / 0.04);
 	-webkit-backdrop-filter: blur(6px);
 	backdrop-filter: blur(6px);
 }
 
-.bh-perf-opaque-content .bh-content-shell,
-.bh-perf-opaque-content .bh-home-card,
-.bh-perf-opaque-content .bh-home-inset {
+.bh-home-card::before {
+	background: rgb(0 0 0 / 0.14);
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.055);
+	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
+}
+
+.bh-home-inset::before {
+	background: rgb(255 255 255 / 0.055);
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+	-webkit-backdrop-filter: blur(3px);
+	backdrop-filter: blur(3px);
+}
+
+.bh-content-shell > *,
+.bh-home-card > *,
+.bh-home-inset > * {
+	position: relative;
+	z-index: 1;
+}
+
+.bh-perf-opaque-content .bh-content-shell::before,
+.bh-perf-opaque-content .bh-home-card::before,
+.bh-perf-opaque-content .bh-home-inset::before {
 	background-color: #020303;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+}
+
+@-moz-document url-prefix() {
+	.bh-content-shell::before {
+		background: rgb(0 0 0 / 0.22);
+	}
+
+	.bh-home-card::before {
+		background: rgb(0 0 0 / 0.18);
+	}
+
+	.bh-home-inset::before {
+		background: rgb(255 255 255 / 0.07);
+	}
 }
 
 @custom-variant dark (&:is(.dark *));
