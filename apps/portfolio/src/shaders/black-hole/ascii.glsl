@@ -29,9 +29,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 	int glyphIndex = int(clamp(floor(brightness * (glyphCount - 1.0) + 0.5), 0.0, glyphCount - 1.0));
 	vec2 atlasUv = vec2((float(glyphIndex) + cellUv.x) / glyphCount, cellUv.y);
 	float glyph = texture(iChannel1, atlasUv).a;
+	float glyphCoverage = max(texelFetch(iChannel2, ivec2(glyphIndex, 0), 0).r, 0.035);
+	float normalizedGlyph = clamp(glyph / glyphCoverage, 0.0, 2.5);
+	float brightCellGlow = (1.0 - glyph) * smoothstep(0.45, 0.95, brightness) * brightness * 0.32;
 
 	vec3 baseColor = uPaletteMode == 1 ? PaletteColor(brightness) : cellColor;
-	vec3 asciiColor = clamp(baseColor * (0.07 + glyph * 1.65), 0.0, 1.0);
+	vec3 asciiColor = clamp(baseColor * (0.035 + normalizedGlyph * 0.82 + brightCellGlow), 0.0, 1.0);
 
 	fragColor = vec4(mix(originalColor, asciiColor, clamp(uAsciiMix, 0.0, 1.0)), 1.0);
 }

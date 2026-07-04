@@ -35,10 +35,24 @@ type AsciiCellSize = {
 
 type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
 type PaletteMode = "source" | "custom";
-type QualityPreset = "performance" | "balanced" | "visual" | "custom";
+type QualityPreset =
+	| "mobile-safe"
+	| "ascii-balanced"
+	| "ascii-sharp"
+	| "performance"
+	| "balanced"
+	| "visual"
+	| "desktop-full"
+	| "stress-test"
+	| "custom";
 type QualityProp = Exclude<QualityPreset, "custom"> | number;
 type AnimationMode = "off" | "route" | "editor";
 type AnimationPhase = "off" | "intro" | "transition" | "idle";
+type RendererMode = "auto" | "full" | "ascii-cell" | "fallback-full";
+type ResolvedRendererMode = "full" | "ascii-cell";
+type ShaderBackend = "auto" | "webgl2" | "webgpu";
+type ResolvedShaderBackend = "webgl2" | "webgpu";
+type RuntimeProfile = "desktop" | "mobile" | "lowPower";
 type FontFamily =
 	| "Departure Mono"
 	| "DSEG14Modern"
@@ -73,6 +87,10 @@ type RenderSettings = {
 	prepassScale: number;
 	bloomScale: number;
 	resolutionScale: number;
+	cellWidth: number;
+	cellHeight: number;
+	frameIntervalMs: number;
+	enableBloomPass: boolean;
 };
 
 type GlyphAtlasConfig = {
@@ -82,6 +100,17 @@ type GlyphAtlasConfig = {
 	textSize: number;
 	cellSize: AsciiCellSize;
 	key: string;
+};
+
+type GlyphAtlasRaster = {
+	canvas: HTMLCanvasElement;
+	metricsCanvas: HTMLCanvasElement;
+};
+
+type GlyphTextureSet = {
+	atlas: TextureLike;
+	metrics: TextureLike;
+	dispose: () => void;
 };
 
 type RenderUniforms = {
@@ -151,6 +180,7 @@ type ProgramPass = {
 		uTemporalJitter: WebGLUniformLocation | null;
 		uBlendWeight: WebGLUniformLocation | null;
 		uBloomMode: WebGLUniformLocation | null;
+		uCanvasResolution: WebGLUniformLocation | null;
 		uAsciiCellSize: WebGLUniformLocation | null;
 		uAsciiMix: WebGLUniformLocation | null;
 		uGlyphCount: WebGLUniformLocation | null;
@@ -210,7 +240,10 @@ type CameraState = {
 };
 
 type BlackHoleStats = {
-	mode: "optimized" | "fallback";
+	mode: "optimized" | "fallback" | "ascii-cell" | "webgpu";
+	backend: ResolvedShaderBackend;
+	requestedRendererMode: RendererMode;
+	runtimeProfile: RuntimeProfile;
 	frame: number;
 	frameTimeMs: number;
 	cpuAverageFrameTimeMs: number;
@@ -252,6 +285,19 @@ type BlackHoleStats = {
 	qualityValue: number;
 	maxDevicePixelRatio: number;
 	resolutionScale: number;
+	cellWidth: number;
+	cellHeight: number;
+	cellCount: number;
+	computeWorkgroups: number;
+	computeInvocations: number;
+	frameIntervalMs: number;
+	enableBloomPass: boolean;
+	passCount: number;
+	estimatedTextureMemoryBytes: number;
+	initTimeMs: number;
+	gpuFrameTimeMs: number | null;
+	gpuTimingSupported: boolean;
+	webgpuAvailable: boolean;
 	fallbackReason: string | null;
 	lastAllocationFailure: string | null;
 	animationMode: AnimationMode;
@@ -268,11 +314,17 @@ type Props = {
 	interactive?: boolean;
 	idleRenderIntervalMs?: number;
 	forceActiveRender?: boolean;
+	rendererMode?: RendererMode;
+	backend?: ShaderBackend;
 	quality?: QualityProp;
 	resolutionScale?: number;
 	prepassScale?: number;
 	bloomScale?: number;
 	maxDevicePixelRatio?: number;
+	cellWidth?: number;
+	cellHeight?: number;
+	frameIntervalMs?: number;
+	enableBloomPass?: boolean;
 	initialCameraPosition?: Vec3;
 	initialCameraForward?: Vec3;
 	initialUniverseSign?: number;
@@ -313,6 +365,29 @@ type PersistentAnimationSnapshot = Required<RuntimeSnapshot> & {
 	route: BlackHoleAnimationRouteKey;
 };
 
+type BenchmarkResult = {
+	label: string;
+	rendererMode: RendererMode;
+	backend: ShaderBackend;
+	activeMode: BlackHoleStats["mode"] | "unavailable";
+	activeBackend: ResolvedShaderBackend | "unavailable";
+	averageFps: number;
+	averageFrameTimeMs: number;
+	p95FrameTimeMs: number;
+	cpuAverageFrameTimeMs: number;
+	cpuP95FrameTimeMs: number;
+	initTimeMs: number;
+	cellCount: number;
+	passCount: number;
+	renderTargetPixels: number;
+	computeWorkgroups: number;
+	computeInvocations: number;
+	estimatedTextureMemoryBytes: number;
+	gpuFrameTimeMs: number | null;
+	gpuTimingSupported: boolean;
+	fallbackReason: string | null;
+};
+
 type CameraEditorApi = {
 	applyPosition: (value: string) => boolean;
 	applyForward: (value: string) => boolean;
@@ -333,6 +408,7 @@ type AnimationEditorApi = {
 declare global {
 	interface Window {
 		__blackHoleStats?: BlackHoleStats;
+		__blackHoleBenchmark?: BenchmarkResult[];
 		__blackHoleAnimationSnapshot?: PersistentAnimationSnapshot;
 	}
 }
@@ -367,6 +443,7 @@ uniform float uQuality;
 uniform float uTemporalJitter;
 uniform float uBlendWeight;
 uniform int uBloomMode;
+uniform vec2 uCanvasResolution;
 uniform vec2 uAsciiCellSize;
 uniform float uAsciiMix;
 uniform int uGlyphCount;
@@ -557,6 +634,211 @@ void main()
 }
 `;
 
+const ASCII_CELL_TRACE_SOURCE = `
+out vec4 shadertoyFragColor;
+
+void main()
+{
+	vec2 canvasResolution = max(uCanvasResolution, vec2(1.0));
+	vec2 cellSize = max(uAsciiCellSize, vec2(2.0));
+	vec2 fullFragCoord = min(
+		(gl_FragCoord.xy + vec2(0.5)) * cellSize,
+		canvasResolution - vec2(0.5)
+	);
+	vec2 uv = fullFragCoord / canvasResolution;
+	mat4 inverseCamRot;
+	vec3 mapCamDir;
+	TraceResult res = TraceFromCamera(uv, canvasResolution, 0.5, inverseCamRot, mapCamDir);
+
+	shadertoyFragColor = FinalizeTrace(res, uv, inverseCamRot, mapCamDir);
+}
+`;
+
+const WEBGPU_COMPUTE_SOURCE = `
+struct Params {
+	time_exposure_quality_glyph: vec4<f32>,
+	shadow: vec4<f32>,
+	mid: vec4<f32>,
+	highlight: vec4<f32>,
+	source_dims: vec4<f32>,
+	canvas_dims: vec4<f32>,
+	cell_size: vec4<f32>,
+	camera_position: vec4<f32>,
+	camera_right: vec4<f32>,
+	camera_up: vec4<f32>,
+	camera_forward: vec4<f32>,
+};
+
+@group(0) @binding(0) var cell_texture: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(1) var<uniform> params: Params;
+
+fn hash3(p: vec3<f32>) -> f32 {
+	return fract(sin(dot(p, vec3<f32>(127.1, 311.7, 74.7))) * 43758.5453123);
+}
+
+fn saturate_color(color: vec3<f32>) -> vec3<f32> {
+	return clamp(color, vec3<f32>(0.0), vec3<f32>(1.0));
+}
+
+fn tone_map(color: vec3<f32>) -> vec3<f32> {
+	var mapped = color / (vec3<f32>(1.0) + color);
+	mapped = pow(saturate_color(mapped), vec3<f32>(0.72));
+	return mapped;
+}
+
+fn star_field(dir: vec3<f32>) -> vec3<f32> {
+	let cell = floor(normalize(dir) * 150.0);
+	let star_seed = hash3(cell);
+	let star = smoothstep(0.992, 1.0, star_seed);
+	let cold = vec3<f32>(0.45, 0.62, 1.0);
+	let warm = vec3<f32>(1.0, 0.86, 0.62);
+	return mix(cold, warm, hash3(cell + vec3<f32>(17.0, 3.0, 91.0))) * star * (0.25 + 1.6 * hash3(cell + vec3<f32>(9.0)));
+}
+
+fn black_hole_color(uv: vec2<f32>) -> vec3<f32> {
+	let canvas = max(params.canvas_dims.xy, vec2<f32>(1.0));
+	let ndc = uv * 2.0 - vec2<f32>(1.0);
+	let fov = 0.57735026;
+	let ray_dir = normalize(
+		params.camera_forward.xyz +
+		params.camera_right.xyz * (ndc.x * fov) +
+		params.camera_up.xyz * (ndc.y * fov * canvas.y / max(canvas.x, 1.0))
+	);
+	let camera_pos = params.camera_position.xyz;
+	let time = params.time_exposure_quality_glyph.x;
+	let exposure = params.time_exposure_quality_glyph.y;
+	let quality = params.time_exposure_quality_glyph.z;
+
+	let to_center = -camera_pos;
+	let closest_t = max(dot(to_center, ray_dir), 0.0);
+	let closest = camera_pos + ray_dir * closest_t;
+	let impact = length(closest);
+	let center_facing = smoothstep(0.0, 1.0, closest_t);
+
+	var color = star_field(ray_dir) * (1.0 - smoothstep(0.86, 0.98, center_facing) * smoothstep(0.7, 4.0, impact) * 0.35);
+
+	let horizon = center_facing * (1.0 - smoothstep(0.78, 1.15, impact));
+	let photon_ring = center_facing * exp(-abs(impact - 1.32) * 7.0) * (0.55 + 0.45 * quality);
+	let inner_ring = center_facing * exp(-abs(impact - 1.75) * 3.2);
+
+	let denom = ray_dir.y;
+	let disk_t = -camera_pos.y / select(0.0001 * sign(denom + 0.0001), denom, abs(denom) > 0.0001);
+	let disk_pos = camera_pos + ray_dir * disk_t;
+	let disk_radius = length(disk_pos.xz);
+	let disk_angle = atan2(disk_pos.z, disk_pos.x);
+	let disk_radial = smoothstep(2.0, 3.0, disk_radius) * (1.0 - smoothstep(14.0, 19.0, disk_radius));
+	let disk_visible = select(0.0, 1.0, disk_t > 0.0);
+	let disk_grazing = clamp(0.15 / max(abs(denom), 0.04), 0.0, 1.0);
+	let orbital = 0.62 + 0.38 * sin(disk_angle * 18.0 - time * 5.0 + disk_radius * 0.9);
+	let tangent = normalize(vec3<f32>(-disk_pos.z, 0.0, disk_pos.x));
+	let doppler = clamp(0.72 + 0.52 * dot(tangent, -ray_dir), 0.25, 1.75);
+	let disk = disk_visible * disk_radial * disk_grazing * orbital;
+	let lensed_disk = center_facing * exp(-abs(impact - 2.35) * 1.35) * (0.25 + 0.75 * smoothstep(-0.2, 0.8, closest.y)) * (0.5 + 0.5 * sin(atan2(closest.z, closest.x) * 14.0 - time * 4.0));
+
+	let heat = clamp(disk * doppler + lensed_disk * 0.45, 0.0, 2.5);
+	let disk_color = mix(vec3<f32>(0.95, 0.24, 0.05), vec3<f32>(1.0, 0.92, 0.72), clamp(heat * 0.85 + photon_ring * 0.35, 0.0, 1.0));
+	color += disk_color * heat * 1.75;
+	color += vec3<f32>(0.6, 0.82, 1.0) * photon_ring * 1.4;
+	color += vec3<f32>(0.95, 0.62, 0.32) * inner_ring * 0.35;
+	color *= 1.0 - horizon * 0.98;
+
+	return tone_map(color * exposure);
+}
+
+@compute @workgroup_size(8, 8, 1)
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+	let dims = vec2<u32>(u32(params.source_dims.x), u32(params.source_dims.y));
+	if (id.x >= dims.x || id.y >= dims.y) {
+		return;
+	}
+
+	let canvas_resolution = max(params.canvas_dims.xy, vec2<f32>(1.0));
+	let source_coord = vec2<f32>(f32(id.x), f32(id.y)) + vec2<f32>(0.5);
+	let full_coord = select(source_coord, source_coord * max(params.cell_size.xy, vec2<f32>(1.0)), params.source_dims.w > 0.5);
+	let uv = min(full_coord / canvas_resolution, vec2<f32>(0.99999));
+	let color = black_hole_color(uv);
+
+	textureStore(cell_texture, vec2<i32>(i32(id.x), i32(id.y)), vec4<f32>(saturate_color(color), 1.0));
+}
+`;
+
+const WEBGPU_RENDER_SOURCE = `
+struct Params {
+	time_exposure_quality_glyph: vec4<f32>,
+	shadow: vec4<f32>,
+	mid: vec4<f32>,
+	highlight: vec4<f32>,
+	source_dims: vec4<f32>,
+	canvas_dims: vec4<f32>,
+	cell_size: vec4<f32>,
+	camera_position: vec4<f32>,
+	camera_right: vec4<f32>,
+	camera_up: vec4<f32>,
+	camera_forward: vec4<f32>,
+};
+
+struct VertexOut {
+	@builtin(position) position: vec4<f32>,
+	@location(0) uv: vec2<f32>,
+};
+
+@group(0) @binding(0) var cell_texture: texture_2d<f32>;
+@group(0) @binding(1) var glyph_texture: texture_2d<f32>;
+@group(0) @binding(2) var glyph_metrics: texture_2d<f32>;
+@group(0) @binding(3) var glyph_sampler: sampler;
+@group(0) @binding(4) var<uniform> params: Params;
+
+@vertex
+fn vertex_main(@builtin(vertex_index) vertex_index: u32) -> VertexOut {
+	var positions = array<vec2<f32>, 3>(
+		vec2<f32>(-1.0, -1.0),
+		vec2<f32>(3.0, -1.0),
+		vec2<f32>(-1.0, 3.0),
+	);
+	let position = positions[vertex_index];
+	var output: VertexOut;
+	output.position = vec4<f32>(position, 0.0, 1.0);
+	output.uv = position * 0.5 + vec2<f32>(0.5);
+	return output;
+}
+
+fn palette_color(brightness: f32) -> vec3<f32> {
+	if (brightness < 0.5) {
+		return mix(params.shadow.xyz, params.mid.xyz, brightness * 2.0);
+	}
+	return mix(params.mid.xyz, params.highlight.xyz, (brightness - 0.5) * 2.0);
+}
+
+@fragment
+fn fragment_main(input: VertexOut) -> @location(0) vec4<f32> {
+	let frag_coord = input.uv * params.canvas_dims.xy;
+	let cell_size = max(params.cell_size.xy, vec2<f32>(2.0));
+	let cell_origin = floor(frag_coord / cell_size) * cell_size;
+	let cell_uv = (frag_coord - cell_origin) / cell_size;
+	let sample_uv = (cell_origin + cell_size * 0.5) / max(params.canvas_dims.xy, vec2<f32>(1.0));
+	let cell_color = textureSample(cell_texture, glyph_sampler, sample_uv).rgb;
+	let original_color = textureSample(cell_texture, glyph_sampler, input.uv).rgb;
+	let ascii_mix = clamp(params.source_dims.z, 0.0, 1.0);
+
+	if (ascii_mix <= 0.001) {
+		return vec4<f32>(original_color, 1.0);
+	}
+
+	var brightness = clamp(dot(cell_color, vec3<f32>(0.3, 0.59, 0.11)), 0.0, 1.0);
+	brightness = clamp((brightness - 0.5) * max(params.canvas_dims.w, 0.01) + 0.5 + params.canvas_dims.z, 0.0, 1.0);
+	let glyph_count = max(params.time_exposure_quality_glyph.w, 1.0);
+	let glyph_index = clamp(floor(brightness * (glyph_count - 1.0) + 0.5), 0.0, glyph_count - 1.0);
+	let atlas_uv = vec2<f32>((glyph_index + cell_uv.x) / glyph_count, cell_uv.y);
+	let glyph = textureSample(glyph_texture, glyph_sampler, atlas_uv).a;
+	let glyph_coverage = max(textureLoad(glyph_metrics, vec2<i32>(i32(glyph_index), 0), 0).r, 0.035);
+	let normalized_glyph = clamp(glyph / glyph_coverage, 0.0, 2.5);
+	let bright_cell_glow = (1.0 - glyph) * smoothstep(0.45, 0.95, brightness) * brightness * 0.32;
+	let base_color = select(cell_color, palette_color(brightness), params.cell_size.z > 0.5);
+	let ascii_color = clamp(base_color * (0.035 + normalized_glyph * 0.82 + bright_cell_glow), vec3<f32>(0.0), vec3<f32>(1.0));
+	return vec4<f32>(mix(original_color, ascii_color, ascii_mix), 1.0);
+}
+`;
+
 const FALLBACK_CHANNEL_RESOLUTIONS = new Float32Array(12);
 const CONTROL_KEY_CODES = new Set([65, 68, 69, 70, 81, 82, 83, 87]);
 
@@ -578,6 +860,7 @@ const ACTIVE_PREPASS_STRIDE = 2;
 const BLOOM_FRAME_STRIDE = 3;
 const DEFAULT_IDLE_RENDER_INTERVAL_MS = 24;
 const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 6, y: 9 };
+const DEFAULT_ASCII_CELL_FRAME_INTERVAL_MS = 33;
 const MAX_GLYPHS = 96;
 const GLYPH_PRESETS: Record<Exclude<GlyphPreset, "custom">, string> = {
 	gargantua: " CGO08@",
@@ -1409,6 +1692,69 @@ function createGlyphAtlasConfig(controls: ShaderControls): GlyphAtlasConfig {
 	};
 }
 
+function createGlyphAtlasRaster(config: GlyphAtlasConfig): GlyphAtlasRaster {
+	const glyphs = Array.from(config.glyphs);
+	const glyphCount = Math.max(1, glyphs.length);
+	const width = Math.max(1, config.cellSize.x * glyphCount);
+	const height = Math.max(1, config.cellSize.y);
+	const canvas = document.createElement("canvas");
+	const context = canvas.getContext("2d");
+
+	if (!context) throw new Error("Could not create ASCII glyph atlas canvas.");
+
+	canvas.width = width;
+	canvas.height = height;
+	context.clearRect(0, 0, width, height);
+	context.fillStyle = "#ffffff";
+	context.textAlign = "center";
+	context.textBaseline = "middle";
+	context.font = `${config.textSize}px "${config.fontFamily}", monospace`;
+
+	for (let index = 0; index < glyphCount; index++) {
+		context.fillText(
+			glyphs[index] ?? " ",
+			index * config.cellSize.x + config.cellSize.x * 0.5,
+			config.cellSize.y * 0.56,
+			config.cellSize.x,
+		);
+	}
+
+	const imageData = context.getImageData(0, 0, width, height);
+	const metricsCanvas = document.createElement("canvas");
+	const metricsContext = metricsCanvas.getContext("2d");
+
+	if (!metricsContext)
+		throw new Error("Could not create ASCII glyph metrics canvas.");
+
+	metricsCanvas.width = glyphCount;
+	metricsCanvas.height = 1;
+	const metricsData = metricsContext.createImageData(glyphCount, 1);
+	const cellArea = Math.max(1, config.cellSize.x * config.cellSize.y);
+
+	for (let glyphIndex = 0; glyphIndex < glyphCount; glyphIndex++) {
+		let alphaSum = 0;
+		const minX = glyphIndex * config.cellSize.x;
+		const maxX = Math.min(width, minX + config.cellSize.x);
+
+		for (let y = 0; y < height; y++) {
+			for (let x = minX; x < maxX; x++) {
+				alphaSum += imageData.data[(y * width + x) * 4 + 3] ?? 0;
+			}
+		}
+
+		const coverage = clamp(alphaSum / (255 * cellArea), 0, 1);
+		const offset = glyphIndex * 4;
+		metricsData.data[offset] = Math.round(coverage * 255);
+		metricsData.data[offset + 1] = 255;
+		metricsData.data[offset + 2] = 255;
+		metricsData.data[offset + 3] = 255;
+	}
+
+	metricsContext.putImageData(metricsData, 0, 0);
+
+	return { canvas, metricsCanvas };
+}
+
 function normalizeHexColor(value: string, fallback: string): string {
 	if (/^#[0-9a-fA-F]{6}$/.test(value)) return value;
 	return fallback;
@@ -1595,6 +1941,10 @@ function resolveQualitySettings({
 	maxDevicePixelRatio,
 	asciiEnabled = true,
 	resolutionScale = 1,
+	cellWidth,
+	cellHeight,
+	frameIntervalMs,
+	enableBloomPass,
 }: Pick<
 	Props,
 	| "quality"
@@ -1604,7 +1954,21 @@ function resolveQualitySettings({
 	| "maxDevicePixelRatio"
 	| "asciiEnabled"
 	| "resolutionScale"
+	| "cellWidth"
+	| "cellHeight"
+	| "frameIntervalMs"
+	| "enableBloomPass"
 >) {
+	const extras = {
+		cellWidth: floorNumber(cellWidth ?? DEFAULT_ASCII_CELL_SIZE.x, 2),
+		cellHeight: floorNumber(cellHeight ?? DEFAULT_ASCII_CELL_SIZE.y, 2),
+		frameIntervalMs: floorNumber(
+			frameIntervalMs ?? DEFAULT_ASCII_CELL_FRAME_INTERVAL_MS,
+			0,
+		),
+		enableBloomPass: enableBloomPass ?? true,
+	};
+
 	if (typeof quality === "number") {
 		const qualityValue = floorNumber(quality, MIN_QUALITY_VALUE, 0.72);
 		return {
@@ -1627,6 +1991,55 @@ function resolveQualitySettings({
 				MIN_DPR,
 			),
 			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+			...extras,
+		};
+	}
+
+	if (quality === "mobile-safe") {
+		return {
+			qualityValue: 0.48,
+			initialPrepassScale: floorNumber(prepassScale ?? 0.18, MIN_PREPASS_SCALE),
+			bloomScale: floorNumber(bloomScale ?? 0.12, MIN_RENDER_SCALE),
+			sceneScale: floorNumber(sceneScale ?? 0.22, MIN_RENDER_SCALE),
+			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 0.6, MIN_DPR),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 0.8),
+			...extras,
+			cellWidth: floorNumber(cellWidth ?? 7, 2),
+			cellHeight: floorNumber(cellHeight ?? 11, 2),
+			frameIntervalMs: floorNumber(frameIntervalMs ?? 50, 0),
+			enableBloomPass: enableBloomPass ?? false,
+		};
+	}
+
+	if (quality === "ascii-balanced") {
+		return {
+			qualityValue: 0.58,
+			initialPrepassScale: floorNumber(prepassScale ?? 0.22, MIN_PREPASS_SCALE),
+			bloomScale: floorNumber(bloomScale ?? 0.18, MIN_RENDER_SCALE),
+			sceneScale: floorNumber(sceneScale ?? 0.28, MIN_RENDER_SCALE),
+			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 0.85, MIN_DPR),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+			...extras,
+			cellWidth: floorNumber(cellWidth ?? 6, 2),
+			cellHeight: floorNumber(cellHeight ?? 9, 2),
+			frameIntervalMs: floorNumber(frameIntervalMs ?? 33, 0),
+			enableBloomPass: enableBloomPass ?? false,
+		};
+	}
+
+	if (quality === "ascii-sharp") {
+		return {
+			qualityValue: 0.72,
+			initialPrepassScale: floorNumber(prepassScale ?? 0.28, MIN_PREPASS_SCALE),
+			bloomScale: floorNumber(bloomScale ?? 0.22, MIN_RENDER_SCALE),
+			sceneScale: floorNumber(sceneScale ?? 0.35, MIN_RENDER_SCALE),
+			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 1, MIN_DPR),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+			...extras,
+			cellWidth: floorNumber(cellWidth ?? 5, 2),
+			cellHeight: floorNumber(cellHeight ?? 8, 2),
+			frameIntervalMs: floorNumber(frameIntervalMs ?? 24, 0),
+			enableBloomPass: enableBloomPass ?? false,
 		};
 	}
 
@@ -1647,6 +2060,7 @@ function resolveQualitySettings({
 			),
 			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 1, MIN_DPR),
 			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+			...extras,
 		};
 	}
 
@@ -1661,6 +2075,37 @@ function resolveQualitySettings({
 			),
 			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 1.5, MIN_DPR),
 			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+			...extras,
+		};
+	}
+
+	if (quality === "desktop-full") {
+		return {
+			qualityValue: 0.9,
+			initialPrepassScale: floorNumber(prepassScale ?? 0.5, MIN_PREPASS_SCALE),
+			bloomScale: floorNumber(bloomScale ?? 0.45, MIN_RENDER_SCALE),
+			sceneScale: floorNumber(sceneScale ?? 0.6, MIN_RENDER_SCALE),
+			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 1.25, MIN_DPR),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+			...extras,
+			frameIntervalMs: floorNumber(frameIntervalMs ?? 16, 0),
+			enableBloomPass: enableBloomPass ?? true,
+		};
+	}
+
+	if (quality === "stress-test") {
+		return {
+			qualityValue: 1,
+			initialPrepassScale: floorNumber(prepassScale ?? 0.75, MIN_PREPASS_SCALE),
+			bloomScale: floorNumber(bloomScale ?? 0.7, MIN_RENDER_SCALE),
+			sceneScale: floorNumber(sceneScale ?? 1, MIN_RENDER_SCALE),
+			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 2, MIN_DPR),
+			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+			...extras,
+			cellWidth: floorNumber(cellWidth ?? 4, 2),
+			cellHeight: floorNumber(cellHeight ?? 6, 2),
+			frameIntervalMs: floorNumber(frameIntervalMs ?? 0, 0),
+			enableBloomPass: enableBloomPass ?? true,
 		};
 	}
 
@@ -1683,6 +2128,7 @@ function resolveQualitySettings({
 			MIN_DPR,
 		),
 		resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
+		...extras,
 	};
 }
 
@@ -1690,6 +2136,13 @@ function qualityPresetFromProp(
 	quality: QualityProp | undefined,
 ): QualityPreset {
 	return typeof quality === "string" ? quality : "custom";
+}
+
+function defaultQualityPresetForRuntime(): Exclude<QualityPreset, "custom"> {
+	if (typeof window === "undefined") return "ascii-balanced";
+	const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+	const narrowViewport = Math.min(window.innerWidth, window.innerHeight) <= 768;
+	return coarsePointer || narrowViewport ? "mobile-safe" : "ascii-balanced";
 }
 
 function createRenderSettingsFromQuality({
@@ -1709,10 +2162,15 @@ function createRenderSettingsFromQuality({
 	| "sceneScale"
 	| "maxDevicePixelRatio"
 	| "resolutionScale"
+	| "cellWidth"
+	| "cellHeight"
+	| "frameIntervalMs"
+	| "enableBloomPass"
 >): RenderSettings {
 	const activeAsciiEnabled = asciiEnabled ?? true;
+	const activeQuality = quality ?? defaultQualityPresetForRuntime();
 	const resolved = resolveQualitySettings({
-		quality: quality ?? "balanced",
+		quality: activeQuality,
 		prepassScale,
 		bloomScale,
 		sceneScale,
@@ -1723,13 +2181,17 @@ function createRenderSettingsFromQuality({
 
 	return {
 		asciiEnabled: activeAsciiEnabled,
-		qualityPreset: qualityPresetFromProp(quality ?? "balanced"),
+		qualityPreset: qualityPresetFromProp(activeQuality),
 		qualityValue: resolved.qualityValue,
 		maxDevicePixelRatio: resolved.maxDevicePixelRatio,
 		sceneScale: resolved.sceneScale,
 		prepassScale: resolved.initialPrepassScale,
 		bloomScale: resolved.bloomScale,
 		resolutionScale: resolved.resolutionScale,
+		cellWidth: resolved.cellWidth,
+		cellHeight: resolved.cellHeight,
+		frameIntervalMs: resolved.frameIntervalMs,
+		enableBloomPass: resolved.enableBloomPass,
 	};
 }
 
@@ -1749,6 +2211,10 @@ function createPresetRenderSettings(
 		prepassScale: resolved.initialPrepassScale,
 		bloomScale: resolved.bloomScale,
 		resolutionScale: resolved.resolutionScale,
+		cellWidth: resolved.cellWidth,
+		cellHeight: resolved.cellHeight,
+		frameIntervalMs: resolved.frameIntervalMs,
+		enableBloomPass: resolved.enableBloomPass,
 	};
 }
 
@@ -1765,7 +2231,70 @@ function resolveRenderSettings(settings: RenderSettings) {
 		),
 		bloomScale: floorNumber(settings.bloomScale, MIN_RENDER_SCALE, 0.3),
 		resolutionScale: floorNumber(settings.resolutionScale, MIN_RENDER_SCALE, 1),
+		cellWidth: floorNumber(settings.cellWidth, 2, DEFAULT_ASCII_CELL_SIZE.x),
+		cellHeight: floorNumber(settings.cellHeight, 2, DEFAULT_ASCII_CELL_SIZE.y),
+		frameIntervalMs: floorNumber(settings.frameIntervalMs, 0, 0),
+		enableBloomPass: settings.enableBloomPass,
 	};
+}
+
+function detectRuntimeProfile(): RuntimeProfile {
+	if (typeof window === "undefined") return "desktop";
+	const navigatorLike = window.navigator as Navigator & {
+		deviceMemory?: number;
+		hardwareConcurrency?: number;
+	};
+	const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+	const narrowViewport = Math.min(window.innerWidth, window.innerHeight) <= 768;
+	const lowMemory =
+		typeof navigatorLike.deviceMemory === "number" &&
+		navigatorLike.deviceMemory <= 4;
+	const lowConcurrency =
+		typeof navigatorLike.hardwareConcurrency === "number" &&
+		navigatorLike.hardwareConcurrency <= 4;
+
+	if (lowMemory || lowConcurrency) return "lowPower";
+	if (coarsePointer || narrowViewport) return "mobile";
+	return "desktop";
+}
+
+function resolveRendererMode(mode: RendererMode): ResolvedRendererMode {
+	if (mode === "full" || mode === "fallback-full") return "full";
+	return "full";
+}
+
+function isWebGpuAvailable(): boolean {
+	return typeof navigator !== "undefined" && "gpu" in navigator;
+}
+
+function resolveShaderBackend(
+	backend: ShaderBackend,
+	resolvedMode: ResolvedRendererMode,
+): ResolvedShaderBackend {
+	if (backend === "webgpu") return "webgpu";
+	if (
+		backend === "auto" &&
+		resolvedMode === "ascii-cell" &&
+		isWebGpuAvailable()
+	)
+		return "webgpu";
+	return "webgl2";
+}
+
+function estimateTextureMemoryBytes(
+	width: number,
+	height: number,
+	bytesPerPixel: number,
+	count = 1,
+): number {
+	return Math.max(0, width) * Math.max(0, height) * bytesPerPixel * count;
+}
+
+function benchmarkP95(values: number[]): number {
+	if (values.length === 0) return 0;
+	const sorted = [...values].sort((a, b) => a - b);
+	const index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95));
+	return sorted[index] ?? sorted[sorted.length - 1] ?? 0;
 }
 
 function cleanShaderSource(name: string, source: string): string {
@@ -1901,6 +2430,7 @@ function createPass(
 			uTemporalJitter: gl.getUniformLocation(program, "uTemporalJitter"),
 			uBlendWeight: gl.getUniformLocation(program, "uBlendWeight"),
 			uBloomMode: gl.getUniformLocation(program, "uBloomMode"),
+			uCanvasResolution: gl.getUniformLocation(program, "uCanvasResolution"),
 			uAsciiCellSize: gl.getUniformLocation(program, "uAsciiCellSize"),
 			uAsciiMix: gl.getUniformLocation(program, "uAsciiMix"),
 			uGlyphCount: gl.getUniformLocation(program, "uGlyphCount"),
@@ -2242,49 +2772,64 @@ function createKeyboardTexture(
 	return { texture, width: 256, height: 1 };
 }
 
-function createGlyphAtlasTexture(
+function createCanvasTexture(
 	gl: WebGL2RenderingContext,
-	config: GlyphAtlasConfig,
+	canvas: HTMLCanvasElement,
+	filter: number,
+	flipY: boolean,
+	errorMessage: string,
 ): TextureLike {
-	const glyphs = Array.from(config.glyphs);
-	const glyphCount = Math.max(1, glyphs.length);
-	const width = Math.max(1, config.cellSize.x * glyphCount);
-	const height = Math.max(1, config.cellSize.y);
-	const canvas = document.createElement("canvas");
-	const context = canvas.getContext("2d");
 	const texture = gl.createTexture();
 
-	if (!context || !texture)
-		throw new Error("Could not create ASCII glyph atlas.");
-
-	canvas.width = width;
-	canvas.height = height;
-	context.clearRect(0, 0, width, height);
-	context.fillStyle = "#ffffff";
-	context.textAlign = "center";
-	context.textBaseline = "middle";
-	context.font = `${config.textSize}px "${config.fontFamily}", monospace`;
-
-	for (let index = 0; index < glyphCount; index++) {
-		context.fillText(
-			glyphs[index] ?? " ",
-			index * config.cellSize.x + config.cellSize.x * 0.5,
-			config.cellSize.y * 0.56,
-			config.cellSize.x,
-		);
-	}
+	if (!texture) throw new Error(errorMessage);
 
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 	gl.bindTexture(gl.TEXTURE_2D, null);
 
-	return { texture, width, height };
+	return { texture, width: canvas.width, height: canvas.height };
+}
+
+function createGlyphTextureSet(
+	gl: WebGL2RenderingContext,
+	config: GlyphAtlasConfig,
+): GlyphTextureSet {
+	const raster = createGlyphAtlasRaster(config);
+	const atlas = createCanvasTexture(
+		gl,
+		raster.canvas,
+		gl.LINEAR,
+		true,
+		"Could not create ASCII glyph atlas texture.",
+	);
+
+	try {
+		const metrics = createCanvasTexture(
+			gl,
+			raster.metricsCanvas,
+			gl.NEAREST,
+			false,
+			"Could not create ASCII glyph metrics texture.",
+		);
+
+		return {
+			atlas,
+			metrics,
+			dispose: () => {
+				gl.deleteTexture(atlas.texture);
+				gl.deleteTexture(metrics.texture);
+			},
+		};
+	} catch (error) {
+		gl.deleteTexture(atlas.texture);
+		throw error;
+	}
 }
 
 function updateKeyboardTexture(
@@ -2349,6 +2894,7 @@ function renderPass(
 	bloomMode: number,
 	channelResolutionScratch: Float32Array,
 	renderUniforms: RenderUniforms = DEFAULT_RENDER_UNIFORMS,
+	canvasResolution: AsciiCellSize | null = null,
 ) {
 	gl.bindFramebuffer(gl.FRAMEBUFFER, target?.framebuffer ?? null);
 
@@ -2376,6 +2922,12 @@ function renderPass(
 	if (pass.locations.iTimeDelta) gl.uniform1f(pass.locations.iTimeDelta, delta);
 	if (pass.locations.iFrame) gl.uniform1i(pass.locations.iFrame, frame);
 	if (pass.locations.iMouse) gl.uniform4fv(pass.locations.iMouse, mouse);
+	if (pass.locations.uCanvasResolution)
+		gl.uniform2f(
+			pass.locations.uCanvasResolution,
+			canvasResolution?.x ?? width,
+			canvasResolution?.y ?? height,
+		);
 	if (pass.locations.uCameraPosition)
 		gl.uniform3fv(pass.locations.uCameraPosition, camera.position);
 	if (pass.locations.uCameraRight)
@@ -2556,6 +3108,16 @@ function formatNumericInput(value: number): string {
 	return String(Number(value.toFixed(4)));
 }
 
+function formatMetric(value: number, digits = 1): string {
+	if (!Number.isFinite(value)) return "n/a";
+	return value.toFixed(digits);
+}
+
+function formatBytes(value: number): string {
+	if (!Number.isFinite(value) || value <= 0) return "0 MB";
+	return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function NumberControl({
 	label,
 	value,
@@ -2694,11 +3256,17 @@ export default function BlackHoleShader({
 	interactive = true,
 	idleRenderIntervalMs = DEFAULT_IDLE_RENDER_INTERVAL_MS,
 	forceActiveRender = false,
+	rendererMode = "auto",
+	backend = "auto",
 	quality = "balanced",
 	resolutionScale = 1,
 	prepassScale,
 	bloomScale,
 	maxDevicePixelRatio,
+	cellWidth,
+	cellHeight,
+	frameIntervalMs,
+	enableBloomPass,
 	initialCameraPosition,
 	initialCameraForward,
 	initialUniverseSign,
@@ -2773,6 +3341,10 @@ export default function BlackHoleShader({
 		textSize: textSize ?? asciiCellSize.y,
 		brightness,
 		contrast,
+		cellWidth,
+		cellHeight,
+		frameIntervalMs,
+		enableBloomPass,
 	});
 	const initialRenderSettingsRef = useRef<RenderSettings>(
 		createRenderSettingsFromQuality({
@@ -2783,6 +3355,10 @@ export default function BlackHoleShader({
 			sceneScale,
 			maxDevicePixelRatio,
 			resolutionScale,
+			cellWidth,
+			cellHeight,
+			frameIntervalMs,
+			enableBloomPass,
 		}),
 	);
 	const hasFixedPrepassScaleRef = useRef(prepassScale !== undefined);
@@ -2792,6 +3368,9 @@ export default function BlackHoleShader({
 	const [renderSettings, setRenderSettings] = useState<RenderSettings>(
 		initialRenderSettingsRef.current,
 	);
+	const [rendererModeState, setRendererModeState] =
+		useState<RendererMode>(rendererMode);
+	const [backendState, setBackendState] = useState<ShaderBackend>(backend);
 	const [animationPlaying, setAnimationPlayingState] = useState(
 		animationAutoplay && animationMode !== "off",
 	);
@@ -2803,6 +3382,11 @@ export default function BlackHoleShader({
 		useState("animation idle");
 	const [blackHolePanelOpen, setBlackHolePanelOpen] = useState(true);
 	const [asciiPanelOpen, setAsciiPanelOpen] = useState(true);
+	const [benchmarkPanelOpen, setBenchmarkPanelOpen] = useState(false);
+	const [benchmarkRunning, setBenchmarkRunning] = useState(false);
+	const [benchmarkResults, setBenchmarkResults] = useState<BenchmarkResult[]>(
+		[],
+	);
 	const [error, setError] = useState<string | null>(null);
 	const [contextRestoreToken, setContextRestoreToken] = useState(0);
 	const controlsRef = useRef(controls);
@@ -2815,6 +3399,8 @@ export default function BlackHoleShader({
 	const animationAutoplayRef = useRef(animationAutoplay);
 	const animationPlayingRef = useRef(animationPlaying);
 	const animationEditorRouteRef = useRef(animationEditorRoute);
+	const rendererModeRef = useRef(rendererModeState);
+	const backendRef = useRef(backendState);
 
 	reactRenderCountRef.current += 1;
 	controlsRef.current = controls;
@@ -2824,6 +3410,8 @@ export default function BlackHoleShader({
 	animationAutoplayRef.current = animationAutoplay;
 	animationPlayingRef.current = animationPlaying;
 	animationEditorRouteRef.current = animationEditorRoute;
+	rendererModeRef.current = rendererModeState;
+	backendRef.current = backendState;
 	animationRouteRef.current =
 		animationMode === "editor"
 			? animationEditorRoute
@@ -2867,6 +3455,18 @@ export default function BlackHoleShader({
 				qualityPreset: preset,
 			};
 		});
+		requestRenderRef.current();
+	};
+
+	const updateRendererMode = (mode: RendererMode) => {
+		setError(null);
+		setRendererModeState(mode);
+		requestRenderRef.current();
+	};
+
+	const updateBackend = (nextBackend: ShaderBackend) => {
+		setError(null);
+		setBackendState(nextBackend);
 		requestRenderRef.current();
 	};
 
@@ -2928,6 +3528,127 @@ export default function BlackHoleShader({
 		}
 	};
 
+	const runBenchmark = async () => {
+		if (benchmarkRunning) return;
+		setBenchmarkRunning(true);
+		setBenchmarkResults([]);
+		const previousRendererMode = rendererModeRef.current;
+		const previousBackend = backendRef.current;
+		const scenarios: Array<{
+			label: string;
+			rendererMode: RendererMode;
+			backend: ShaderBackend;
+		}> = [
+			{ label: "Full WebGL2", rendererMode: "full", backend: "webgl2" },
+			{
+				label: "Fallback Full WebGL2",
+				rendererMode: "fallback-full",
+				backend: "webgl2",
+			},
+		];
+		if (isWebGpuAvailable()) {
+			scenarios.push({
+				label: "Full WebGPU",
+				rendererMode: "full",
+				backend: "webgpu",
+			});
+		}
+		const wait = (ms: number) =>
+			new Promise((resolve) => window.setTimeout(resolve, ms));
+		const results: BenchmarkResult[] = [];
+
+		try {
+			for (const scenario of scenarios) {
+				window.__blackHoleStats = undefined;
+				setRendererModeState(scenario.rendererMode);
+				setBackendState(scenario.backend);
+				await wait(900);
+				const cpuFrameTimes: number[] = [];
+				const wallFrameTimes: number[] = [];
+				let latestStats: BlackHoleStats | undefined;
+				let lastFrame = window.__blackHoleStats?.frame ?? -1;
+				let lastFrameSampleTime = performance.now();
+				let framesSeen = 0;
+				const benchmarkStart = performance.now();
+
+				for (let i = 0; i < 40; i++) {
+					await wait(50);
+					const sampleTime = performance.now();
+					latestStats = window.__blackHoleStats;
+					if (!latestStats || latestStats.frame === lastFrame) continue;
+
+					const frameDelta =
+						lastFrame >= 0 && latestStats.frame >= lastFrame
+							? Math.max(1, latestStats.frame - lastFrame)
+							: 1;
+					const sampleDelta = sampleTime - lastFrameSampleTime;
+
+					if (lastFrame >= 0 && sampleDelta > 0) {
+						wallFrameTimes.push(sampleDelta / frameDelta);
+					}
+					if (latestStats.frameTimeMs > 0) {
+						cpuFrameTimes.push(latestStats.frameTimeMs);
+					}
+
+					framesSeen += frameDelta;
+					lastFrame = latestStats.frame;
+					lastFrameSampleTime = sampleTime;
+				}
+
+				const benchmarkElapsedMs = performance.now() - benchmarkStart;
+				const averageFrameTimeMs =
+					framesSeen > 0
+						? benchmarkElapsedMs / framesSeen
+						: (latestStats?.averageFrameTimeMs ?? 0);
+				const p95FrameTimeMs =
+					wallFrameTimes.length > 0
+						? benchmarkP95(wallFrameTimes)
+						: averageFrameTimeMs;
+				const cpuAverageFrameTimeMs =
+					cpuFrameTimes.length > 0
+						? cpuFrameTimes.reduce((sum, value) => sum + value, 0) /
+							cpuFrameTimes.length
+						: (latestStats?.frameTimeMs ?? 0);
+				const cpuP95FrameTimeMs =
+					cpuFrameTimes.length > 0
+						? benchmarkP95(cpuFrameTimes)
+						: cpuAverageFrameTimeMs;
+				const result: BenchmarkResult = {
+					label: scenario.label,
+					rendererMode: scenario.rendererMode,
+					backend: scenario.backend,
+					activeMode: latestStats?.mode ?? "unavailable",
+					activeBackend: latestStats?.backend ?? "unavailable",
+					averageFps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : 0,
+					averageFrameTimeMs,
+					p95FrameTimeMs,
+					cpuAverageFrameTimeMs,
+					cpuP95FrameTimeMs,
+					initTimeMs: latestStats?.initTimeMs ?? 0,
+					cellCount: latestStats?.cellCount ?? 0,
+					passCount: latestStats?.passCount ?? 0,
+					computeWorkgroups: latestStats?.computeWorkgroups ?? 0,
+					computeInvocations: latestStats?.computeInvocations ?? 0,
+					renderTargetPixels:
+						(latestStats?.sceneWidth ?? 0) * (latestStats?.sceneHeight ?? 0),
+					estimatedTextureMemoryBytes:
+						latestStats?.estimatedTextureMemoryBytes ?? 0,
+					gpuFrameTimeMs: latestStats?.gpuFrameTimeMs ?? null,
+					gpuTimingSupported: latestStats?.gpuTimingSupported ?? false,
+					fallbackReason: latestStats?.fallbackReason ?? null,
+				};
+				results.push(result);
+				setBenchmarkResults([...results]);
+			}
+			window.__blackHoleBenchmark = results;
+		} finally {
+			setRendererModeState(previousRendererMode);
+			setBackendState(previousBackend);
+			setBenchmarkRunning(false);
+			requestRenderRef.current();
+		}
+	};
+
 	const handleCameraInputKeyDown = (
 		event: ReactKeyboardEvent<HTMLInputElement>,
 		apply: () => void,
@@ -2967,6 +3688,1015 @@ export default function BlackHoleShader({
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 
+		const settings = resolveRenderSettings(renderSettings);
+		const runtimeProfile = detectRuntimeProfile();
+		const resolvedRendererMode = resolveRendererMode(rendererModeState);
+		const resolvedBackend = resolveShaderBackend(
+			backendState,
+			resolvedRendererMode,
+		);
+		const setupStart = performance.now();
+
+		if (resolvedRendererMode === "ascii-cell" || resolvedBackend === "webgpu") {
+			const sourceIsCellGrid = resolvedRendererMode === "ascii-cell";
+			let disposed = false;
+			let animationFrame = 0;
+			let frame = 0;
+			let renderWidth = 1;
+			let renderHeight = 1;
+			let cellTextureWidth = 1;
+			let cellTextureHeight = 1;
+			let lastTime = performance.now();
+			let lastRenderNow = 0;
+			let shaderTime = runtimeSnapshotRef.current.shaderTime ?? 0;
+			let averageFrameTimeMs = 16.7;
+			let cpuAverageFrameTimeMs = 16.7;
+			let lastStatsPublish = 0;
+			let pointerActive = false;
+			let lastPointerX = 0;
+			let lastPointerY = 0;
+			let contextLost = false;
+			let initTimeMs = 0;
+			const frameTimes: number[] = [];
+			const reducedMotion = window.matchMedia(
+				"(prefers-reduced-motion: reduce)",
+			);
+			const keyboardData = new Uint8Array(256 * 4);
+			const mouse = new Float32Array([0, 0, -1, -1]);
+			const camera = createInitialCamera({
+				position:
+					runtimeSnapshotRef.current.cameraPosition ??
+					initialPropsRef.current.initialCameraPosition,
+				forward:
+					runtimeSnapshotRef.current.cameraForward ??
+					initialPropsRef.current.initialCameraForward,
+				universeSign:
+					runtimeSnapshotRef.current.universeSign ??
+					initialPropsRef.current.initialUniverseSign,
+			});
+			const movementSpeed =
+				runtimeSnapshotRef.current.movementSpeed ?? MOVE_SPEED;
+			let activeAsciiBackend = resolvedBackend;
+			let fallbackReason: string | null =
+				resolvedBackend === "webgpu" && !isWebGpuAvailable()
+					? "WebGPU is not available in this browser."
+					: null;
+
+			const snapshotRuntime = (now = performance.now()) => {
+				const snapshot = runtimeSnapshotRef.current;
+				snapshot.cameraPosition = snapshot.cameraPosition
+					? copyVec3Into(snapshot.cameraPosition, camera.position)
+					: cloneVec3(camera.position);
+				snapshot.cameraForward = snapshot.cameraForward
+					? copyVec3Into(snapshot.cameraForward, camera.forward)
+					: cloneVec3(camera.forward);
+				snapshot.universeSign = camera.universeSign;
+				snapshot.shaderTime = shaderTime;
+				snapshot.movementSpeed = movementSpeed;
+				void now;
+			};
+
+			const publishStats = (
+				frameTimeMs: number,
+				now: number,
+				passCount: number,
+				estimatedTextureMemoryBytes: number,
+				gpuFrameTimeMs: number | null,
+				gpuTimingSupported: boolean,
+			) => {
+				if (!debugStats && !import.meta.env.DEV && !showControls) return;
+				if (!showControls && now - lastStatsPublish < 250) return;
+				lastStatsPublish = now;
+				const activeAtlas = atlasConfigRef.current;
+				const activeControls = controlsRef.current;
+				const cellCount = cellTextureWidth * cellTextureHeight;
+				const computeWorkgroups =
+					Math.ceil(cellTextureWidth / 8) * Math.ceil(cellTextureHeight / 8);
+				const stats: BlackHoleStats = {
+					mode: sourceIsCellGrid ? "ascii-cell" : "webgpu",
+					backend: activeAsciiBackend,
+					requestedRendererMode: rendererModeState,
+					runtimeProfile,
+					frame,
+					frameTimeMs,
+					cpuAverageFrameTimeMs,
+					averageFrameTimeMs,
+					fps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : 0,
+					reactRenderCount: reactRenderCountRef.current,
+					dpr: renderWidth / Math.max(1, canvas.getBoundingClientRect().width),
+					targetAllocationScale: 1,
+					prepassScale: 0,
+					bloomScale: settings.bloomScale,
+					sceneScale: settings.sceneScale,
+					asciiEnabled: settings.asciiEnabled,
+					asciiCellSize: sourceIsCellGrid
+						? {
+								x: settings.cellWidth,
+								y: settings.cellHeight,
+							}
+						: activeAtlas.cellSize,
+					renderWidth,
+					renderHeight,
+					sceneWidth: cellTextureWidth,
+					sceneHeight: cellTextureHeight,
+					prepassWidth: cellTextureWidth,
+					prepassHeight: cellTextureHeight,
+					bloomWidth: 0,
+					bloomHeight: 0,
+					cameraPosition: [...camera.position],
+					cameraForward: [...camera.forward],
+					universeSign: camera.universeSign,
+					movementSpeed,
+					timeScale: activeControls.timeScale,
+					exposure: activeControls.exposure,
+					bloomStrength: activeControls.bloomStrength,
+					temporalJitter: activeControls.temporalJitter,
+					invertControls: activeControls.invertControls,
+					paletteMode: activeControls.paletteMode,
+					glyphCount: activeAtlas.glyphCount,
+					fontFamily: activeAtlas.fontFamily,
+					textSize: activeAtlas.textSize,
+					asciiBrightness: activeControls.brightness,
+					asciiContrast: activeControls.contrast,
+					shaderTime,
+					qualityPreset: settings.qualityPreset,
+					qualityValue: settings.qualityValue,
+					maxDevicePixelRatio: settings.maxDevicePixelRatio,
+					resolutionScale: settings.resolutionScale,
+					cellWidth: settings.cellWidth,
+					cellHeight: settings.cellHeight,
+					cellCount,
+					computeWorkgroups,
+					computeInvocations: computeWorkgroups * 64,
+					frameIntervalMs: settings.frameIntervalMs,
+					enableBloomPass: false,
+					passCount,
+					estimatedTextureMemoryBytes,
+					initTimeMs,
+					gpuFrameTimeMs,
+					gpuTimingSupported,
+					webgpuAvailable: isWebGpuAvailable(),
+					fallbackReason,
+					lastAllocationFailure: null,
+					animationMode,
+					animationRoute: normalizeBlackHoleAnimationRoute(
+						animationRouteRef.current,
+					),
+					animationPhase: "off",
+					animationPlaying: false,
+					animationFrameIndex: 0,
+					animationSequenceTime: 0,
+				};
+				window.__blackHoleStats = stats;
+				frameTimes.push(frameTimeMs);
+				if (frameTimes.length > 180) frameTimes.shift();
+			};
+
+			const writeCameraReadout = (force = false) => {
+				const activeElement = document.activeElement;
+				if (!showControls) return;
+
+				if (
+					cameraPositionInputRef.current &&
+					(force || activeElement !== cameraPositionInputRef.current)
+				) {
+					cameraPositionInputRef.current.value = formatCameraVec3(
+						camera.position,
+					);
+				}
+				if (
+					cameraForwardInputRef.current &&
+					(force || activeElement !== cameraForwardInputRef.current)
+				) {
+					cameraForwardInputRef.current.value = formatCameraVec3(
+						camera.forward,
+					);
+				}
+				if (
+					cameraUniverseInputRef.current &&
+					(force || activeElement !== cameraUniverseInputRef.current)
+				) {
+					cameraUniverseInputRef.current.value = formatCameraNumber(
+						camera.universeSign,
+					);
+				}
+			};
+
+			cameraEditorRef.current = {
+				applyPosition: (value: string) => {
+					const nextPosition = parseCameraVec3(value);
+					if (!nextPosition) {
+						writeCameraReadout(true);
+						return false;
+					}
+					camera.position = nextPosition;
+					snapshotRuntime();
+					writeCameraReadout(true);
+					requestRenderRef.current();
+					return true;
+				},
+				applyForward: (value: string) => {
+					const nextForward = parseCameraVec3(value);
+					if (!nextForward || length(nextForward) <= 1e-9) {
+						writeCameraReadout(true);
+						return false;
+					}
+					setCameraForward(camera, nextForward);
+					snapshotRuntime();
+					writeCameraReadout(true);
+					requestRenderRef.current();
+					return true;
+				},
+				applyUniverse: (value: string) => {
+					const nextUniverseSign = parseUniverseSign(value);
+					if (nextUniverseSign === null) {
+						writeCameraReadout(true);
+						return false;
+					}
+					camera.universeSign = nextUniverseSign;
+					snapshotRuntime();
+					writeCameraReadout(true);
+					requestRenderRef.current();
+					return true;
+				},
+				sync: () => writeCameraReadout(true),
+			};
+
+			animationEditorRef.current = {
+				play: () => {},
+				pause: () => {},
+				restartIntro: () => {},
+				previewIdle: () => {},
+				setRoute: () => {},
+				currentKeyframe: () =>
+					stringifyAnimationValue(
+						animationKeyframeFromCamera(camera, controlsRef.current, true, 2.5),
+					),
+				routeConfig: () => "",
+			};
+
+			const setKey = (event: KeyboardEvent, pressed: boolean) => {
+				if (!interactive) return;
+				if (isControlKeyboardTarget(event.target)) return;
+				if (event.keyCode < 0 || event.keyCode > 255) return;
+				keyboardData[event.keyCode * 4] = pressed ? 255 : 0;
+				requestRenderRef.current();
+			};
+
+			const handlePointerDown = (event: PointerEvent) => {
+				if (!interactive) return;
+				pointerActive = true;
+				lastPointerX = event.clientX;
+				lastPointerY = event.clientY;
+				canvas.setPointerCapture?.(event.pointerId);
+				requestRenderRef.current();
+			};
+			const handlePointerMove = (event: PointerEvent) => {
+				if (!interactive || !pointerActive) return;
+				const direction = controlsRef.current.invertControls ? -1 : 1;
+				camera.pendingYaw -=
+					(event.clientX - lastPointerX) * MOUSE_SENSITIVITY * direction;
+				camera.pendingPitch -=
+					(event.clientY - lastPointerY) * MOUSE_SENSITIVITY * direction;
+				lastPointerX = event.clientX;
+				lastPointerY = event.clientY;
+				requestRenderRef.current();
+			};
+			const handlePointerUp = (event: PointerEvent) => {
+				pointerActive = false;
+				canvas.releasePointerCapture?.(event.pointerId);
+				requestRenderRef.current();
+			};
+
+			const startWebGlAsciiCell = () => {
+				const gl = canvas.getContext("webgl2", {
+					alpha: false,
+					antialias: false,
+					depth: false,
+					preserveDrawingBuffer: false,
+					stencil: false,
+				});
+				if (!gl) {
+					setError("WebGL2 is not available in this browser.");
+					return;
+				}
+
+				const byteFormat = chooseByteTextureFormat(gl);
+				const maxTextureSize = Math.max(
+					2,
+					Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) ||
+						MAX_GLYPH_ATLAS_DIMENSION,
+				);
+				const vertexBuffer = gl.createBuffer();
+				if (!vertexBuffer) {
+					setError("Could not create ASCII-cell vertex buffer.");
+					return;
+				}
+				gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+				gl.bufferData(
+					gl.ARRAY_BUFFER,
+					new Float32Array([-1, -1, 3, -1, -1, 3]),
+					gl.STATIC_DRAW,
+				);
+
+				const fallbackTexture = createSolidTexture(gl, [0, 0, 0, 255]);
+				let glyphAtlasConfig = atlasConfigRef.current;
+				let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
+				let glyphTextures = createGlyphTextureSet(gl, glyphAtlasConfig);
+				const cellPass = createPass(
+					gl,
+					"ASCII Cell Trace",
+					createBlackHoleFragmentSource(ASCII_CELL_TRACE_SOURCE),
+				);
+				const asciiPass = createPass(
+					gl,
+					"ASCII Cell Composite",
+					createStandardFragmentSource("ASCII", asciiSource),
+				);
+				let cellTarget: RenderTarget | null = null;
+				const channelResolutionScratch = new Float32Array(12);
+				const activeRenderUniforms = createRenderUniforms(
+					controlsRef.current,
+					glyphAtlasConfig,
+					settings.asciiEnabled,
+					asciiMix,
+				);
+
+				const disposeCellTarget = () => {
+					disposeRenderTarget(gl, cellTarget);
+					cellTarget = null;
+				};
+
+				const resize = () => {
+					const rect = canvas.getBoundingClientRect();
+					const dpr = Math.min(
+						window.devicePixelRatio || 1,
+						settings.maxDevicePixelRatio,
+					);
+					const nextWidth = Math.min(
+						maxTextureSize,
+						Math.max(
+							1,
+							Math.floor(rect.width * dpr * settings.resolutionScale),
+						),
+					);
+					const nextHeight = Math.min(
+						maxTextureSize,
+						Math.max(
+							1,
+							Math.floor(rect.height * dpr * settings.resolutionScale),
+						),
+					);
+					const nextCellWidth = Math.min(
+						maxTextureSize,
+						Math.max(1, Math.ceil(nextWidth / Math.max(2, settings.cellWidth))),
+					);
+					const nextCellHeight = Math.min(
+						maxTextureSize,
+						Math.max(
+							1,
+							Math.ceil(nextHeight / Math.max(2, settings.cellHeight)),
+						),
+					);
+					if (
+						nextWidth === renderWidth &&
+						nextHeight === renderHeight &&
+						nextCellWidth === cellTextureWidth &&
+						nextCellHeight === cellTextureHeight
+					)
+						return;
+					renderWidth = nextWidth;
+					renderHeight = nextHeight;
+					cellTextureWidth = nextCellWidth;
+					cellTextureHeight = nextCellHeight;
+					canvas.width = renderWidth;
+					canvas.height = renderHeight;
+					disposeCellTarget();
+					cellTarget = createRenderTarget(
+						gl,
+						cellTextureWidth,
+						cellTextureHeight,
+						byteFormat,
+						"nearest",
+					);
+					frame = 0;
+					lastRenderNow = 0;
+				};
+
+				const renderFrame = (now: number) => {
+					if (disposed || contextLost) return;
+					animationFrame = 0;
+					const cpuFrameStart = performance.now();
+					try {
+						resize();
+						const targetInterval = reducedMotion.matches
+							? Math.max(settings.frameIntervalMs, 120)
+							: settings.frameIntervalMs;
+						if (
+							frame > 0 &&
+							targetInterval > 0 &&
+							now - lastRenderNow < targetInterval
+						) {
+							animationFrame = requestAnimationFrame(renderFrame);
+							return;
+						}
+						const delta = Math.min(
+							0.1,
+							Math.max(0.001, (now - lastTime) / 1000),
+						);
+						lastTime = now;
+						lastRenderNow = now;
+						const liveControls = controlsRef.current;
+						const nextGlyphControlsKey = glyphControlsKey(liveControls);
+						if (nextGlyphControlsKey !== liveGlyphControlsKey) {
+							liveGlyphControlsKey = nextGlyphControlsKey;
+							glyphTextures.dispose();
+							glyphAtlasConfig = createGlyphAtlasConfig(liveControls);
+							glyphTextures = createGlyphTextureSet(gl, glyphAtlasConfig);
+						}
+						writeRenderUniforms(
+							activeRenderUniforms,
+							liveControls,
+							glyphAtlasConfig,
+							settings.asciiEnabled,
+							asciiMix,
+						);
+						activeRenderUniforms.asciiCellSize = {
+							x: settings.cellWidth,
+							y: settings.cellHeight,
+						};
+						shaderTime += delta * liveControls.timeScale;
+						updateCamera(camera, keyboardData, delta, movementSpeed);
+						snapshotRuntime(now);
+						if (!cellTarget) return;
+						gl.disable(gl.DEPTH_TEST);
+						gl.disable(gl.BLEND);
+						gl.clearColor(0, 0, 0, 1);
+						renderPass(
+							gl,
+							cellPass,
+							vertexBuffer,
+							cellTarget,
+							cellTextureWidth,
+							cellTextureHeight,
+							shaderTime,
+							delta,
+							frame,
+							mouse,
+							[
+								fallbackTexture,
+								fallbackTexture,
+								fallbackTexture,
+								fallbackTexture,
+							],
+							camera,
+							settings.qualityValue,
+							1,
+							0,
+							channelResolutionScratch,
+							activeRenderUniforms,
+							{ x: renderWidth, y: renderHeight },
+						);
+						renderPass(
+							gl,
+							asciiPass,
+							vertexBuffer,
+							null,
+							renderWidth,
+							renderHeight,
+							shaderTime,
+							delta,
+							frame,
+							mouse,
+							[
+								cellTarget,
+								glyphTextures.atlas,
+								glyphTextures.metrics,
+								fallbackTexture,
+							],
+							camera,
+							settings.qualityValue,
+							1,
+							0,
+							channelResolutionScratch,
+							activeRenderUniforms,
+						);
+						const frameTimeMs = performance.now() - cpuFrameStart;
+						cpuAverageFrameTimeMs =
+							cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
+						averageFrameTimeMs =
+							averageFrameTimeMs * 0.94 + delta * 1000 * 0.06;
+						publishStats(
+							frameTimeMs,
+							now,
+							2,
+							estimateTextureMemoryBytes(
+								cellTextureWidth,
+								cellTextureHeight,
+								4,
+							) +
+								estimateTextureMemoryBytes(
+									glyphTextures.atlas.width,
+									glyphTextures.atlas.height,
+									4,
+								) +
+								estimateTextureMemoryBytes(
+									glyphTextures.metrics.width,
+									glyphTextures.metrics.height,
+									4,
+								),
+							null,
+							false,
+						);
+						writeCameraReadout();
+						frame += 1;
+					} catch (renderError) {
+						setError(formatError(renderError));
+						disposed = true;
+						return;
+					}
+					if (!document.hidden)
+						animationFrame = requestAnimationFrame(renderFrame);
+				};
+
+				const requestRender = () => {
+					if (
+						!disposed &&
+						!contextLost &&
+						!animationFrame &&
+						!document.hidden
+					) {
+						animationFrame = requestAnimationFrame(renderFrame);
+					}
+				};
+				requestRenderRef.current = requestRender;
+
+				const handleContextLost = (event: Event) => {
+					event.preventDefault();
+					contextLost = true;
+					setError("WebGL context lost. Restoring ASCII-cell renderer...");
+				};
+				const handleContextRestored = () => {
+					contextLost = false;
+					setError(null);
+					setContextRestoreToken((token) => token + 1);
+				};
+				const resizeObserver = new ResizeObserver(requestRender);
+				resizeObserver.observe(canvas);
+				canvas.addEventListener("webglcontextlost", handleContextLost);
+				canvas.addEventListener("webglcontextrestored", handleContextRestored);
+				initTimeMs = performance.now() - setupStart;
+				writeCameraReadout(true);
+				requestRender();
+
+				return () => {
+					disposed = true;
+					snapshotRuntime();
+					if (animationFrame) cancelAnimationFrame(animationFrame);
+					resizeObserver.disconnect();
+					canvas.removeEventListener("webglcontextlost", handleContextLost);
+					canvas.removeEventListener(
+						"webglcontextrestored",
+						handleContextRestored,
+					);
+					disposeCellTarget();
+					gl.deleteProgram(cellPass.program);
+					gl.deleteProgram(asciiPass.program);
+					gl.deleteBuffer(vertexBuffer);
+					gl.deleteTexture(fallbackTexture.texture);
+					glyphTextures.dispose();
+					delete window.__blackHoleStats;
+				};
+			};
+
+			const startWebGpuAsciiCell = async () => {
+				// biome-ignore lint/suspicious/noExplicitAny: WebGPU DOM types are not available in every TypeScript lib target used by Astro yet.
+				const gpuNavigator = navigator as Navigator & { gpu?: any };
+				if (!gpuNavigator.gpu)
+					throw new Error("WebGPU is not available in this browser.");
+				const adapter = await gpuNavigator.gpu.requestAdapter();
+				if (!adapter) throw new Error("No WebGPU adapter is available.");
+				const timestampSupported = Boolean(
+					adapter.features?.has?.("timestamp-query"),
+				);
+				const device = await adapter.requestDevice();
+				// biome-ignore lint/suspicious/noExplicitAny: WebGPU canvas context is intentionally guarded at runtime.
+				const context = canvas.getContext("webgpu") as any;
+				if (!context)
+					throw new Error("Could not create WebGPU canvas context.");
+				const presentationFormat = gpuNavigator.gpu.getPreferredCanvasFormat();
+				context.configure({
+					device,
+					format: presentationFormat,
+					alphaMode: "opaque",
+				});
+
+				const sampler = device.createSampler({
+					magFilter: "nearest",
+					minFilter: "nearest",
+				});
+				const uniformBuffer = device.createBuffer({
+					size: 44 * 4,
+					usage: 0x0040 | 0x0008,
+				});
+				const computeModule = device.createShaderModule({
+					label: "ASCII Cell Compute",
+					code: WEBGPU_COMPUTE_SOURCE,
+				});
+				const renderModule = device.createShaderModule({
+					label: "ASCII Cell Render",
+					code: WEBGPU_RENDER_SOURCE,
+				});
+				const computePipeline = await device.createComputePipelineAsync({
+					label: "ASCII Cell Compute Pipeline",
+					layout: "auto",
+					compute: { module: computeModule, entryPoint: "main" },
+				});
+				const renderPipeline = await device.createRenderPipelineAsync({
+					label: "ASCII Cell Render Pipeline",
+					layout: "auto",
+					vertex: { module: renderModule, entryPoint: "vertex_main" },
+					fragment: {
+						module: renderModule,
+						entryPoint: "fragment_main",
+						targets: [{ format: presentationFormat }],
+					},
+					primitive: { topology: "triangle-list" },
+				});
+				let glyphAtlasConfig = atlasConfigRef.current;
+				let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
+				let glyphRaster = createGlyphAtlasRaster(glyphAtlasConfig);
+				let glyphTexture = device.createTexture({
+					size: [glyphRaster.canvas.width, glyphRaster.canvas.height, 1],
+					format: "rgba8unorm",
+					usage: 0x0004 | 0x0002 | 0x0010,
+				});
+				device.queue.copyExternalImageToTexture(
+					{ source: glyphRaster.canvas },
+					{ texture: glyphTexture },
+					[glyphRaster.canvas.width, glyphRaster.canvas.height],
+				);
+				let glyphMetricsTexture = device.createTexture({
+					size: [
+						glyphRaster.metricsCanvas.width,
+						glyphRaster.metricsCanvas.height,
+						1,
+					],
+					format: "rgba8unorm",
+					usage: 0x0004 | 0x0002 | 0x0010,
+				});
+				device.queue.copyExternalImageToTexture(
+					{ source: glyphRaster.metricsCanvas },
+					{ texture: glyphMetricsTexture },
+					[glyphRaster.metricsCanvas.width, glyphRaster.metricsCanvas.height],
+				);
+				// biome-ignore lint/suspicious/noExplicitAny: WebGPU texture shape is browser-provided and experimental here.
+				let cellTexture: any = null;
+				// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
+				let computeBindGroup: any = null;
+				// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
+				let renderBindGroup: any = null;
+				const uniformData = new Float32Array(44);
+
+				const writeUniforms = () => {
+					const activeControls = controlsRef.current;
+					const activeAtlas = glyphAtlasConfig;
+					const renderUniforms = createRenderUniforms(
+						activeControls,
+						activeAtlas,
+						settings.asciiEnabled,
+						asciiMix,
+					);
+					uniformData[0] = shaderTime;
+					uniformData[1] = renderUniforms.exposure;
+					uniformData[2] = settings.qualityValue;
+					uniformData[3] = renderUniforms.glyphCount;
+					uniformData.set(renderUniforms.shadowColor, 4);
+					uniformData[7] = 1;
+					uniformData.set(renderUniforms.midColor, 8);
+					uniformData[11] = 1;
+					uniformData.set(renderUniforms.highlightColor, 12);
+					uniformData[15] = 1;
+					uniformData[16] = cellTextureWidth;
+					uniformData[17] = cellTextureHeight;
+					uniformData[18] = renderUniforms.asciiMix;
+					uniformData[19] = sourceIsCellGrid ? 1 : 0;
+					uniformData[20] = renderWidth;
+					uniformData[21] = renderHeight;
+					uniformData[22] = renderUniforms.asciiBrightness;
+					uniformData[23] = renderUniforms.asciiContrast;
+					uniformData[24] = sourceIsCellGrid
+						? settings.cellWidth
+						: activeAtlas.cellSize.x;
+					uniformData[25] = sourceIsCellGrid
+						? settings.cellHeight
+						: activeAtlas.cellSize.y;
+					uniformData[26] = renderUniforms.paletteMode;
+					uniformData[27] = renderUniforms.bloomStrength;
+					uniformData.set(camera.position, 28);
+					uniformData[31] = camera.universeSign;
+					uniformData.set(camera.right, 32);
+					uniformData[35] = 0;
+					uniformData.set(camera.up, 36);
+					uniformData[39] = 0;
+					uniformData.set(camera.forward, 40);
+					uniformData[43] = 0;
+					device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+				};
+
+				const recreateBindGroups = () => {
+					computeBindGroup = device.createBindGroup({
+						layout: computePipeline.getBindGroupLayout(0),
+						entries: [
+							{ binding: 0, resource: cellTexture.createView() },
+							{ binding: 1, resource: { buffer: uniformBuffer } },
+						],
+					});
+					renderBindGroup = device.createBindGroup({
+						layout: renderPipeline.getBindGroupLayout(0),
+						entries: [
+							{ binding: 0, resource: cellTexture.createView() },
+							{ binding: 1, resource: glyphTexture.createView() },
+							{ binding: 2, resource: glyphMetricsTexture.createView() },
+							{ binding: 3, resource: sampler },
+							{ binding: 4, resource: { buffer: uniformBuffer } },
+						],
+					});
+				};
+
+				const resize = () => {
+					const rect = canvas.getBoundingClientRect();
+					const dpr = Math.min(
+						window.devicePixelRatio || 1,
+						settings.maxDevicePixelRatio,
+					);
+					const nextWidth = Math.max(
+						1,
+						Math.floor(rect.width * dpr * settings.resolutionScale),
+					);
+					const nextHeight = Math.max(
+						1,
+						Math.floor(rect.height * dpr * settings.resolutionScale),
+					);
+					const nextCellWidth = Math.max(
+						1,
+						sourceIsCellGrid
+							? Math.ceil(nextWidth / Math.max(2, settings.cellWidth))
+							: nextWidth,
+					);
+					const nextCellHeight = Math.max(
+						1,
+						sourceIsCellGrid
+							? Math.ceil(nextHeight / Math.max(2, settings.cellHeight))
+							: nextHeight,
+					);
+					if (
+						nextWidth === renderWidth &&
+						nextHeight === renderHeight &&
+						nextCellWidth === cellTextureWidth &&
+						nextCellHeight === cellTextureHeight
+					)
+						return;
+					renderWidth = nextWidth;
+					renderHeight = nextHeight;
+					cellTextureWidth = nextCellWidth;
+					cellTextureHeight = nextCellHeight;
+					canvas.width = renderWidth;
+					canvas.height = renderHeight;
+					cellTexture?.destroy?.();
+					cellTexture = device.createTexture({
+						size: [cellTextureWidth, cellTextureHeight, 1],
+						format: "rgba8unorm",
+						usage: 0x0004 | 0x0002 | 0x0008,
+					});
+					recreateBindGroups();
+					frame = 0;
+					lastRenderNow = 0;
+				};
+
+				const renderFrame = (now: number) => {
+					if (disposed) return;
+					animationFrame = 0;
+					const cpuFrameStart = performance.now();
+					try {
+						resize();
+						const targetInterval = reducedMotion.matches
+							? Math.max(settings.frameIntervalMs, 120)
+							: settings.frameIntervalMs;
+						if (
+							frame > 0 &&
+							targetInterval > 0 &&
+							now - lastRenderNow < targetInterval
+						) {
+							animationFrame = requestAnimationFrame(renderFrame);
+							return;
+						}
+						const delta = Math.min(
+							0.1,
+							Math.max(0.001, (now - lastTime) / 1000),
+						);
+						lastTime = now;
+						lastRenderNow = now;
+						const liveControls = controlsRef.current;
+						const nextGlyphControlsKey = glyphControlsKey(liveControls);
+						if (nextGlyphControlsKey !== liveGlyphControlsKey) {
+							liveGlyphControlsKey = nextGlyphControlsKey;
+							glyphTexture.destroy?.();
+							glyphMetricsTexture.destroy?.();
+							glyphAtlasConfig = createGlyphAtlasConfig(liveControls);
+							glyphRaster = createGlyphAtlasRaster(glyphAtlasConfig);
+							glyphTexture = device.createTexture({
+								size: [glyphRaster.canvas.width, glyphRaster.canvas.height, 1],
+								format: "rgba8unorm",
+								usage: 0x0004 | 0x0002 | 0x0010,
+							});
+							device.queue.copyExternalImageToTexture(
+								{ source: glyphRaster.canvas },
+								{ texture: glyphTexture },
+								[glyphRaster.canvas.width, glyphRaster.canvas.height],
+							);
+							glyphMetricsTexture = device.createTexture({
+								size: [
+									glyphRaster.metricsCanvas.width,
+									glyphRaster.metricsCanvas.height,
+									1,
+								],
+								format: "rgba8unorm",
+								usage: 0x0004 | 0x0002 | 0x0010,
+							});
+							device.queue.copyExternalImageToTexture(
+								{ source: glyphRaster.metricsCanvas },
+								{ texture: glyphMetricsTexture },
+								[
+									glyphRaster.metricsCanvas.width,
+									glyphRaster.metricsCanvas.height,
+								],
+							);
+							recreateBindGroups();
+						}
+						shaderTime += delta * liveControls.timeScale;
+						updateCamera(camera, keyboardData, delta, movementSpeed);
+						snapshotRuntime(now);
+						writeUniforms();
+						const commandEncoder = device.createCommandEncoder();
+						const computePass = commandEncoder.beginComputePass();
+						computePass.setPipeline(computePipeline);
+						computePass.setBindGroup(0, computeBindGroup);
+						computePass.dispatchWorkgroups(
+							Math.ceil(cellTextureWidth / 8),
+							Math.ceil(cellTextureHeight / 8),
+							1,
+						);
+						computePass.end();
+						const currentTexture = context.getCurrentTexture();
+						const renderPass = commandEncoder.beginRenderPass({
+							colorAttachments: [
+								{
+									view: currentTexture.createView(),
+									clearValue: { r: 0, g: 0, b: 0, a: 1 },
+									loadOp: "clear",
+									storeOp: "store",
+								},
+							],
+						});
+						renderPass.setPipeline(renderPipeline);
+						renderPass.setBindGroup(0, renderBindGroup);
+						renderPass.draw(3, 1, 0, 0);
+						renderPass.end();
+						device.queue.submit([commandEncoder.finish()]);
+						const frameTimeMs = performance.now() - cpuFrameStart;
+						cpuAverageFrameTimeMs =
+							cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
+						averageFrameTimeMs =
+							averageFrameTimeMs * 0.94 + delta * 1000 * 0.06;
+						publishStats(
+							frameTimeMs,
+							now,
+							2,
+							estimateTextureMemoryBytes(
+								cellTextureWidth,
+								cellTextureHeight,
+								4,
+							) +
+								estimateTextureMemoryBytes(
+									glyphRaster.canvas.width,
+									glyphRaster.canvas.height,
+									4,
+								) +
+								estimateTextureMemoryBytes(
+									glyphRaster.metricsCanvas.width,
+									glyphRaster.metricsCanvas.height,
+									4,
+								),
+							null,
+							timestampSupported,
+						);
+						writeCameraReadout();
+						frame += 1;
+					} catch (renderError) {
+						setError(formatError(renderError));
+						disposed = true;
+						return;
+					}
+					if (!document.hidden)
+						animationFrame = requestAnimationFrame(renderFrame);
+				};
+
+				const requestRender = () => {
+					if (!disposed && !animationFrame && !document.hidden) {
+						animationFrame = requestAnimationFrame(renderFrame);
+					}
+				};
+				requestRenderRef.current = requestRender;
+				initTimeMs = performance.now() - setupStart;
+				const resizeObserver = new ResizeObserver(requestRender);
+				resizeObserver.observe(canvas);
+				writeCameraReadout(true);
+				requestRender();
+
+				return () => {
+					disposed = true;
+					snapshotRuntime();
+					if (animationFrame) cancelAnimationFrame(animationFrame);
+					resizeObserver.disconnect();
+					cellTexture?.destroy?.();
+					glyphTexture.destroy?.();
+					glyphMetricsTexture.destroy?.();
+					device.destroy?.();
+					delete window.__blackHoleStats;
+				};
+			};
+
+			let cleanup: (() => void) | undefined;
+			const handleKeyDown = (event: KeyboardEvent) => setKey(event, true);
+			const handleKeyUp = (event: KeyboardEvent) => setKey(event, false);
+
+			if (interactive) {
+				window.addEventListener("keydown", handleKeyDown);
+				window.addEventListener("keyup", handleKeyUp);
+				canvas.addEventListener("pointerdown", handlePointerDown);
+				canvas.addEventListener("pointermove", handlePointerMove);
+				canvas.addEventListener("pointerup", handlePointerUp);
+				canvas.addEventListener("pointercancel", handlePointerUp);
+			}
+
+			if (resolvedBackend === "webgpu") {
+				void startWebGpuAsciiCell()
+					.then((nextCleanup) => {
+						if (disposed) {
+							nextCleanup?.();
+							return;
+						}
+						cleanup = nextCleanup;
+						setError(null);
+					})
+					.catch((webGpuError) => {
+						fallbackReason = formatError(webGpuError);
+						activeAsciiBackend = "webgl2";
+						if (!sourceIsCellGrid) {
+							setError(null);
+							setBackendState("webgl2");
+							return;
+						}
+						try {
+							cleanup = startWebGlAsciiCell();
+							setError(null);
+						} catch (webGlError) {
+							fallbackReason = formatError(webGlError);
+							setError(fallbackReason);
+						}
+					});
+			} else {
+				try {
+					cleanup = startWebGlAsciiCell();
+				} catch (webGlError) {
+					fallbackReason = formatError(webGlError);
+					setError(fallbackReason);
+				}
+			}
+
+			return () => {
+				disposed = true;
+				cleanup?.();
+				if (animationFrame) cancelAnimationFrame(animationFrame);
+				if (interactive) {
+					window.removeEventListener("keydown", handleKeyDown);
+					window.removeEventListener("keyup", handleKeyUp);
+					canvas.removeEventListener("pointerdown", handlePointerDown);
+					canvas.removeEventListener("pointermove", handlePointerMove);
+					canvas.removeEventListener("pointerup", handlePointerUp);
+					canvas.removeEventListener("pointercancel", handlePointerUp);
+				}
+				requestRenderRef.current = () => {};
+				cameraEditorRef.current = {
+					applyPosition: () => false,
+					applyForward: () => false,
+					applyUniverse: () => false,
+					sync: () => {},
+				};
+			};
+		}
+
 		const gl = canvas.getContext("webgl2", {
 			alpha: false,
 			antialias: false,
@@ -2980,7 +4710,6 @@ export default function BlackHoleShader({
 			return;
 		}
 
-		const settings = resolveRenderSettings(renderSettings);
 		const idleRenderInterval = Math.max(
 			0,
 			finiteNumber(idleRenderIntervalMs, DEFAULT_IDLE_RENDER_INTERVAL_MS),
@@ -3024,8 +4753,12 @@ export default function BlackHoleShader({
 		let disposed = false;
 		let animationFrame = 0;
 		let frame = 0;
-		let mode: "optimized" | "fallback" = "optimized";
-		let fallbackReason: string | null = null;
+		let mode: "optimized" | "fallback" =
+			rendererModeState === "fallback-full" ? "fallback" : "optimized";
+		let fallbackReason: string | null =
+			rendererModeState === "fallback-full"
+				? "Forced fallback renderer selected."
+				: null;
 		let startTime = performance.now();
 		let lastTime = startTime;
 		let shaderTime =
@@ -3047,6 +4780,7 @@ export default function BlackHoleShader({
 		let currentPrepassScale = settings.initialPrepassScale;
 		let averageFrameTimeMs = 16.7;
 		let cpuAverageFrameTimeMs = 16.7;
+		let initTimeMs = 0;
 		let lastRenderNow = 0;
 		let lastStatsPublish = 0;
 		let lastRuntimeSnapshotUpdate = 0;
@@ -3139,13 +4873,13 @@ export default function BlackHoleShader({
 		const keyboardTexture = createKeyboardTexture(gl, keyboardData);
 		let glyphAtlasConfig = atlasConfigRef.current;
 		let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
-		let glyphAtlasTexture = createGlyphAtlasTexture(gl, glyphAtlasConfig);
+		let glyphTextures = createGlyphTextureSet(gl, glyphAtlasConfig);
 		const vertexBuffer = gl.createBuffer();
 		const channelResolutionScratch = new Float32Array(12);
 
 		if (!vertexBuffer) {
 			setError("Could not create fullscreen vertex buffer.");
-			gl.deleteTexture(glyphAtlasTexture.texture);
+			glyphTextures.dispose();
 			gl.deleteTexture(fallbackTexture.texture);
 			gl.deleteTexture(keyboardTexture.texture);
 			return;
@@ -3276,43 +5010,45 @@ export default function BlackHoleShader({
 			sync: () => writeCameraReadout(true),
 		};
 
-		try {
-			if (!floatFormat)
-				throw new Error("EXT_color_buffer_float is unavailable.");
+		if (mode === "optimized") {
+			try {
+				if (!floatFormat)
+					throw new Error("EXT_color_buffer_float is unavailable.");
 
-			const testTarget = createMultiRenderTarget(gl, 4, 4, floatFormat, 2);
-			testTarget.dispose();
+				const testTarget = createMultiRenderTarget(gl, 4, 4, floatFormat, 2);
+				testTarget.dispose();
 
-			optimizedPasses = {
-				prepass: createPass(
-					gl,
-					"NPGS prepass",
-					createBlackHoleFragmentSource(PREPASS_MAIN),
-				),
-				composite: createPass(
-					gl,
-					"NPGS composite",
-					createBlackHoleFragmentSource(COMPOSITE_MAIN),
-				),
-				bloom: createPass(
-					gl,
-					"NPGS bloom",
-					createStandardFragmentSource("NPGS bloom", bloomSource),
-				),
-				image: createPass(
-					gl,
-					"Image",
-					createStandardFragmentSource("Image", imageSource),
-				),
-				ascii: createPass(
-					gl,
-					"ASCII",
-					createStandardFragmentSource("ASCII", asciiSource),
-				),
-			};
-		} catch (optimizedError) {
-			mode = "fallback";
-			fallbackReason = formatError(optimizedError);
+				optimizedPasses = {
+					prepass: createPass(
+						gl,
+						"NPGS prepass",
+						createBlackHoleFragmentSource(PREPASS_MAIN),
+					),
+					composite: createPass(
+						gl,
+						"NPGS composite",
+						createBlackHoleFragmentSource(COMPOSITE_MAIN),
+					),
+					bloom: createPass(
+						gl,
+						"NPGS bloom",
+						createStandardFragmentSource("NPGS bloom", bloomSource),
+					),
+					image: createPass(
+						gl,
+						"Image",
+						createStandardFragmentSource("Image", imageSource),
+					),
+					ascii: createPass(
+						gl,
+						"ASCII",
+						createStandardFragmentSource("ASCII", asciiSource),
+					),
+				};
+			} catch (optimizedError) {
+				mode = "fallback";
+				fallbackReason = formatError(optimizedError);
+			}
 		}
 
 		if (mode === "fallback") {
@@ -3323,7 +5059,7 @@ export default function BlackHoleShader({
 				gl.deleteBuffer(vertexBuffer);
 				gl.deleteTexture(fallbackTexture.texture);
 				gl.deleteTexture(keyboardTexture.texture);
-				gl.deleteTexture(glyphAtlasTexture.texture);
+				glyphTextures.dispose();
 				return;
 			}
 		}
@@ -3374,8 +5110,8 @@ export default function BlackHoleShader({
 		const syncGlyphAtlasConfig = (nextConfig: GlyphAtlasConfig) => {
 			if (nextConfig.key === glyphAtlasConfig.key) return;
 
-			gl.deleteTexture(glyphAtlasTexture.texture);
-			glyphAtlasTexture = createGlyphAtlasTexture(gl, nextConfig);
+			glyphTextures.dispose();
+			glyphTextures = createGlyphTextureSet(gl, nextConfig);
 			glyphAtlasConfig = nextConfig;
 		};
 
@@ -3749,10 +5485,10 @@ export default function BlackHoleShader({
 				nextSceneHeight * currentPrepassScale,
 			);
 			const nextBloomWidth = targetDimension(
-				nextSceneWidth * settings.bloomScale,
+				settings.enableBloomPass ? nextSceneWidth * settings.bloomScale : 1,
 			);
 			const nextBloomHeight = targetDimension(
-				nextSceneHeight * settings.bloomScale,
+				settings.enableBloomPass ? nextSceneHeight * settings.bloomScale : 1,
 			);
 
 			sceneWidth = nextSceneWidth;
@@ -3901,11 +5637,19 @@ export default function BlackHoleShader({
 					: nextSceneHeight;
 			const nextBloomWidth =
 				mode === "optimized"
-					? targetDimension(nextSceneWidth * settings.bloomScale)
+					? targetDimension(
+							settings.enableBloomPass
+								? nextSceneWidth * settings.bloomScale
+								: 1,
+						)
 					: nextSceneWidth;
 			const nextBloomHeight =
 				mode === "optimized"
-					? targetDimension(nextSceneHeight * settings.bloomScale)
+					? targetDimension(
+							settings.enableBloomPass
+								? nextSceneHeight * settings.bloomScale
+								: 1,
+						)
 					: nextSceneHeight;
 
 			if (
@@ -3961,6 +5705,9 @@ export default function BlackHoleShader({
 			const activeAtlas = glyphAtlasConfig;
 			const stats: BlackHoleStats = {
 				mode,
+				backend: "webgl2",
+				requestedRendererMode: rendererModeState,
+				runtimeProfile,
 				frame,
 				frameTimeMs,
 				cpuAverageFrameTimeMs,
@@ -4002,6 +5749,24 @@ export default function BlackHoleShader({
 				qualityValue: settings.qualityValue,
 				maxDevicePixelRatio: settings.maxDevicePixelRatio,
 				resolutionScale: settings.resolutionScale,
+				cellWidth: settings.cellWidth,
+				cellHeight: settings.cellHeight,
+				cellCount: renderWidth * renderHeight,
+				computeWorkgroups: 0,
+				computeInvocations: 0,
+				frameIntervalMs: settings.frameIntervalMs,
+				enableBloomPass: settings.enableBloomPass,
+				passCount: mode === "optimized" ? 5 : 6,
+				estimatedTextureMemoryBytes:
+					mode === "optimized"
+						? estimateTextureMemoryBytes(prepassWidth, prepassHeight, 8, 2) +
+							estimateTextureMemoryBytes(sceneWidth, sceneHeight, 8, 3) +
+							estimateTextureMemoryBytes(bloomWidth, bloomHeight, 8, 3)
+						: estimateTextureMemoryBytes(sceneWidth, sceneHeight, 4, 7),
+				initTimeMs,
+				gpuFrameTimeMs: null,
+				gpuTimingSupported: false,
+				webgpuAvailable: isWebGpuAvailable(),
 				fallbackReason:
 					[fallbackReason, allocationScaleReason].filter(Boolean).join("; ") ||
 					null,
@@ -4203,7 +5968,9 @@ export default function BlackHoleShader({
 						optimizedTargets.composite.write,
 						fallbackTexture,
 						fallbackTexture,
-						optimizedTargets.bloomVertical,
+						settings.enableBloomPass
+							? optimizedTargets.bloomVertical
+							: fallbackTexture,
 					],
 					camera,
 					settings.qualityValue,
@@ -4226,8 +5993,8 @@ export default function BlackHoleShader({
 					mouse,
 					[
 						optimizedTargets.scene,
-						glyphAtlasTexture,
-						fallbackTexture,
+						glyphTextures.atlas,
+						glyphTextures.metrics,
 						fallbackTexture,
 					],
 					camera,
@@ -4253,7 +6020,9 @@ export default function BlackHoleShader({
 						optimizedTargets.composite.write,
 						fallbackTexture,
 						fallbackTexture,
-						optimizedTargets.bloomVertical,
+						settings.enableBloomPass
+							? optimizedTargets.bloomVertical
+							: fallbackTexture,
 					],
 					camera,
 					settings.qualityValue,
@@ -4404,8 +6173,8 @@ export default function BlackHoleShader({
 					mouse,
 					[
 						fallbackTargets.scene,
-						glyphAtlasTexture,
-						fallbackTexture,
+						glyphTextures.atlas,
+						glyphTextures.metrics,
 						fallbackTexture,
 					],
 					camera,
@@ -4514,9 +6283,10 @@ export default function BlackHoleShader({
 						: IDLE_PREPASS_STRIDE;
 					const shouldUpdatePrepass = frame < 2 || frame % prepassStride === 0;
 					const shouldUpdateBloom =
-						frame < 2 ||
-						shouldUpdatePrepass ||
-						frame % BLOOM_FRAME_STRIDE === 0;
+						settings.enableBloomPass &&
+						(frame < 2 ||
+							shouldUpdatePrepass ||
+							frame % BLOOM_FRAME_STRIDE === 0);
 
 					renderOptimized(
 						shaderTime,
@@ -4678,6 +6448,7 @@ export default function BlackHoleShader({
 		canvas.addEventListener("webglcontextlost", handleContextLost);
 		canvas.addEventListener("webglcontextrestored", handleContextRestored);
 
+		initTimeMs = performance.now() - setupStart;
 		updateCameraReadout(performance.now(), true);
 		requestRender();
 
@@ -4707,7 +6478,7 @@ export default function BlackHoleShader({
 			Object.values(fallbackPasses ?? {}).forEach((pass) => {
 				gl.deleteProgram(pass.program);
 			});
-			gl.deleteTexture(glyphAtlasTexture.texture);
+			glyphTextures.dispose();
 			requestRenderRef.current = () => {};
 			cameraEditorRef.current = {
 				applyPosition: () => false,
@@ -4725,11 +6496,14 @@ export default function BlackHoleShader({
 		debugStats,
 		idleRenderIntervalMs,
 		forceActiveRender,
+		rendererModeState,
+		backendState,
 		initialCameraKey,
 		initialCameraPosition,
 		initialCameraForward,
 		initialUniverseSign,
 		contextRestoreToken,
+		animationMode,
 	]);
 
 	const glyphPresetOptions: Array<{ label: string; value: GlyphPreset }> = [
@@ -4739,10 +6513,25 @@ export default function BlackHoleShader({
 		{ label: "Custom", value: "custom" },
 	];
 	const qualityPresetOptions: Array<{ label: string; value: QualityPreset }> = [
+		{ label: "Mobile Safe", value: "mobile-safe" },
+		{ label: "ASCII Balanced", value: "ascii-balanced" },
+		{ label: "ASCII Sharp", value: "ascii-sharp" },
 		{ label: "Performance", value: "performance" },
 		{ label: "Balanced", value: "balanced" },
 		{ label: "Visual", value: "visual" },
+		{ label: "Desktop Full", value: "desktop-full" },
+		{ label: "Stress Test", value: "stress-test" },
 		{ label: "Custom", value: "custom" },
+	];
+	const rendererModeOptions: Array<{ label: string; value: RendererMode }> = [
+		{ label: "Auto", value: "auto" },
+		{ label: "Full", value: "full" },
+		{ label: "Fallback Full", value: "fallback-full" },
+	];
+	const backendOptions: Array<{ label: string; value: ShaderBackend }> = [
+		{ label: "Auto", value: "auto" },
+		{ label: "WebGL2", value: "webgl2" },
+		{ label: "WebGPU Experimental", value: "webgpu" },
 	];
 	const fontOptions = FONT_OPTIONS.map((font) => ({
 		label: font,
@@ -4752,6 +6541,7 @@ export default function BlackHoleShader({
 	return (
 		<div className={`relative h-full w-full bg-black ${className}`}>
 			<canvas
+				key={`${rendererModeState}:${backendState}:${contextRestoreToken}`}
 				ref={canvasRef}
 				className={`block h-full w-full bg-black ${
 					interactive ? "cursor-crosshair touch-none" : "pointer-events-none"
@@ -4819,13 +6609,32 @@ export default function BlackHoleShader({
 								</div>
 							) : null}
 							<div className="grid gap-3 border-t border-white/10 pt-3">
+								<SelectControl
+									label="Renderer"
+									value={rendererModeState}
+									options={rendererModeOptions}
+									onChange={updateRendererMode}
+								/>
+								<SelectControl
+									label="Backend"
+									value={backendState}
+									options={backendOptions}
+									onChange={updateBackend}
+								/>
 								<ToggleControl
 									label="ASCII Effect"
 									checked={renderSettings.asciiEnabled}
 									onChange={updateAsciiEnabled}
 								/>
+								<ToggleControl
+									label="Bloom Pass"
+									checked={renderSettings.enableBloomPass}
+									onChange={(checked) =>
+										updateRenderSetting("enableBloomPass", checked)
+									}
+								/>
 								<SelectControl
-									label="Quality"
+									label="Preset"
 									value={renderSettings.qualityPreset}
 									options={qualityPresetOptions}
 									onChange={applyQualityPreset}
@@ -4842,64 +6651,89 @@ export default function BlackHoleShader({
 										0 stable, 0.05 tiny AA, 0.25+ shimmer
 									</p>
 								</div>
-								{renderSettings.qualityPreset === "custom" ? (
-									<div className="grid grid-cols-2 gap-3">
-										<NumberControl
-											label="Trace"
-											value={renderSettings.qualityValue}
-											min={MIN_QUALITY_VALUE}
-											step={0.01}
-											onChange={(value) =>
-												updateRenderSetting("qualityValue", value)
-											}
-										/>
-										<NumberControl
-											label="DPR"
-											value={renderSettings.maxDevicePixelRatio}
-											min={MIN_DPR}
-											step={0.05}
-											onChange={(value) =>
-												updateRenderSetting("maxDevicePixelRatio", value)
-											}
-										/>
-										<NumberControl
-											label="Scene"
-											value={renderSettings.sceneScale}
-											min={MIN_RENDER_SCALE}
-											step={0.01}
-											onChange={(value) =>
-												updateRenderSetting("sceneScale", value)
-											}
-										/>
-										<NumberControl
-											label="Prepass"
-											value={renderSettings.prepassScale}
-											min={MIN_RENDER_SCALE}
-											step={0.01}
-											onChange={(value) =>
-												updateRenderSetting("prepassScale", value)
-											}
-										/>
-										<NumberControl
-											label="Bloom Res"
-											value={renderSettings.bloomScale}
-											min={MIN_RENDER_SCALE}
-											step={0.01}
-											onChange={(value) =>
-												updateRenderSetting("bloomScale", value)
-											}
-										/>
-										<NumberControl
-											label="Canvas"
-											value={renderSettings.resolutionScale}
-											min={MIN_RENDER_SCALE}
-											step={0.05}
-											onChange={(value) =>
-												updateRenderSetting("resolutionScale", value)
-											}
-										/>
-									</div>
-								) : null}
+								<div className="grid grid-cols-2 gap-3">
+									<NumberControl
+										label="Trace"
+										value={renderSettings.qualityValue}
+										min={MIN_QUALITY_VALUE}
+										step={0.01}
+										onChange={(value) =>
+											updateRenderSetting("qualityValue", value)
+										}
+									/>
+									<NumberControl
+										label="DPR"
+										value={renderSettings.maxDevicePixelRatio}
+										min={MIN_DPR}
+										step={0.05}
+										onChange={(value) =>
+											updateRenderSetting("maxDevicePixelRatio", value)
+										}
+									/>
+									<NumberControl
+										label="Scene"
+										value={renderSettings.sceneScale}
+										min={MIN_RENDER_SCALE}
+										step={0.01}
+										onChange={(value) =>
+											updateRenderSetting("sceneScale", value)
+										}
+									/>
+									<NumberControl
+										label="Prepass"
+										value={renderSettings.prepassScale}
+										min={MIN_RENDER_SCALE}
+										step={0.01}
+										onChange={(value) =>
+											updateRenderSetting("prepassScale", value)
+										}
+									/>
+									<NumberControl
+										label="Bloom Res"
+										value={renderSettings.bloomScale}
+										min={MIN_RENDER_SCALE}
+										step={0.01}
+										onChange={(value) =>
+											updateRenderSetting("bloomScale", value)
+										}
+									/>
+									<NumberControl
+										label="Canvas"
+										value={renderSettings.resolutionScale}
+										min={MIN_RENDER_SCALE}
+										step={0.05}
+										onChange={(value) =>
+											updateRenderSetting("resolutionScale", value)
+										}
+									/>
+									<NumberControl
+										label="Cell W"
+										value={renderSettings.cellWidth}
+										min={2}
+										step={1}
+										onChange={(value) =>
+											updateRenderSetting("cellWidth", value)
+										}
+									/>
+									<NumberControl
+										label="Cell H"
+										value={renderSettings.cellHeight}
+										min={2}
+										step={1}
+										onChange={(value) =>
+											updateRenderSetting("cellHeight", value)
+										}
+									/>
+									<NumberControl
+										label="Frame Cap"
+										value={renderSettings.frameIntervalMs}
+										min={0}
+										step={1}
+										onChange={(value) =>
+											updateRenderSetting("frameIntervalMs", value)
+										}
+									/>
+								</div>
 							</div>
 							{animationMode !== "off" ? (
 								<div className="grid gap-3 border-t border-white/10 pt-3">
@@ -5076,6 +6910,87 @@ export default function BlackHoleShader({
 									step={0.05}
 									onChange={(value) => updateControl("contrast", value)}
 								/>
+							</div>
+						</ControlPanel>
+					</div>
+
+					<div className="pointer-events-auto overflow-hidden rounded-md">
+						<ControlPanel
+							title="Benchmark"
+							icon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
+							open={benchmarkPanelOpen}
+							onToggle={() => setBenchmarkPanelOpen((open) => !open)}
+						>
+							<button
+								type="button"
+								onClick={() => void runBenchmark()}
+								disabled={benchmarkRunning}
+								className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white disabled:cursor-wait disabled:opacity-50"
+							>
+								{benchmarkRunning ? "Running..." : "Run Benchmark"}
+							</button>
+							<div className="grid gap-2 font-mono text-[10px] text-white/65">
+								{benchmarkResults.length === 0 ? (
+									<p className="leading-snug text-white/35">
+										Runs full, fallback, and WebGPU when available.
+									</p>
+								) : (
+									benchmarkResults.map((result) => (
+										<div
+											key={`${result.label}:${result.activeMode}:${result.activeBackend}`}
+											className="grid gap-1 border border-white/10 bg-black/50 p-2"
+										>
+											<div className="flex items-center justify-between gap-2 text-white/80">
+												<span>{result.label}</span>
+												<span>{formatMetric(result.averageFps)} fps</span>
+											</div>
+											<div className="grid grid-cols-2 gap-x-3 gap-y-1 text-white/45">
+												<span>Mode {result.activeMode}</span>
+												<span>Backend {result.activeBackend}</span>
+												<span>
+													Wall {formatMetric(result.averageFrameTimeMs)} ms
+												</span>
+												<span>
+													Wall P95 {formatMetric(result.p95FrameTimeMs)} ms
+												</span>
+												<span>
+													CPU {formatMetric(result.cpuAverageFrameTimeMs)} ms
+												</span>
+												<span>
+													CPU P95 {formatMetric(result.cpuP95FrameTimeMs)} ms
+												</span>
+												<span>Cells {result.cellCount.toLocaleString()}</span>
+												<span>Passes {result.passCount}</span>
+												<span>
+													Groups {result.computeWorkgroups.toLocaleString()}
+												</span>
+												<span>
+													Invokes {result.computeInvocations.toLocaleString()}
+												</span>
+												<span>
+													Pixels {result.renderTargetPixels.toLocaleString()}
+												</span>
+												<span>
+													{formatBytes(result.estimatedTextureMemoryBytes)}
+												</span>
+												<span>Init {formatMetric(result.initTimeMs)} ms</span>
+												<span>
+													GPU{" "}
+													{result.gpuFrameTimeMs === null
+														? result.gpuTimingSupported
+															? "pending"
+															: "n/a"
+														: `${formatMetric(result.gpuFrameTimeMs)} ms`}
+												</span>
+											</div>
+											{result.fallbackReason ? (
+												<p className="text-red-200/70">
+													{result.fallbackReason}
+												</p>
+											) : null}
+										</div>
+									))
+								)}
 							</div>
 						</ControlPanel>
 					</div>
