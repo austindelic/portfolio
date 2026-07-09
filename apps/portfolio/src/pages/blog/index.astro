@@ -6,21 +6,20 @@ import { sortMDByDate } from "../../utils";
 
 const allPosts = await getCollection("blog");
 
-const visiblePosts = allPosts.filter((post) => post.slug !== "example");
+const visiblePosts = allPosts.filter((post) => post.data.published !== false);
 const allPostsByDate = sortMDByDate(visiblePosts);
 ---
 
 <BaseLayout title="Blog" navbarActiveItemID="blog">
-  <section aria-label="Publicaciones de mi sitio">
-    <h1 class="text-xl font-bold mb-6 drop-shadow-sm">📝 Blog posts</h1>
+  <section aria-label="Blog posts">
+    <h1 class="text-xl font-bold mb-6 drop-shadow-sm">Blog posts</h1>
 
     {
       allPostsByDate.length === 0 ? (
         <div class="flex items-center gap-4 mb-6">
-          <p class="text-4xl">🔍</p>
           <div class="flex flex-col">
-            <h1 class="text-yellow-400 text-2xl font-bold">404</h1>
-            <p class="text-gray-400 text-xs">No blog posts available</p>
+            <h2 class="text-yellow-400 text-2xl font-bold">404</h2>
+            <p class="text-gray-400 text-xs">No posts published yet.</p>
           </div>
         </div>
       ) : (

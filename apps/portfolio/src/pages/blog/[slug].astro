@@ -7,10 +7,12 @@ import { getBlogImage } from "../../utils";
 export async function getStaticPaths() {
 	const postEntries = await getCollection("blog");
 
-	return postEntries.map((entry) => ({
-		params: { slug: entry.slug },
-		props: { entry },
-	}));
+	return postEntries
+		.filter((entry) => entry.data.published !== false)
+		.map((entry) => ({
+			params: { slug: entry.slug },
+			props: { entry },
+		}));
 }
 
 interface Props {

@@ -35,13 +35,12 @@ const displayDate = dayjs(publishDate).format("ll");
         />
       )
     }
-    <h1 class="title mt-12 mb-4 text-4xl font-bold text-zing-900">{title}</h1>
-    <p class="text-gray-600">{publishDate && <time>{displayDate}</time>}</p>
+    <h1 class="title mt-12 mb-4 text-4xl font-bold text-white">{title}</h1>
+    <p class="text-gray-500">{publishDate && <time>{displayDate}</time>}</p>
     {
       updatedDate && (
-        <div>
-          {" "}
-          Última vez actualizado: <time>{updatedDate}</time>{" "}
+        <div class="text-gray-500">
+          Updated: <time>{updatedDate}</time>
         </div>
       )
     }

@@ -8,20 +8,21 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { sortMDByDate } from "../utils";
 
 const allPosts = await getCollection("blog");
-const visiblePosts = allPosts.filter((post) => post.slug !== "example");
+const visiblePosts = allPosts.filter((post) => post.data.published !== false);
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const allPostsByDate = sortMDByDate(visiblePosts);
 
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const techStack: Record<string, string> = {
 	ts: "TypeScript",
+	go: "Go",
+	rust: "Rust",
 	python: "Python",
 	postgres: "Postgres",
-	astro: "Astro",
-	svelte: "Svelte",
 	next: "Next.js",
-	tailwind: "Tailwind",
-	rust: "Rust",
+	angular: "Angular",
+	dotnet: ".NET",
+	azure: "Azure",
 };
 
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
@@ -29,19 +30,28 @@ const projects: Array<{
 	title: string;
 	description: string;
 	link: string;
-	icon: string;
+	label: string;
 }> = [
 	{
+		title: "Tactify",
+		description:
+			"AI accessibility platform for tactile SVG graphics and guided audio narration.",
+		label: "product",
+		link: "/blog/building-tactify/",
+	},
+	{
 		title: "Still",
-		description: "Universal Package Manager and Version Manager (Mise + Brew)",
-		icon: "📦",
+		description:
+			"Rust project environment manager built around typed desired state.",
+		label: "systems",
 		link: "https://github.com/austindelic/still",
 	},
 	{
-		title: "crib.",
-		description: "Shared living managment webapp",
-		link: "https://github.com/austindelic/crib",
-		icon: "🏠",
+		title: "Production systems",
+		description:
+			"Notes from shipping across web, mobile, APIs, cloud, CI/CD, and support tooling.",
+		label: "work",
+		link: "/blog/production-systems-notes/",
 	},
 ];
 ---
@@ -71,11 +81,10 @@ const projects: Array<{
         <div class="text-xs">
           <div class="space-y-2">
             <div class="flex items-center gap-4 mb-4">
-              <p class="text-3xl">🌱</p>
               <div class="flex flex-col">
                 <h1 class="text-primary text-xl">Austin Delic</h1>
                 <p class="text-gray-400 text-xs">
-                  Builder. Engineer. Founder.
+                  Software engineer / builder in Perth.
                 </p>
               </div>
             </div>
@@ -83,7 +92,7 @@ const projects: Array<{
             <!-- Personal paragraph -->
             <div class="bh-home-inset bg-white/[0.04] rounded-lg p-3 mb-4">
               <p class="text-gray-200 leading-relaxed">
-                Shipping since 2024. Currently studying Computer Science while building in Rust, TypeScript and Svelte.
+                I build production software across web, mobile, backend systems, cloud infrastructure, and AI product surfaces. Recent work spans healthcare payments platforms, accessibility tooling, Rust developer infrastructure, and full-stack client products.
               </p>
             </div>
 
@@ -91,28 +100,20 @@ const projects: Array<{
 
             <div class="flex">
               <span class="text-gray-400 w-36 shrink-0">Location</span>
-              <span class="text-white">Perth, Australia 🇦🇺</span>
+              <span class="text-white">Perth, Australia</span>
             </div>
 
             <div class="flex">
               <span class="text-gray-400 w-36 shrink-0">Work</span>
               <span class="text-white">
-                Software Engineer, Student
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-cyan-600 hover:underline focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900"
-                  href="austindelic.com"
-                  aria-label="Visit your company website"
-                  ></a
-                >
+                Production full-stack engineering, AI products, systems tooling
               </span>
             </div>
 
             <div class="flex">
-              <span class="text-gray-400 w-36 shrink-0">Interests</span>
+              <span class="text-gray-400 w-36 shrink-0">Focus</span>
               <span class="text-white"
-              >Open Source, Startup</span
+              >End-to-end ownership, reliable delivery, useful abstractions</span
               >
             </div>
 
@@ -122,14 +123,14 @@ const projects: Array<{
                 <a
                   class="text-cyan-600 hover:underline focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900"
                   href="mailto:austin@austindelic.com"
-                  aria-label="Send email to austin@ausindelic.com">austin@austindelic.com</a
+                  aria-label="Send email to austin@austindelic.com">austin@austindelic.com</a
                 >
               </span>
             </div>
 
             <div class="flex">
               <div class="flex items-center">
-                <span class="text-gray-400 w-36 shrink-0">Tech</span>
+                <span class="text-gray-400 w-36 shrink-0">Stack</span>
                 <div class="flex flex-wrap gap-2" role="list" aria-label="Tech">
                   {
                     Object.keys(techStack).map((lang) => (
@@ -159,7 +160,7 @@ const projects: Array<{
         role="region"
         aria-label="Project showcase"
       >
-        <h2 class="mb-4 text-sm font-bold text-gray-500">💻 project samples</h2>
+        <h2 class="mb-4 text-sm font-bold text-gray-500">project samples</h2>
         <div class="space-y-2" role="list">
           {
             projects.map((project, index) => (
@@ -170,8 +171,12 @@ const projects: Array<{
                 {project.link ? (
                   <a
                     href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    target={project.link.startsWith("http") ? "_blank" : undefined}
+                    rel={
+                      project.link.startsWith("http")
+                        ? "noopener noreferrer"
+                        : undefined
+                    }
                     class="block focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                     aria-label={`Visit ${project.title}: ${project.description}`}
                   >
@@ -182,12 +187,8 @@ const projects: Array<{
                       >
                         {String(index + 1).padStart(2, "0")}.
                       </span>
-                      <span
-                        class="text-yellow-360 shrink-0"
-                        role="img"
-                        aria-label="Project icon"
-                      >
-                        {project.icon}
+                      <span class="text-gray-500 w-20 shrink-0">
+                        {project.label}
                       </span>
                       <div class="min-w-0 flex-1">
                         <span class="text-white group-hover:text-cyan-300 font-semibold">
@@ -207,12 +208,8 @@ const projects: Array<{
                     <span class="text-gray-400 w-6 shrink-0" aria-hidden="true">
                       {String(index + 1).padStart(2, "0")}.
                     </span>
-                    <span
-                      class="text-yellow-360 shrink-0"
-                      role="img"
-                      aria-label="Project icon"
-                    >
-                      {project.icon}
+                    <span class="text-gray-500 w-20 shrink-0">
+                      {project.label}
                     </span>
                     <div class="min-w-0 flex-1">
                       <span class="text-white font-semibold">
@@ -238,7 +235,7 @@ const projects: Array<{
     </section>
 
     <section id="blog" class="mt-8">
-      <h2 class="text-sm mb-6 font-semibold text-gray-500">✍️ latest posts</h2>
+      <h2 class="text-sm mb-6 font-semibold text-gray-500">latest posts</h2>
       <ul class="space-y-6" role="list">
         {
           allPostsByDate.map((post) => (
