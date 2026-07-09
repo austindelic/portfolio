@@ -3,17 +3,23 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
+import cloudflare from "@astrojs/cloudflare";
+
 // https://astro.build/config
 export default defineConfig({
-	integrations: [sitemap(), react()],
-	site: "https://austindelic.com",
-	compressHTML: true,
-	markdown: {
+    integrations: [sitemap(), react()],
+    site: "https://austindelic.com",
+    compressHTML: true,
+
+    markdown: {
 		shikiConfig: {
 			theme: "gruvbox-dark-medium",
 		},
 	},
-	vite: {
+
+    vite: {
 		plugins: [tailwindcss()],
 	},
+
+    adapter: cloudflare()
 });
