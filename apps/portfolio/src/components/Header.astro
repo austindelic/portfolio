@@ -1,8 +1,6 @@
 ---
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 const { navbarActiveItemID, disableClock = false } = Astro.props;
-// biome-ignore lint/correctness/noUnusedVariables: Astro passes this value into the inline script.
-const activeClasses = ["text-white", "opacity-100"];
 
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import { SquareArrowOutUpRight } from "lucide-react";
@@ -35,7 +33,7 @@ const links: Array<{
 ];
 ---
 
-<header id="main-header" class="mb-8 px-6 mt-6">
+<header data-disable-clock={disableClock ? "true" : "false"} id="main-header" class="mb-8 px-6 mt-6">
   <nav
     id="navigation-menu"
     aria-label="Main menu"
@@ -58,7 +56,7 @@ const links: Array<{
               href={link.redirect ? link.redirect : link.url}
               target={link.redirect ? "_blank" : "_self"}
               id={link.id}
-              class="text-gray-400 opacity-70 hover:opacity-100 inline-flex items-center gap-1"
+              class:list={["text-gray-400 opacity-70 hover:opacity-100 inline-flex items-center gap-1", isActive && "text-white opacity-100"]}
             >
               {link.title}
               {!isActive && (
@@ -75,67 +73,39 @@ const links: Array<{
   </nav>
 </header>
 
-<script
-  define:vars={{
-    navbarActiveItemID,
-    activeClasses,
-    disableClock,
-  }}
->
-  const activeItemElement = document.getElementById(navbarActiveItemID);
-
-  if (activeItemElement) {
-    activeClasses.forEach((activeClass) => {
-      activeItemElement.classList.add(activeClass);
-    });
-  }
-
-  const clockWindow = window;
-  const clock = document.getElementById("perth-time");
-  const hour = clock?.querySelector("[data-clock-hour]");
-  const minute = clock?.querySelector("[data-clock-minute]");
-  const second = clock?.querySelector("[data-clock-second]");
-  const colons = clock ? Array.from(clock.querySelectorAll("[data-clock-colon]")) : [];
+<script>
   const formatter = new Intl.DateTimeFormat("en-AU", {
-    timeZone: "Australia/Perth",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
+    timeZone: "Australia/Perth", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
   });
-
-  function updateText(node, value) {
-    if (node && node.textContent !== value) node.textContent = value;
+  let interval: ReturnType<typeof setInterval> | undefined;
+  function stopClock() {
+    if (interval !== undefined) window.clearInterval(interval);
+    interval = undefined;
   }
-
-  function updatePerthTime() {
-    const now = new Date();
-    const parts = formatter.formatToParts(now);
-
-    let h = "", m = "", s = "";
-    for (const p of parts) {
-      if (p.type === "hour") h = p.value;
-      if (p.type === "minute") m = p.value;
-      if (p.type === "second") s = p.value;
+  function setupClock() {
+    stopClock();
+    const clock = document.getElementById("perth-time");
+    if (!clock || document.getElementById("main-header")?.dataset.disableClock === "true") return;
+    const hour = clock.querySelector("[data-clock-hour]");
+    const minute = clock.querySelector("[data-clock-minute]");
+    const second = clock.querySelector("[data-clock-second]");
+    const colons = clock.querySelectorAll("[data-clock-colon]");
+    function updateText(node: Element | null, value: string) {
+      if (node && node.textContent !== value) node.textContent = value;
     }
-
-    updateText(hour, h);
-    updateText(minute, m);
-    updateText(second, s);
-
-    const colonHidden = now.getSeconds() % 2 !== 0;
-    for (const colon of colons) {
-      colon.classList.toggle("off", colonHidden);
+    function update() {
+      const now = new Date();
+      for (const part of formatter.formatToParts(now)) {
+        if (part.type === "hour") updateText(hour, part.value);
+        if (part.type === "minute") updateText(minute, part.value);
+        if (part.type === "second") updateText(second, part.value);
+      }
+      for (const colon of colons) colon.classList.toggle("off", now.getSeconds() % 2 !== 0);
     }
+    update();
+    interval = window.setInterval(update, 1000);
   }
-
-  if (clockWindow.__perthClockInterval) {
-    window.clearInterval(clockWindow.__perthClockInterval);
-    clockWindow.__perthClockInterval = undefined;
-  }
-
-  if (!disableClock) {
-    updatePerthTime();
-    clockWindow.__perthClockInterval = window.setInterval(updatePerthTime, 1000);
-  }
+  setupClock();
+  document.addEventListener("astro:before-swap", stopClock);
+  document.addEventListener("astro:page-load", setupClock);
 </script>

@@ -1,0 +1,315 @@
+{
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+    "dpr": 1,
+    "mobile": "viewport emulation on the same desktop GPU"
+  },
+  "summaries": [
+    {
+      "width": 1440,
+      "baseline": {
+        "cpuMedian": 0.20000000298023224,
+        "cpuP95": 0.4000000059604645,
+        "wallMedian": 16.699999999999818,
+        "wallP95": 16.700000000000728,
+        "firstFrame": 123.79999999701977,
+        "drawsPerFrame": 6
+      },
+      "final": {
+        "cpuMedian": 0.09999999403953552,
+        "cpuP95": 0.20000000298023224,
+        "wallMedian": 16.699999999999818,
+        "wallP95": 16.700000000000728,
+        "firstFrame": 49.3999999910593,
+        "drawsPerFrame": 3
+      },
+      "baselineResources": {
+        "Texture": 11,
+        "Buffer": 1,
+        "Framebuffer": 7,
+        "Program": 11
+      },
+      "finalResources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      }
+    },
+    {
+      "width": 2560,
+      "baseline": {
+        "cpuMedian": 0.10000000894069672,
+        "cpuP95": 0.20000000298023224,
+        "wallMedian": 16.699999999999818,
+        "wallP95": 33.399999999999636,
+        "firstFrame": 163.29999999701977,
+        "drawsPerFrame": 6
+      },
+      "final": {
+        "cpuMedian": 0.09999999403953552,
+        "cpuP95": 0.20000000298023224,
+        "wallMedian": 33.29999999999927,
+        "wallP95": 33.40000000000009,
+        "firstFrame": 115.70000000298023,
+        "drawsPerFrame": 3
+      },
+      "baselineResources": {
+        "Texture": 11,
+        "Buffer": 1,
+        "Framebuffer": 7,
+        "Program": 11
+      },
+      "finalResources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      }
+    },
+    {
+      "width": 390,
+      "baseline": {
+        "cpuMedian": 0.29999999701976776,
+        "cpuP95": 0.5,
+        "wallMedian": 16.699999999999818,
+        "wallP95": 16.700000000000728,
+        "firstFrame": 125.5,
+        "drawsPerFrame": 6
+      },
+      "final": {
+        "cpuMedian": 0.10000000894069672,
+        "cpuP95": 0.29999999701976776,
+        "wallMedian": 16.699999999999818,
+        "wallP95": 16.700000000000728,
+        "firstFrame": 68.20000000298023,
+        "drawsPerFrame": 3
+      },
+      "baselineResources": {
+        "Texture": 11,
+        "Buffer": 1,
+        "Framebuffer": 7,
+        "Program": 11
+      },
+      "finalResources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      }
+    }
+  ],
+  "assets": {
+    "baseline": {
+      "files": [
+        {
+          "name": "_astro/client.C5__Eka-.js",
+          "bytes": 186619,
+          "gzip": 59176,
+          "brotli": 50431
+        },
+        {
+          "name": "_astro/index.Bz3_ld-V.js",
+          "bytes": 7848,
+          "gzip": 3057,
+          "brotli": 2682
+        },
+        {
+          "name": "_astro/BlackHoleShader.CZqvgRp5.js",
+          "bytes": 106,
+          "gzip": 110,
+          "brotli": 110
+        },
+        {
+          "name": "_astro/BlackHoleShader.Dz7LtkAl.js",
+          "bytes": 250547,
+          "gzip": 66162,
+          "brotli": 55099
+        },
+        {
+          "name": "_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330,
+          "gzip": 5290,
+          "brotli": 4731
+        }
+      ],
+      "bytes": 460450,
+      "gzip": 133795,
+      "brotli": 113053
+    },
+    "final": {
+      "files": [
+        {
+          "name": "_astro/client.9unXo8s5.js",
+          "bytes": 186619,
+          "gzip": 59177,
+          "brotli": 50453
+        },
+        {
+          "name": "_astro/index.WFquGv8Z.js",
+          "bytes": 7848,
+          "gzip": 3057,
+          "brotli": 2682
+        },
+        {
+          "name": "_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100,
+          "gzip": 108,
+          "brotli": 88
+        },
+        {
+          "name": "_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437,
+          "gzip": 46456,
+          "brotli": 39856
+        },
+        {
+          "name": "_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330,
+          "gzip": 5290,
+          "brotli": 4731
+        }
+      ],
+      "bytes": 383334,
+      "gzip": 114088,
+      "brotli": 97810
+    },
+    "reductionPercent": {
+      "bytes": 16.74796394831144,
+      "gzip": 14.729249971972047,
+      "brotli": 13.483056619461664
+    }
+  },
+  "comparisons": [
+    {
+      "name": "1440-30.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "1440-60.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "1440-120.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "1440-420.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "2560-30.png",
+      "width": 2560,
+      "height": 1440,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "2560-60.png",
+      "width": 2560,
+      "height": 1440,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "2560-120.png",
+      "width": 2560,
+      "height": 1440,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "2560-420.png",
+      "width": 2560,
+      "height": 1440,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "390-30.png",
+      "width": 390,
+      "height": 844,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "390-60.png",
+      "width": 390,
+      "height": 844,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "390-120.png",
+      "width": 390,
+      "height": 844,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "390-420.png",
+      "width": 390,
+      "height": 844,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "editor-bloom-0.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "editor-bloom-0.4.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "route-blog.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "route-post.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 3336,
+      "maxDifference": 255
+    },
+    {
+      "name": "route-socials.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 0,
+      "maxDifference": 0
+    },
+    {
+      "name": "route-home.png",
+      "width": 1440,
+      "height": 900,
+      "changedChannels": 3336,
+      "maxDifference": 255
+    }
+  ]
+}

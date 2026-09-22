@@ -1,0 +1,150 @@
+async (page) => {
+	const origin = page.url().split("/").slice(0, 3).join("/");
+	await page.addInitScript(() => {
+		const scenario = new URLSearchParams(location.search).get("failure");
+		const live = (window.__failureProbe = {
+			programs: new Set(),
+			shaders: new Set(),
+			textures: new Set(),
+			framebuffers: new Set(),
+			draws: 0,
+			failed: false,
+		});
+		for (const [kind, key] of [
+			["Program", "programs"],
+			["Shader", "shaders"],
+			["Texture", "textures"],
+			["Framebuffer", "framebuffers"],
+		]) {
+			const create = WebGL2RenderingContext.prototype["create" + kind],
+				remove = WebGL2RenderingContext.prototype["delete" + kind];
+			WebGL2RenderingContext.prototype["create" + kind] = function (...args) {
+				const value = create.apply(this, args);
+				if (value) live[key].add(value);
+				return value;
+			};
+			WebGL2RenderingContext.prototype["delete" + kind] = function (value) {
+				live[key].delete(value);
+				return remove.call(this, value);
+			};
+		}
+		const draw = WebGL2RenderingContext.prototype.drawArrays;
+		WebGL2RenderingContext.prototype.drawArrays = function (...args) {
+			live.draws++;
+			return draw.apply(this, args);
+		};
+		if (scenario === "allocation" || scenario === "bloom-allocation") {
+			let pending = false;
+			const image = WebGL2RenderingContext.prototype.texImage2D,
+				error = WebGL2RenderingContext.prototype.getError;
+			WebGL2RenderingContext.prototype.texImage2D = function (...args) {
+				const result = image.apply(this, args);
+				if (
+					!live.failed &&
+					args.length === 9 &&
+					args[3] > 64 &&
+					(scenario === "allocation" || window.__injectBloomFailure)
+				) {
+					live.failed = true;
+					pending = true;
+				}
+				return result;
+			};
+			WebGL2RenderingContext.prototype.getError = function () {
+				if (pending) {
+					pending = false;
+					return this.OUT_OF_MEMORY;
+				}
+				return error.call(this);
+			};
+		}
+		if (scenario === "compile" || scenario === "bloom-compile") {
+			const parameter = WebGL2RenderingContext.prototype.getShaderParameter;
+			let checks = 0;
+			WebGL2RenderingContext.prototype.getShaderParameter = function (
+				shader,
+				p,
+			) {
+				if (
+					p === this.COMPILE_STATUS &&
+					++checks === (scenario === "compile" ? 4 : 8)
+				) {
+					live.failed = true;
+					return false;
+				}
+				return parameter.call(this, shader, p);
+			};
+		}
+		if (scenario === "unavailable") {
+			const get = HTMLCanvasElement.prototype.getContext;
+			HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+				if (type === "webgl2") {
+					live.failed = true;
+					return null;
+				}
+				return get.call(this, type, ...args);
+			};
+		}
+	});
+	const results = [];
+	for (const scenario of [
+		"allocation",
+		"compile",
+		"unavailable",
+		"bloom-allocation",
+		"bloom-compile",
+	]) {
+		await page.goto(
+			origin +
+				(scenario.startsWith("bloom-")
+					? "/black-hole/?failure="
+					: "/?failure=") +
+				scenario,
+			{
+				waitUntil: "networkidle",
+			},
+		);
+		if (scenario.startsWith("bloom-")) {
+			await page.getByLabel("Bloom", { exact: true }).waitFor();
+			await page.evaluate(() => {
+				window.__injectBloomFailure = true;
+			});
+			await page.getByLabel("Bloom", { exact: true }).fill("0.4");
+			await page.getByLabel("Bloom", { exact: true }).press("Tab");
+		}
+		await page.waitForTimeout(300);
+		results.push(
+			await page.evaluate((scenario) => {
+				const p = window.__failureProbe;
+				return {
+					scenario,
+					failed: p.failed,
+					draws: p.draws,
+					programs: p.programs.size,
+					shaders: p.shaders.size,
+					textures: p.textures.size,
+					framebuffers: p.framebuffers.size,
+					errorText:
+						document.querySelector('[class*="border-red-500"]')?.textContent ||
+						null,
+				};
+			}, scenario),
+		);
+	}
+	const failures = results.filter((r) => {
+		if (!r.failed) return true;
+		if (["allocation", "bloom-allocation"].includes(r.scenario)) {
+			const bloom = r.scenario === "bloom-allocation";
+			return (
+				r.draws === 0 ||
+				r.programs !== (bloom ? 6 : 3) ||
+				r.textures !== (bloom ? 10 : 7) ||
+				r.errorText
+			);
+		}
+		return (
+			r.programs !== 0 || r.shaders !== 0 || r.textures !== 0 || !r.errorText
+		);
+	});
+	return { results, failures };
+}

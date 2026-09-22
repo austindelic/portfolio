@@ -1,17 +1,6 @@
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
-	ChevronDown,
-	ChevronUp,
-	Copy,
-	Pause,
-	Play,
-	RotateCcw,
-	SlidersHorizontal,
-	Type,
-} from "lucide-react";
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
-import {
-	BLACK_HOLE_ANIMATION_ROUTE_OPTIONS,
 	BLACK_HOLE_ANIMATION_ROUTES,
 	type BlackHoleAnimationKeyframe,
 	type BlackHoleAnimationRouteKey,
@@ -19,7 +8,6 @@ import {
 	normalizeBlackHoleAnimationRoute,
 } from "../config/black-hole-animation";
 import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
-import bloomSource from "../shaders/black-hole/bloom.glsl?raw";
 import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
 import bufferBSource from "../shaders/black-hole/buffer-b.glsl?raw";
 import bufferCSource from "../shaders/black-hole/buffer-c.glsl?raw";
@@ -33,9 +21,9 @@ type AsciiCellSize = {
 	y: number;
 };
 
-type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
+export type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
 type PaletteMode = "source" | "custom";
-type QualityPreset =
+export type QualityPreset =
 	| "mobile-safe"
 	| "ascii-balanced"
 	| "ascii-sharp"
@@ -46,13 +34,13 @@ type QualityPreset =
 	| "stress-test"
 	| "custom";
 type QualityProp = Exclude<QualityPreset, "custom"> | number;
-type AnimationMode = "off" | "route" | "editor";
+export type AnimationMode = "off" | "route" | "editor";
 type AnimationPhase = "off" | "intro" | "transition" | "idle";
-type RendererMode = "auto" | "full" | "ascii-cell" | "fallback-full";
-type ResolvedRendererMode = "full" | "ascii-cell";
-type ShaderBackend = "auto" | "webgl2" | "webgpu";
-type ResolvedShaderBackend = "webgl2" | "webgpu";
-type RuntimeProfile = "desktop" | "mobile" | "lowPower";
+export type RendererMode = "auto" | "full" | "ascii-cell" | "fallback-full";
+export type ResolvedRendererMode = "full" | "ascii-cell";
+export type ShaderBackend = "auto" | "webgl2" | "webgpu";
+export type ResolvedShaderBackend = "webgl2" | "webgpu";
+export type RuntimeProfile = "desktop" | "mobile" | "lowPower";
 type FontFamily =
 	| "Departure Mono"
 	| "DSEG14Modern"
@@ -60,7 +48,7 @@ type FontFamily =
 	| "Courier New"
 	| "monospace";
 
-type ShaderControls = {
+export type ShaderControls = {
 	timeScale: number;
 	exposure: number;
 	bloomStrength: number;
@@ -93,7 +81,7 @@ type RenderSettings = {
 	enableBloomPass: boolean;
 };
 
-type GlyphAtlasConfig = {
+export type GlyphAtlasConfig = {
 	glyphs: string;
 	glyphCount: number;
 	fontFamily: FontFamily;
@@ -134,7 +122,7 @@ type TextureLike = {
 	height: number;
 };
 
-type RenderTarget = TextureLike & {
+export type RenderTarget = TextureLike & {
 	framebuffer: WebGLFramebuffer;
 };
 
@@ -161,6 +149,9 @@ type TextureFormat = {
 };
 
 type ProgramPass = {
+	channels: TextureLike[];
+	vao: WebGLVertexArrayObject | null;
+	uniformCache: Map<WebGLUniformLocation, Array<number | undefined>>;
 	name: string;
 	program: WebGLProgram;
 	locations: {
@@ -195,37 +186,20 @@ type ProgramPass = {
 	};
 };
 
-type OptimizedPassSet = {
-	prepass: ProgramPass;
-	composite: ProgramPass;
-	bloom: ProgramPass;
-	image: ProgramPass;
-	ascii: ProgramPass;
-};
-
 type FallbackPassSet = {
 	a: ProgramPass;
-	b: ProgramPass;
-	c: ProgramPass;
-	d: ProgramPass;
+	b?: ProgramPass;
+	c?: ProgramPass;
+	d?: ProgramPass;
 	image: ProgramPass;
 	ascii: ProgramPass;
-};
-
-type OptimizedTargets = {
-	prepass: MultiRenderTarget;
-	composite: PingPongTarget;
-	bloomMip: RenderTarget;
-	bloomHorizontal: RenderTarget;
-	bloomVertical: RenderTarget;
-	scene: RenderTarget;
 };
 
 type FallbackTargets = {
 	a: PingPongTarget;
-	b: PingPongTarget;
-	c: RenderTarget;
-	d: RenderTarget;
+	b?: RenderTarget;
+	c?: RenderTarget;
+	d?: RenderTarget;
 	scene: RenderTarget;
 };
 
@@ -239,7 +213,7 @@ type CameraState = {
 	pendingPitch: number;
 };
 
-type BlackHoleStats = {
+export type BlackHoleStats = {
 	mode: "optimized" | "fallback" | "ascii-cell" | "webgpu";
 	backend: ResolvedShaderBackend;
 	requestedRendererMode: RendererMode;
@@ -308,7 +282,7 @@ type BlackHoleStats = {
 	animationSequenceTime: number;
 };
 
-type Props = {
+export type Props = {
 	className?: string;
 	showControls?: boolean;
 	interactive?: boolean;
@@ -353,7 +327,7 @@ type Props = {
 	debugStats?: boolean;
 };
 
-type RuntimeSnapshot = {
+export type RuntimeSnapshot = {
 	cameraPosition?: Vec3;
 	cameraForward?: Vec3;
 	universeSign?: number;
@@ -365,7 +339,7 @@ type PersistentAnimationSnapshot = Required<RuntimeSnapshot> & {
 	route: BlackHoleAnimationRouteKey;
 };
 
-type BenchmarkResult = {
+export type BenchmarkResult = {
 	label: string;
 	rendererMode: RendererMode;
 	backend: ShaderBackend;
@@ -388,14 +362,14 @@ type BenchmarkResult = {
 	fallbackReason: string | null;
 };
 
-type CameraEditorApi = {
+export type CameraEditorApi = {
 	applyPosition: (value: string) => boolean;
 	applyForward: (value: string) => boolean;
 	applyUniverse: (value: string) => boolean;
 	sync: () => void;
 };
 
-type AnimationEditorApi = {
+export type AnimationEditorApi = {
 	play: () => void;
 	pause: () => void;
 	restartIntro: () => void;
@@ -503,362 +477,23 @@ vec4 FinalizeTrace(TraceResult res, vec2 uv, mat4 inverseCamRot, vec3 mapCamDir)
 }
 `;
 
-const PREPASS_MAIN = `
-layout(location = 0) out vec4 outDistortionFlag;
-layout(location = 1) out vec4 outVolumetric;
-
-void main()
-{
-	vec2 resolution = iResolution.xy;
-	vec2 uv = gl_FragCoord.xy / resolution;
-	mat4 inverseCamRot;
-	vec3 mapCamDir;
-	TraceResult res = TraceFromCamera(uv, resolution, 0.5, inverseCamRot, mapCamDir);
-
-	outDistortionFlag = vec4(res.EscapeDir * res.FreqShift, res.Status);
-	outVolumetric = res.AccumColor;
-}
-`;
-
-const COMPOSITE_MAIN = `
-out vec4 shadertoyFragColor;
-
-ivec2 ClampCoord(ivec2 coord, ivec2 size)
-{
-	return clamp(coord, ivec2(0), size - ivec2(1));
-}
-
-bool IsOpaqueStatus(float status)
-{
-	return abs(round(status) - 3.0) < 0.1;
-}
-
-bool IsSensitiveBoundary(float a, float b)
-{
-	return abs(round(a) - round(b)) > 0.1 || abs(a - b) > 0.35;
-}
-
-void ManualBilinearSample(vec2 uv, out vec3 distortion, out vec4 volumetric, out float nearestStatus)
-{
-	ivec2 texSize = textureSize(iChannel0, 0);
-	vec2 pixelPos = uv * vec2(texSize) - 0.5;
-	ivec2 basePos = ivec2(floor(pixelPos));
-	vec2 f = fract(pixelPos);
-
-	ivec2 p00 = ClampCoord(basePos, texSize);
-	ivec2 p10 = ClampCoord(basePos + ivec2(1, 0), texSize);
-	ivec2 p01 = ClampCoord(basePos + ivec2(0, 1), texSize);
-	ivec2 p11 = ClampCoord(basePos + ivec2(1, 1), texSize);
-
-	vec4 d00 = texelFetch(iChannel0, p00, 0);
-	vec4 d10 = texelFetch(iChannel0, p10, 0);
-	vec4 d01 = texelFetch(iChannel0, p01, 0);
-	vec4 d11 = texelFetch(iChannel0, p11, 0);
-
-	vec4 v00 = texelFetch(iChannel1, p00, 0);
-	vec4 v10 = texelFetch(iChannel1, p10, 0);
-	vec4 v01 = texelFetch(iChannel1, p01, 0);
-	vec4 v11 = texelFetch(iChannel1, p11, 0);
-
-	distortion = mix(mix(d00.xyz, d10.xyz, f.x), mix(d01.xyz, d11.xyz, f.x), f.y);
-	volumetric = mix(mix(v00, v10, f.x), mix(v01, v11, f.x), f.y);
-
-	float w00 = (1.0 - f.x) * (1.0 - f.y);
-	float w10 = f.x * (1.0 - f.y);
-	float w01 = (1.0 - f.x) * f.y;
-	float w11 = f.x * f.y;
-	nearestStatus = d00.w;
-	float maxWeight = w00;
-
-	if (w10 > maxWeight) { maxWeight = w10; nearestStatus = d10.w; }
-	if (w01 > maxWeight) { maxWeight = w01; nearestStatus = d01.w; }
-	if (w11 > maxWeight) { nearestStatus = d11.w; }
-}
-
-bool IsPrepassEdge(vec2 uv)
-{
-	ivec2 texSize = textureSize(iChannel0, 0);
-	ivec2 center = ClampCoord(ivec2(floor(uv * vec2(texSize))), texSize);
-	vec4 c = texelFetch(iChannel0, center, 0);
-	vec4 l = texelFetch(iChannel0, ClampCoord(center + ivec2(-1, 0), texSize), 0);
-	vec4 r = texelFetch(iChannel0, ClampCoord(center + ivec2(1, 0), texSize), 0);
-	vec4 u = texelFetch(iChannel0, ClampCoord(center + ivec2(0, -1), texSize), 0);
-	vec4 d = texelFetch(iChannel0, ClampCoord(center + ivec2(0, 1), texSize), 0);
-
-	bool statusEdge = IsSensitiveBoundary(c.w, l.w) || IsSensitiveBoundary(c.w, r.w) || IsSensitiveBoundary(c.w, u.w) || IsSensitiveBoundary(c.w, d.w);
-
-	return statusEdge;
-}
-
-void main()
-{
-	vec2 resolution = iResolution.xy;
-	vec2 uv = gl_FragCoord.xy / resolution;
-	mat4 inverseCamRot;
-	vec3 mapCamDir;
-	vec4 finalColor;
-
-	if (IsPrepassEdge(uv))
-	{
-		TraceResult res = TraceFromCamera(uv, resolution, 0.0, inverseCamRot, mapCamDir);
-		finalColor = FinalizeTrace(res, uv, inverseCamRot, mapCamDir);
-	}
-	else
-	{
-		vec3 distortion;
-		vec4 volumetric;
-		float nearestStatus;
-		ManualBilinearSample(uv, distortion, volumetric, nearestStatus);
-
-		TraceResult res;
-		res.EscapeDir = distortion / max(length(distortion), 1e-9);
-		res.FreqShift = length(distortion);
-		res.Status = nearestStatus;
-		res.AccumColor = volumetric;
-		res.CurrentSign = uUniverseSign;
-
-		vec4 relativePos;
-		vec4 relativeDiskNormal;
-		vec4 relativeDiskTangent;
-		BuildCameraFrame(inverseCamRot, relativePos, relativeDiskNormal, relativeDiskTangent, mapCamDir);
-		finalColor = FinalizeTrace(res, uv, inverseCamRot, mapCamDir);
-	}
-
-	if (iFrame > 0)
-	{
-		vec4 prevColor = texelFetch(iChannel2, ivec2(gl_FragCoord.xy), 0);
-		finalColor = uBlendWeight * finalColor + (1.0 - uBlendWeight) * prevColor;
-	}
-
-	shadertoyFragColor = finalColor;
-}
-`;
-
-const ASCII_CELL_TRACE_SOURCE = `
-out vec4 shadertoyFragColor;
-
-void main()
-{
-	vec2 canvasResolution = max(uCanvasResolution, vec2(1.0));
-	vec2 cellSize = max(uAsciiCellSize, vec2(2.0));
-	vec2 fullFragCoord = min(
-		(gl_FragCoord.xy + vec2(0.5)) * cellSize,
-		canvasResolution - vec2(0.5)
-	);
-	vec2 uv = fullFragCoord / canvasResolution;
-	mat4 inverseCamRot;
-	vec3 mapCamDir;
-	TraceResult res = TraceFromCamera(uv, canvasResolution, 0.5, inverseCamRot, mapCamDir);
-
-	shadertoyFragColor = FinalizeTrace(res, uv, inverseCamRot, mapCamDir);
-}
-`;
-
-const WEBGPU_COMPUTE_SOURCE = `
-struct Params {
-	time_exposure_quality_glyph: vec4<f32>,
-	shadow: vec4<f32>,
-	mid: vec4<f32>,
-	highlight: vec4<f32>,
-	source_dims: vec4<f32>,
-	canvas_dims: vec4<f32>,
-	cell_size: vec4<f32>,
-	camera_position: vec4<f32>,
-	camera_right: vec4<f32>,
-	camera_up: vec4<f32>,
-	camera_forward: vec4<f32>,
-};
-
-@group(0) @binding(0) var cell_texture: texture_storage_2d<rgba8unorm, write>;
-@group(0) @binding(1) var<uniform> params: Params;
-
-fn hash3(p: vec3<f32>) -> f32 {
-	return fract(sin(dot(p, vec3<f32>(127.1, 311.7, 74.7))) * 43758.5453123);
-}
-
-fn saturate_color(color: vec3<f32>) -> vec3<f32> {
-	return clamp(color, vec3<f32>(0.0), vec3<f32>(1.0));
-}
-
-fn tone_map(color: vec3<f32>) -> vec3<f32> {
-	var mapped = color / (vec3<f32>(1.0) + color);
-	mapped = pow(saturate_color(mapped), vec3<f32>(0.72));
-	return mapped;
-}
-
-fn star_field(dir: vec3<f32>) -> vec3<f32> {
-	let cell = floor(normalize(dir) * 150.0);
-	let star_seed = hash3(cell);
-	let star = smoothstep(0.992, 1.0, star_seed);
-	let cold = vec3<f32>(0.45, 0.62, 1.0);
-	let warm = vec3<f32>(1.0, 0.86, 0.62);
-	return mix(cold, warm, hash3(cell + vec3<f32>(17.0, 3.0, 91.0))) * star * (0.25 + 1.6 * hash3(cell + vec3<f32>(9.0)));
-}
-
-fn black_hole_color(uv: vec2<f32>) -> vec3<f32> {
-	let canvas = max(params.canvas_dims.xy, vec2<f32>(1.0));
-	let ndc = uv * 2.0 - vec2<f32>(1.0);
-	let fov = 0.57735026;
-	let ray_dir = normalize(
-		params.camera_forward.xyz +
-		params.camera_right.xyz * (ndc.x * fov) +
-		params.camera_up.xyz * (ndc.y * fov * canvas.y / max(canvas.x, 1.0))
-	);
-	let camera_pos = params.camera_position.xyz;
-	let time = params.time_exposure_quality_glyph.x;
-	let exposure = params.time_exposure_quality_glyph.y;
-	let quality = params.time_exposure_quality_glyph.z;
-
-	let to_center = -camera_pos;
-	let closest_t = max(dot(to_center, ray_dir), 0.0);
-	let closest = camera_pos + ray_dir * closest_t;
-	let impact = length(closest);
-	let center_facing = smoothstep(0.0, 1.0, closest_t);
-
-	var color = star_field(ray_dir) * (1.0 - smoothstep(0.86, 0.98, center_facing) * smoothstep(0.7, 4.0, impact) * 0.35);
-
-	let horizon = center_facing * (1.0 - smoothstep(0.78, 1.15, impact));
-	let photon_ring = center_facing * exp(-abs(impact - 1.32) * 7.0) * (0.55 + 0.45 * quality);
-	let inner_ring = center_facing * exp(-abs(impact - 1.75) * 3.2);
-
-	let denom = ray_dir.y;
-	let disk_t = -camera_pos.y / select(0.0001 * sign(denom + 0.0001), denom, abs(denom) > 0.0001);
-	let disk_pos = camera_pos + ray_dir * disk_t;
-	let disk_radius = length(disk_pos.xz);
-	let disk_angle = atan2(disk_pos.z, disk_pos.x);
-	let disk_radial = smoothstep(2.0, 3.0, disk_radius) * (1.0 - smoothstep(14.0, 19.0, disk_radius));
-	let disk_visible = select(0.0, 1.0, disk_t > 0.0);
-	let disk_grazing = clamp(0.15 / max(abs(denom), 0.04), 0.0, 1.0);
-	let orbital = 0.62 + 0.38 * sin(disk_angle * 18.0 - time * 5.0 + disk_radius * 0.9);
-	let tangent = normalize(vec3<f32>(-disk_pos.z, 0.0, disk_pos.x));
-	let doppler = clamp(0.72 + 0.52 * dot(tangent, -ray_dir), 0.25, 1.75);
-	let disk = disk_visible * disk_radial * disk_grazing * orbital;
-	let lensed_disk = center_facing * exp(-abs(impact - 2.35) * 1.35) * (0.25 + 0.75 * smoothstep(-0.2, 0.8, closest.y)) * (0.5 + 0.5 * sin(atan2(closest.z, closest.x) * 14.0 - time * 4.0));
-
-	let heat = clamp(disk * doppler + lensed_disk * 0.45, 0.0, 2.5);
-	let disk_color = mix(vec3<f32>(0.95, 0.24, 0.05), vec3<f32>(1.0, 0.92, 0.72), clamp(heat * 0.85 + photon_ring * 0.35, 0.0, 1.0));
-	color += disk_color * heat * 1.75;
-	color += vec3<f32>(0.6, 0.82, 1.0) * photon_ring * 1.4;
-	color += vec3<f32>(0.95, 0.62, 0.32) * inner_ring * 0.35;
-	color *= 1.0 - horizon * 0.98;
-
-	return tone_map(color * exposure);
-}
-
-@compute @workgroup_size(8, 8, 1)
-fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-	let dims = vec2<u32>(u32(params.source_dims.x), u32(params.source_dims.y));
-	if (id.x >= dims.x || id.y >= dims.y) {
-		return;
-	}
-
-	let canvas_resolution = max(params.canvas_dims.xy, vec2<f32>(1.0));
-	let source_coord = vec2<f32>(f32(id.x), f32(id.y)) + vec2<f32>(0.5);
-	let full_coord = select(source_coord, source_coord * max(params.cell_size.xy, vec2<f32>(1.0)), params.source_dims.w > 0.5);
-	let uv = min(full_coord / canvas_resolution, vec2<f32>(0.99999));
-	let color = black_hole_color(uv);
-
-	textureStore(cell_texture, vec2<i32>(i32(id.x), i32(id.y)), vec4<f32>(saturate_color(color), 1.0));
-}
-`;
-
-const WEBGPU_RENDER_SOURCE = `
-struct Params {
-	time_exposure_quality_glyph: vec4<f32>,
-	shadow: vec4<f32>,
-	mid: vec4<f32>,
-	highlight: vec4<f32>,
-	source_dims: vec4<f32>,
-	canvas_dims: vec4<f32>,
-	cell_size: vec4<f32>,
-	camera_position: vec4<f32>,
-	camera_right: vec4<f32>,
-	camera_up: vec4<f32>,
-	camera_forward: vec4<f32>,
-};
-
-struct VertexOut {
-	@builtin(position) position: vec4<f32>,
-	@location(0) uv: vec2<f32>,
-};
-
-@group(0) @binding(0) var cell_texture: texture_2d<f32>;
-@group(0) @binding(1) var glyph_texture: texture_2d<f32>;
-@group(0) @binding(2) var glyph_metrics: texture_2d<f32>;
-@group(0) @binding(3) var glyph_sampler: sampler;
-@group(0) @binding(4) var<uniform> params: Params;
-
-@vertex
-fn vertex_main(@builtin(vertex_index) vertex_index: u32) -> VertexOut {
-	var positions = array<vec2<f32>, 3>(
-		vec2<f32>(-1.0, -1.0),
-		vec2<f32>(3.0, -1.0),
-		vec2<f32>(-1.0, 3.0),
-	);
-	let position = positions[vertex_index];
-	var output: VertexOut;
-	output.position = vec4<f32>(position, 0.0, 1.0);
-	output.uv = position * 0.5 + vec2<f32>(0.5);
-	return output;
-}
-
-fn palette_color(brightness: f32) -> vec3<f32> {
-	if (brightness < 0.5) {
-		return mix(params.shadow.xyz, params.mid.xyz, brightness * 2.0);
-	}
-	return mix(params.mid.xyz, params.highlight.xyz, (brightness - 0.5) * 2.0);
-}
-
-@fragment
-fn fragment_main(input: VertexOut) -> @location(0) vec4<f32> {
-	let frag_coord = input.uv * params.canvas_dims.xy;
-	let cell_size = max(params.cell_size.xy, vec2<f32>(2.0));
-	let cell_origin = floor(frag_coord / cell_size) * cell_size;
-	let cell_uv = (frag_coord - cell_origin) / cell_size;
-	let sample_uv = (cell_origin + cell_size * 0.5) / max(params.canvas_dims.xy, vec2<f32>(1.0));
-	let cell_color = textureSample(cell_texture, glyph_sampler, sample_uv).rgb;
-	let original_color = textureSample(cell_texture, glyph_sampler, input.uv).rgb;
-	let ascii_mix = clamp(params.source_dims.z, 0.0, 1.0);
-
-	if (ascii_mix <= 0.001) {
-		return vec4<f32>(original_color, 1.0);
-	}
-
-	var brightness = clamp(dot(cell_color, vec3<f32>(0.3, 0.59, 0.11)), 0.0, 1.0);
-	brightness = clamp((brightness - 0.5) * max(params.canvas_dims.w, 0.01) + 0.5 + params.canvas_dims.z, 0.0, 1.0);
-	let glyph_count = max(params.time_exposure_quality_glyph.w, 1.0);
-	let glyph_index = clamp(floor(brightness * (glyph_count - 1.0) + 0.5), 0.0, glyph_count - 1.0);
-	let atlas_uv = vec2<f32>((glyph_index + cell_uv.x) / glyph_count, cell_uv.y);
-	let glyph = textureSample(glyph_texture, glyph_sampler, atlas_uv).a;
-	let glyph_coverage = max(textureLoad(glyph_metrics, vec2<i32>(i32(glyph_index), 0), 0).r, 0.035);
-	let normalized_glyph = clamp(glyph / glyph_coverage, 0.0, 2.5);
-	let bright_cell_glow = (1.0 - glyph) * smoothstep(0.45, 0.95, brightness) * brightness * 0.32;
-	let base_color = select(cell_color, palette_color(brightness), params.cell_size.z > 0.5);
-	let ascii_color = clamp(base_color * (0.035 + normalized_glyph * 0.82 + bright_cell_glow), vec3<f32>(0.0), vec3<f32>(1.0));
-	return vec4<f32>(mix(original_color, ascii_color, ascii_mix), 1.0);
-}
-`;
-
 const FALLBACK_CHANNEL_RESOLUTIONS = new Float32Array(12);
 const CONTROL_KEY_CODES = new Set([65, 68, 69, 70, 81, 82, 83, 87]);
 
-const MOVE_SPEED = 2.5;
+export const MOVE_SPEED = 2.5;
 const MOVE_SPEED_FACTOR = 1.25;
-const MOUSE_SENSITIVITY = 0.003;
+export const MOUSE_SENSITIVITY = 0.003;
 const ROLL_SPEED = 2.0;
-const FRAME_TARGET_MS = 22;
-const MIN_RENDER_SCALE = 0.01;
-const MIN_DPR = 0.01;
-const MIN_TEXT_SIZE = 1;
-const MIN_QUALITY_VALUE = 0.01;
-const MAX_GLYPH_ATLAS_DIMENSION = 4096;
+
+export const MIN_RENDER_SCALE = 0.01;
+export const MIN_DPR = 0.01;
+export const MIN_TEXT_SIZE = 1;
+export const MIN_QUALITY_VALUE = 0.01;
+export const MAX_GLYPH_ATLAS_DIMENSION = 4096;
 const MIN_PREPASS_SCALE = MIN_RENDER_SCALE;
 const DIRECT_FALLBACK_DPR = 0.85;
 const TARGET_ALLOCATION_SCALE_STEPS = [1, 0.75, 0.5, 0.35, 0.25] as const;
-const IDLE_PREPASS_STRIDE = 4;
-const ACTIVE_PREPASS_STRIDE = 2;
-const BLOOM_FRAME_STRIDE = 3;
-const DEFAULT_IDLE_RENDER_INTERVAL_MS = 24;
+
 const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 6, y: 9 };
 const DEFAULT_ASCII_CELL_FRAME_INTERVAL_MS = 33;
 const MAX_GLYPHS = 96;
@@ -868,7 +503,7 @@ const GLYPH_PRESETS: Record<Exclude<GlyphPreset, "custom">, string> = {
 	dense:
 		" .'`,^\":;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
 };
-const FONT_OPTIONS: FontFamily[] = [
+export const FONT_OPTIONS: FontFamily[] = [
 	"Departure Mono",
 	"DSEG14Modern",
 	"Menlo",
@@ -907,7 +542,7 @@ const DEFAULT_RENDER_UNIFORMS: RenderUniforms = {
 	highlightColor: [1, 0.98, 0.949],
 };
 
-function glyphControlsKey(controls: ShaderControls): string {
+export function glyphControlsKey(controls: ShaderControls): string {
 	return [
 		controls.glyphPreset,
 		controls.customGlyphs,
@@ -940,18 +575,18 @@ function cross(a: Vec3, b: Vec3): Vec3 {
 	];
 }
 
-function length(v: Vec3): number {
+export function length(v: Vec3): number {
 	return Math.hypot(v[0], v[1], v[2]);
 }
 
-function copyVec3Into(target: Vec3, source: Vec3): Vec3 {
+export function copyVec3Into(target: Vec3, source: Vec3): Vec3 {
 	target[0] = source[0];
 	target[1] = source[1];
 	target[2] = source[2];
 	return target;
 }
 
-function cloneVec3(source: Vec3): Vec3 {
+export function cloneVec3(source: Vec3): Vec3 {
 	return [source[0], source[1], source[2]];
 }
 
@@ -1009,7 +644,7 @@ function coerceVec3(value: Vec3 | undefined, fallback: Vec3): Vec3 {
 	return [value[0], value[1], value[2]];
 }
 
-function createInitialCamera({
+export function createInitialCamera({
 	position: initialPosition,
 	forward: initialForward,
 	universeSign,
@@ -1037,7 +672,7 @@ function createInitialCamera({
 	};
 }
 
-function setCameraForward(camera: CameraState, forward: Vec3) {
+export function setCameraForward(camera: CameraState, forward: Vec3) {
 	normalizeInto(camera.forward, forward);
 	if (length(camera.forward) < 1e-9)
 		normalizeInto(camera.forward, [0, 0.15, -1]);
@@ -1057,16 +692,16 @@ function setCameraForward(camera: CameraState, forward: Vec3) {
 	camera.pendingPitch = 0;
 }
 
-function formatCameraNumber(value: number): string {
+export function formatCameraNumber(value: number): string {
 	const normalizedValue = Math.abs(value) < 0.0005 ? 0 : value;
 	return normalizedValue.toFixed(3);
 }
 
-function formatCameraVec3(value: Vec3): string {
+export function formatCameraVec3(value: Vec3): string {
 	return `[${value.map(formatCameraNumber).join(", ")}]`;
 }
 
-function parseCameraVec3(value: string): Vec3 | null {
+export function parseCameraVec3(value: string): Vec3 | null {
 	const matches = value.match(/[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/gi);
 	if (!matches || matches.length !== 3) return null;
 
@@ -1076,7 +711,7 @@ function parseCameraVec3(value: string): Vec3 | null {
 	return [parsed[0], parsed[1], parsed[2]];
 }
 
-function parseUniverseSign(value: string): number | null {
+export function parseUniverseSign(value: string): number | null {
 	const parsed = Number(value.trim());
 	if (!Number.isFinite(parsed)) return null;
 	return parsed < 0 ? -1 : 1;
@@ -1534,7 +1169,7 @@ function applyAnimationCamera(
 	camera.pendingPitch = 0;
 }
 
-function animationKeyframeFromCamera(
+export function animationKeyframeFromCamera(
 	camera: CameraState,
 	controls: ShaderControls,
 	asciiEnabled: boolean,
@@ -1596,11 +1231,11 @@ function buildRouteTransitionSequence(
 	return sequence;
 }
 
-function stringifyAnimationValue(value: unknown): string {
+export function stringifyAnimationValue(value: unknown): string {
 	return JSON.stringify(value, null, "\t");
 }
 
-function formatError(error: unknown): string {
+export function formatError(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
 }
 
@@ -1676,7 +1311,9 @@ function cellSizeForText(textSize: number, glyphCount: number): AsciiCellSize {
 	};
 }
 
-function createGlyphAtlasConfig(controls: ShaderControls): GlyphAtlasConfig {
+export function createGlyphAtlasConfig(
+	controls: ShaderControls,
+): GlyphAtlasConfig {
 	const glyphs = glyphsForControls(controls);
 	const glyphCount = Array.from(glyphs).length;
 	const cellSize = cellSizeForText(controls.textSize, glyphCount);
@@ -1692,7 +1329,9 @@ function createGlyphAtlasConfig(controls: ShaderControls): GlyphAtlasConfig {
 	};
 }
 
-function createGlyphAtlasRaster(config: GlyphAtlasConfig): GlyphAtlasRaster {
+export function createGlyphAtlasRaster(
+	config: GlyphAtlasConfig,
+): GlyphAtlasRaster {
 	const glyphs = Array.from(config.glyphs);
 	const glyphCount = Math.max(1, glyphs.length);
 	const width = Math.max(1, config.cellSize.x * glyphCount);
@@ -1833,7 +1472,7 @@ function createInitialControls(props: Props): ShaderControls {
 	};
 }
 
-function createRenderUniforms(
+export function createRenderUniforms(
 	controls: ShaderControls,
 	atlasConfig: GlyphAtlasConfig,
 	asciiEnabled: boolean,
@@ -1874,7 +1513,7 @@ function createRenderUniforms(
 	};
 }
 
-function writeRenderUniforms(
+export function writeRenderUniforms(
 	target: RenderUniforms,
 	controls: ShaderControls,
 	atlasConfig: GlyphAtlasConfig,
@@ -1924,7 +1563,7 @@ function writeRenderUniforms(
 	return target;
 }
 
-function isControlKeyboardTarget(target: EventTarget | null): boolean {
+export function isControlKeyboardTarget(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
 	return Boolean(
 		target.closest("[data-black-hole-control]") ||
@@ -2263,7 +1902,7 @@ function resolveRendererMode(mode: RendererMode): ResolvedRendererMode {
 	return "full";
 }
 
-function isWebGpuAvailable(): boolean {
+export function isWebGpuAvailable(): boolean {
 	return typeof navigator !== "undefined" && "gpu" in navigator;
 }
 
@@ -2281,20 +1920,13 @@ function resolveShaderBackend(
 	return "webgl2";
 }
 
-function estimateTextureMemoryBytes(
+export function estimateTextureMemoryBytes(
 	width: number,
 	height: number,
 	bytesPerPixel: number,
 	count = 1,
 ): number {
 	return Math.max(0, width) * Math.max(0, height) * bytesPerPixel * count;
-}
-
-function benchmarkP95(values: number[]): number {
-	if (values.length === 0) return 0;
-	const sorted = [...values].sort((a, b) => a - b);
-	const index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95));
-	return sorted[index] ?? sorted[sorted.length - 1] ?? 0;
 }
 
 function cleanShaderSource(name: string, source: string): string {
@@ -2328,7 +1960,7 @@ function getBlackHoleCoreSource(): string {
 	return cleanShaderSource("Black Hole Core", bufferASource.slice(0, index));
 }
 
-function createStandardFragmentSource(
+export function createStandardFragmentSource(
 	name: string,
 	shaderBody: string,
 ): string {
@@ -2343,7 +1975,7 @@ void main() {
 `;
 }
 
-function createBlackHoleFragmentSource(entrySource: string): string {
+export function createBlackHoleFragmentSource(entrySource: string): string {
 	return `${FRAGMENT_HEADER}
 ${getBlackHoleCoreSource()}
 ${BLACK_HOLE_HELPERS}
@@ -2372,7 +2004,7 @@ function compileShader(
 	return shader;
 }
 
-function createPass(
+export function createPass(
 	gl: WebGL2RenderingContext,
 	name: string,
 	fragmentSource: string,
@@ -2383,15 +2015,24 @@ function createPass(
 		VERTEX_SOURCE,
 		`${name} vertex`,
 	);
-	const fragment = compileShader(
-		gl,
-		gl.FRAGMENT_SHADER,
-		fragmentSource,
-		`${name} fragment`,
-	);
+	let fragment: WebGLShader;
+	try {
+		fragment = compileShader(
+			gl,
+			gl.FRAGMENT_SHADER,
+			fragmentSource,
+			`${name} fragment`,
+		);
+	} catch (error) {
+		gl.deleteShader(vertex);
+		throw error;
+	}
 	const program = gl.createProgram();
-
-	if (!program) throw new Error(`Could not create ${name} program.`);
+	if (!program) {
+		gl.deleteShader(vertex);
+		gl.deleteShader(fragment);
+		throw new Error(`Could not create ${name} program.`);
+	}
 
 	gl.attachShader(program, vertex);
 	gl.attachShader(program, fragment);
@@ -2405,7 +2046,10 @@ function createPass(
 		throw new Error(`${name} failed to link:\n${log}`);
 	}
 
-	return {
+	const pass: ProgramPass = {
+		channels: [],
+		vao: null,
+		uniformCache: new Map(),
 		name,
 		program,
 		locations: {
@@ -2444,23 +2088,18 @@ function createPass(
 			uBloomStrength: gl.getUniformLocation(program, "uBloomStrength"),
 		},
 	};
+	// Sampler indices are program state and never change during its lifetime.
+	// biome-ignore lint/correctness/useHookAtTopLevel: WebGL useProgram is not a React hook.
+	gl.useProgram(program);
+	pass.locations.iChannels.forEach((location, unit) => {
+		if (location) gl.uniform1i(location, unit);
+	});
+	return pass;
 }
 
-function chooseFloatTextureFormat(
+export function chooseByteTextureFormat(
 	gl: WebGL2RenderingContext,
-): TextureFormat | null {
-	const canRenderFloat = gl.getExtension("EXT_color_buffer_float");
-	if (!canRenderFloat) return null;
-
-	return {
-		internalFormat: gl.RGBA16F,
-		format: gl.RGBA,
-		type: gl.HALF_FLOAT,
-		canFilterLinear: Boolean(gl.getExtension("OES_texture_float_linear")),
-	};
-}
-
-function chooseByteTextureFormat(gl: WebGL2RenderingContext): TextureFormat {
+): TextureFormat {
 	return {
 		internalFormat: gl.RGBA8,
 		format: gl.RGBA,
@@ -2500,7 +2139,7 @@ function clearGlErrors(gl: WebGL2RenderingContext) {
 	}
 }
 
-function createRenderTarget(
+export function createRenderTarget(
 	gl: WebGL2RenderingContext,
 	width: number,
 	height: number,
@@ -2574,101 +2213,6 @@ function createRenderTarget(
 	return { texture, framebuffer, width, height };
 }
 
-function createMultiRenderTarget(
-	gl: WebGL2RenderingContext,
-	width: number,
-	height: number,
-	format: TextureFormat,
-	count: number,
-): MultiRenderTarget {
-	const framebuffer = gl.createFramebuffer();
-	if (!framebuffer)
-		throw new Error("Could not create multi render target framebuffer.");
-
-	const textures: TextureLike[] = [];
-	const attachments: number[] = [];
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-	clearGlErrors(gl);
-
-	try {
-		for (let i = 0; i < count; i++) {
-			const texture = gl.createTexture();
-			if (!texture)
-				throw new Error(
-					`Could not create multi render target texture ${i + 1}/${count} (${width}x${height}).`,
-				);
-			textures.push({ texture, width, height });
-
-			gl.bindTexture(gl.TEXTURE_2D, texture);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0,
-				format.internalFormat,
-				width,
-				height,
-				0,
-				format.format,
-				format.type,
-				null,
-			);
-			const textureError = gl.getError();
-			if (textureError !== gl.NO_ERROR) {
-				throw new Error(
-					`Could not allocate multi render target texture ${i + 1}/${count} (${width}x${height}, ${formatGlError(
-						gl,
-						textureError,
-					)}).`,
-				);
-			}
-
-			const attachment = gl.COLOR_ATTACHMENT0 + i;
-			gl.framebufferTexture2D(
-				gl.FRAMEBUFFER,
-				attachment,
-				gl.TEXTURE_2D,
-				texture,
-				0,
-			);
-			attachments.push(attachment);
-		}
-
-		gl.drawBuffers(attachments);
-
-		if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-			throw new Error("Prepass MRT framebuffer is incomplete.");
-		}
-	} catch (error) {
-		textures.forEach((item) => {
-			gl.deleteTexture(item.texture);
-		});
-		gl.deleteFramebuffer(framebuffer);
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		gl.bindTexture(gl.TEXTURE_2D, null);
-		throw error;
-	}
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	gl.bindTexture(gl.TEXTURE_2D, null);
-
-	return {
-		framebuffer,
-		textures,
-		width,
-		height,
-		dispose: () => {
-			textures.forEach((item) => {
-				gl.deleteTexture(item.texture);
-			});
-			gl.deleteFramebuffer(framebuffer);
-		},
-	};
-}
-
 function createPingPongTarget(
 	gl: WebGL2RenderingContext,
 	width: number,
@@ -2706,7 +2250,7 @@ function createPingPongTarget(
 	}
 }
 
-function disposeRenderTarget(
+export function disposeRenderTarget(
 	gl: WebGL2RenderingContext,
 	target: RenderTarget | null,
 ) {
@@ -2715,7 +2259,7 @@ function disposeRenderTarget(
 	gl.deleteFramebuffer(target.framebuffer);
 }
 
-function createSolidTexture(
+export function createSolidTexture(
 	gl: WebGL2RenderingContext,
 	rgba: [number, number, number, number],
 ): TextureLike {
@@ -2796,7 +2340,7 @@ function createCanvasTexture(
 	return { texture, width: canvas.width, height: canvas.height };
 }
 
-function createGlyphTextureSet(
+export function createGlyphTextureSet(
 	gl: WebGL2RenderingContext,
 	config: GlyphAtlasConfig,
 ): GlyphTextureSet {
@@ -2852,19 +2396,6 @@ function updateKeyboardTexture(
 	gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
-function hasActiveControls(
-	keyboardData: Uint8Array,
-	pointerActive: boolean,
-): boolean {
-	if (pointerActive) return true;
-
-	for (const keyCode of CONTROL_KEY_CODES) {
-		if (keyboardData[keyCode * 4] > 0) return true;
-	}
-
-	return false;
-}
-
 function fillChannelResolution(channels: TextureLike[], output: Float32Array) {
 	output.set(FALLBACK_CHANNEL_RESOLUTIONS);
 
@@ -2876,7 +2407,45 @@ function fillChannelResolution(channels: TextureLike[], output: Float32Array) {
 	}
 }
 
-function renderPass(
+function uniformChanged(
+	pass: ProgramPass,
+	location: WebGLUniformLocation,
+	a: number,
+	b?: number,
+	c?: number,
+): boolean {
+	const cached = pass.uniformCache.get(location);
+	if (cached && cached[0] === a && cached[1] === b && cached[2] === c)
+		return false;
+	if (cached) {
+		cached[0] = a;
+		cached[1] = b;
+		cached[2] = c;
+	} else pass.uniformCache.set(location, [a, b, c]);
+	return true;
+}
+
+function uniformArrayChanged(
+	pass: ProgramPass,
+	location: WebGLUniformLocation,
+	values: ArrayLike<number>,
+): boolean {
+	const cached = pass.uniformCache.get(location);
+	if (!cached) {
+		pass.uniformCache.set(location, Array.from(values));
+		return true;
+	}
+	let changed = false;
+	for (let i = 0; i < values.length; i++) {
+		if (cached[i] !== values[i]) {
+			cached[i] = values[i];
+			changed = true;
+		}
+	}
+	return changed;
+}
+
+export function renderPass(
 	gl: WebGL2RenderingContext,
 	pass: ProgramPass,
 	vertexBuffer: WebGLBuffer,
@@ -2887,7 +2456,10 @@ function renderPass(
 	delta: number,
 	frame: number,
 	mouse: Float32Array,
-	channels: TextureLike[],
+	channel0: TextureLike,
+	channel1: TextureLike,
+	channel2: TextureLike,
+	channel3: TextureLike,
 	camera: CameraState,
 	qualityValue: number,
 	blendWeight: number,
@@ -2896,103 +2468,229 @@ function renderPass(
 	renderUniforms: RenderUniforms = DEFAULT_RENDER_UNIFORMS,
 	canvasResolution: AsciiCellSize | null = null,
 ) {
+	const channels = pass.channels;
+	channels[0] = channel0;
+	channels[1] = channel1;
+	channels[2] = channel2;
+	channels[3] = channel3;
 	gl.bindFramebuffer(gl.FRAMEBUFFER, target?.framebuffer ?? null);
-
-	if (target && "textures" in target) {
-		gl.drawBuffers(
-			target.textures.map((_, index) => gl.COLOR_ATTACHMENT0 + index),
-		);
-	} else if (target) {
-		gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-	} else {
-		gl.drawBuffers([gl.BACK]);
-	}
 
 	gl.viewport(0, 0, width, height);
 	// biome-ignore lint/correctness/useHookAtTopLevel: WebGLRenderingContext.useProgram is not a React hook.
 	gl.useProgram(pass.program);
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-	gl.enableVertexAttribArray(pass.locations.position);
-	gl.vertexAttribPointer(pass.locations.position, 2, gl.FLOAT, false, 0, 0);
+	if (!pass.vao) {
+		pass.vao = gl.createVertexArray();
+		if (!pass.vao)
+			throw new Error(`Could not create ${pass.name} vertex array.`);
+		gl.bindVertexArray(pass.vao);
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.enableVertexAttribArray(pass.locations.position);
+		gl.vertexAttribPointer(pass.locations.position, 2, gl.FLOAT, false, 0, 0);
+	} else {
+		gl.bindVertexArray(pass.vao);
+	}
 
-	if (pass.locations.iResolution)
+	if (
+		pass.locations.iResolution &&
+		uniformChanged(pass, pass.locations.iResolution, width, height, 1)
+	)
 		gl.uniform3f(pass.locations.iResolution, width, height, 1);
-	if (pass.locations.iTime) gl.uniform1f(pass.locations.iTime, time);
-	if (pass.locations.iTimeDelta) gl.uniform1f(pass.locations.iTimeDelta, delta);
-	if (pass.locations.iFrame) gl.uniform1i(pass.locations.iFrame, frame);
-	if (pass.locations.iMouse) gl.uniform4fv(pass.locations.iMouse, mouse);
-	if (pass.locations.uCanvasResolution)
+	if (pass.locations.iTime && uniformChanged(pass, pass.locations.iTime, time))
+		gl.uniform1f(pass.locations.iTime, time);
+	if (
+		pass.locations.iTimeDelta &&
+		uniformChanged(pass, pass.locations.iTimeDelta, delta)
+	)
+		gl.uniform1f(pass.locations.iTimeDelta, delta);
+	if (
+		pass.locations.iFrame &&
+		uniformChanged(pass, pass.locations.iFrame, frame)
+	)
+		gl.uniform1i(pass.locations.iFrame, frame);
+	if (
+		pass.locations.iMouse &&
+		uniformArrayChanged(pass, pass.locations.iMouse, mouse)
+	)
+		gl.uniform4fv(pass.locations.iMouse, mouse);
+	if (
+		pass.locations.uCanvasResolution &&
+		uniformChanged(
+			pass,
+			pass.locations.uCanvasResolution,
+			canvasResolution?.x ?? width,
+			canvasResolution?.y ?? height,
+		)
+	)
 		gl.uniform2f(
 			pass.locations.uCanvasResolution,
 			canvasResolution?.x ?? width,
 			canvasResolution?.y ?? height,
 		);
-	if (pass.locations.uCameraPosition)
+	if (
+		pass.locations.uCameraPosition &&
+		uniformArrayChanged(pass, pass.locations.uCameraPosition, camera.position)
+	)
 		gl.uniform3fv(pass.locations.uCameraPosition, camera.position);
-	if (pass.locations.uCameraRight)
+	if (
+		pass.locations.uCameraRight &&
+		uniformArrayChanged(pass, pass.locations.uCameraRight, camera.right)
+	)
 		gl.uniform3fv(pass.locations.uCameraRight, camera.right);
-	if (pass.locations.uCameraUp)
+	if (
+		pass.locations.uCameraUp &&
+		uniformArrayChanged(pass, pass.locations.uCameraUp, camera.up)
+	)
 		gl.uniform3fv(pass.locations.uCameraUp, camera.up);
-	if (pass.locations.uUniverseSign)
+	if (
+		pass.locations.uUniverseSign &&
+		uniformChanged(pass, pass.locations.uUniverseSign, camera.universeSign)
+	)
 		gl.uniform1f(pass.locations.uUniverseSign, camera.universeSign);
-	if (pass.locations.uQuality)
+	if (
+		pass.locations.uQuality &&
+		uniformChanged(pass, pass.locations.uQuality, qualityValue)
+	)
 		gl.uniform1f(pass.locations.uQuality, qualityValue);
-	if (pass.locations.uTemporalJitter)
+	if (
+		pass.locations.uTemporalJitter &&
+		uniformChanged(
+			pass,
+			pass.locations.uTemporalJitter,
+			renderUniforms.temporalJitter,
+		)
+	)
 		gl.uniform1f(pass.locations.uTemporalJitter, renderUniforms.temporalJitter);
-	if (pass.locations.uBlendWeight)
+	if (
+		pass.locations.uBlendWeight &&
+		uniformChanged(pass, pass.locations.uBlendWeight, blendWeight)
+	)
 		gl.uniform1f(pass.locations.uBlendWeight, blendWeight);
-	if (pass.locations.uBloomMode)
+	if (
+		pass.locations.uBloomMode &&
+		uniformChanged(pass, pass.locations.uBloomMode, bloomMode)
+	)
 		gl.uniform1i(pass.locations.uBloomMode, bloomMode);
-	if (pass.locations.uAsciiCellSize)
+	if (
+		pass.locations.uAsciiCellSize &&
+		uniformChanged(
+			pass,
+			pass.locations.uAsciiCellSize,
+			renderUniforms.asciiCellSize.x,
+			renderUniforms.asciiCellSize.y,
+		)
+	)
 		gl.uniform2f(
 			pass.locations.uAsciiCellSize,
 			renderUniforms.asciiCellSize.x,
 			renderUniforms.asciiCellSize.y,
 		);
-	if (pass.locations.uAsciiMix)
+	if (
+		pass.locations.uAsciiMix &&
+		uniformChanged(pass, pass.locations.uAsciiMix, renderUniforms.asciiMix)
+	)
 		gl.uniform1f(pass.locations.uAsciiMix, renderUniforms.asciiMix);
-	if (pass.locations.uGlyphCount)
+	if (
+		pass.locations.uGlyphCount &&
+		uniformChanged(pass, pass.locations.uGlyphCount, renderUniforms.glyphCount)
+	)
 		gl.uniform1i(pass.locations.uGlyphCount, renderUniforms.glyphCount);
-	if (pass.locations.uAsciiBrightness)
+	if (
+		pass.locations.uAsciiBrightness &&
+		uniformChanged(
+			pass,
+			pass.locations.uAsciiBrightness,
+			renderUniforms.asciiBrightness,
+		)
+	)
 		gl.uniform1f(
 			pass.locations.uAsciiBrightness,
 			renderUniforms.asciiBrightness,
 		);
-	if (pass.locations.uAsciiContrast)
+	if (
+		pass.locations.uAsciiContrast &&
+		uniformChanged(
+			pass,
+			pass.locations.uAsciiContrast,
+			renderUniforms.asciiContrast,
+		)
+	)
 		gl.uniform1f(pass.locations.uAsciiContrast, renderUniforms.asciiContrast);
-	if (pass.locations.uPaletteMode)
+	if (
+		pass.locations.uPaletteMode &&
+		uniformChanged(
+			pass,
+			pass.locations.uPaletteMode,
+			renderUniforms.paletteMode,
+		)
+	)
 		gl.uniform1i(pass.locations.uPaletteMode, renderUniforms.paletteMode);
-	if (pass.locations.uShadowColor)
+	if (
+		pass.locations.uShadowColor &&
+		uniformArrayChanged(
+			pass,
+			pass.locations.uShadowColor,
+			renderUniforms.shadowColor,
+		)
+	)
 		gl.uniform3fv(pass.locations.uShadowColor, renderUniforms.shadowColor);
-	if (pass.locations.uMidColor)
+	if (
+		pass.locations.uMidColor &&
+		uniformArrayChanged(pass, pass.locations.uMidColor, renderUniforms.midColor)
+	)
 		gl.uniform3fv(pass.locations.uMidColor, renderUniforms.midColor);
-	if (pass.locations.uHighlightColor)
+	if (
+		pass.locations.uHighlightColor &&
+		uniformArrayChanged(
+			pass,
+			pass.locations.uHighlightColor,
+			renderUniforms.highlightColor,
+		)
+	)
 		gl.uniform3fv(
 			pass.locations.uHighlightColor,
 			renderUniforms.highlightColor,
 		);
-	if (pass.locations.uExposure)
+	if (
+		pass.locations.uExposure &&
+		uniformChanged(pass, pass.locations.uExposure, renderUniforms.exposure)
+	)
 		gl.uniform1f(pass.locations.uExposure, renderUniforms.exposure);
-	if (pass.locations.uBloomStrength)
+	if (
+		pass.locations.uBloomStrength &&
+		uniformChanged(
+			pass,
+			pass.locations.uBloomStrength,
+			renderUniforms.bloomStrength,
+		)
+	)
 		gl.uniform1f(pass.locations.uBloomStrength, renderUniforms.bloomStrength);
 
 	if (pass.locations.iChannelResolution) {
 		fillChannelResolution(channels, channelResolutionScratch);
-		gl.uniform3fv(pass.locations.iChannelResolution, channelResolutionScratch);
+		if (
+			uniformArrayChanged(
+				pass,
+				pass.locations.iChannelResolution,
+				channelResolutionScratch,
+			)
+		)
+			gl.uniform3fv(
+				pass.locations.iChannelResolution,
+				channelResolutionScratch,
+			);
 	}
 
 	for (let i = 0; i < 4; i++) {
+		if (!pass.locations.iChannels[i]) continue;
 		gl.activeTexture(gl.TEXTURE0 + i);
 		gl.bindTexture(gl.TEXTURE_2D, channels[i].texture);
-		if (pass.locations.iChannels[i])
-			gl.uniform1i(pass.locations.iChannels[i], i);
 	}
 
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
-function updateCamera(
+export function updateCamera(
 	camera: CameraState,
 	keyboardData: Uint8Array,
 	delta: number,
@@ -3060,202 +2758,10 @@ function updateCamera(
 	}
 }
 
-function ControlPanel({
-	title,
-	icon,
-	open,
-	onToggle,
-	children,
-}: {
-	title: string;
-	icon: ReactNode;
-	open: boolean;
-	onToggle: () => void;
-	children: ReactNode;
-}) {
-	const ToggleIcon = open ? ChevronDown : ChevronUp;
-
-	return (
-		<section
-			className="border border-white/15 bg-black/70 text-white shadow-2xl backdrop-blur-md"
-			data-black-hole-control
-		>
-			<button
-				type="button"
-				className="flex h-9 w-full items-center justify-between gap-3 px-3 text-left font-mono text-[11px] uppercase tracking-[0.16em] text-white/80 transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-				onClick={onToggle}
-				aria-expanded={open}
-				title={open ? `Collapse ${title}` : `Expand ${title}`}
-			>
-				<span className="flex min-w-0 items-center gap-2">
-					<span className="text-cyan-200">{icon}</span>
-					<span className="truncate">{title}</span>
-				</span>
-				<ToggleIcon aria-hidden className="h-4 w-4 shrink-0" />
-			</button>
-			{open ? (
-				<div className="grid gap-3 border-t border-white/10 p-3">
-					{children}
-				</div>
-			) : null}
-		</section>
-	);
-}
-
-function formatNumericInput(value: number): string {
-	if (!Number.isFinite(value)) return "";
-	if (Number.isInteger(value)) return String(value);
-	return String(Number(value.toFixed(4)));
-}
-
-function formatMetric(value: number, digits = 1): string {
-	if (!Number.isFinite(value)) return "n/a";
-	return value.toFixed(digits);
-}
-
-function formatBytes(value: number): string {
-	if (!Number.isFinite(value) || value <= 0) return "0 MB";
-	return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function NumberControl({
-	label,
-	value,
-	min,
-	step = 0.01,
-	onChange,
-}: {
-	label: string;
-	value: number;
-	min?: number;
-	step?: number;
-	onChange: (value: number) => void;
-}) {
-	const [draftValue, setDraftValue] = useState(() => formatNumericInput(value));
-
-	useEffect(() => {
-		setDraftValue(formatNumericInput(value));
-	}, [value]);
-
-	const applyDraft = (nextDraft: string) => {
-		setDraftValue(nextDraft);
-		const parsedValue = Number(nextDraft);
-		if (!Number.isFinite(parsedValue)) return;
-		onChange(min === undefined ? parsedValue : Math.max(min, parsedValue));
-	};
-
-	const syncFromValue = () => {
-		const parsedValue = Number(draftValue);
-		if (!Number.isFinite(parsedValue)) {
-			setDraftValue(formatNumericInput(value));
-			return;
-		}
-
-		const normalizedValue =
-			min === undefined ? parsedValue : Math.max(min, parsedValue);
-		onChange(normalizedValue);
-		setDraftValue(formatNumericInput(normalizedValue));
-	};
-
-	return (
-		<label className="grid gap-1 font-mono text-[11px] text-white/70">
-			<span>{label}</span>
-			<input
-				type="number"
-				min={min}
-				step={step}
-				value={draftValue}
-				onChange={(event) => applyDraft(event.currentTarget.value)}
-				onBlur={syncFromValue}
-				className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
-			/>
-		</label>
-	);
-}
-
-function ToggleControl({
-	label,
-	checked,
-	onChange,
-}: {
-	label: string;
-	checked: boolean;
-	onChange: (checked: boolean) => void;
-}) {
-	return (
-		<label className="flex items-center justify-between gap-3 font-mono text-[11px] text-white/70">
-			<span>{label}</span>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={(event) => onChange(event.currentTarget.checked)}
-				className="h-4 w-4 accent-cyan-300"
-			/>
-		</label>
-	);
-}
-
-function SelectControl<Value extends string>({
-	label,
-	value,
-	options,
-	onChange,
-}: {
-	label: string;
-	value: Value;
-	options: Array<{ label: string; value: Value }>;
-	onChange: (value: Value) => void;
-}) {
-	return (
-		<label className="grid gap-1 font-mono text-[11px] text-white/70">
-			<span>{label}</span>
-			<select
-				value={value}
-				onChange={(event) => onChange(event.currentTarget.value as Value)}
-				className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
-			>
-				{options.map((option) => (
-					<option key={option.value} value={option.value}>
-						{option.label}
-					</option>
-				))}
-			</select>
-		</label>
-	);
-}
-
-function ColorControl({
-	label,
-	value,
-	onChange,
-}: {
-	label: string;
-	value: string;
-	onChange: (value: string) => void;
-}) {
-	return (
-		<label className="grid gap-1 font-mono text-[11px] text-white/70">
-			<span>{label}</span>
-			<span className="flex h-8 items-center gap-2 border border-white/15 bg-black/80 px-2">
-				<input
-					type="color"
-					value={value}
-					onChange={(event) => onChange(event.currentTarget.value)}
-					className="h-5 w-7 cursor-pointer border-0 bg-transparent p-0"
-					title={label}
-				/>
-				<span className="text-white/45">{value}</span>
-			</span>
-		</label>
-	);
-}
-
-export default function BlackHoleShader({
+function useBlackHoleController({
 	className = "",
 	showControls = true,
 	interactive = true,
-	idleRenderIntervalMs = DEFAULT_IDLE_RENDER_INTERVAL_MS,
-	forceActiveRender = false,
 	rendererMode = "auto",
 	backend = "auto",
 	quality = "balanced",
@@ -3297,6 +2803,7 @@ export default function BlackHoleShader({
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const reactRenderCountRef = useRef(0);
 	const requestRenderRef = useRef<() => void>(() => {});
+	const resetFrameRef = useRef<() => void>(() => {});
 	const animationEditorRef = useRef<AnimationEditorApi>({
 		play: () => {},
 		pause: () => {},
@@ -3361,7 +2868,6 @@ export default function BlackHoleShader({
 			enableBloomPass,
 		}),
 	);
-	const hasFixedPrepassScaleRef = useRef(prepassScale !== undefined);
 	const [controls, setControls] = useState<ShaderControls>(() =>
 		createInitialControls(initialPropsRef.current),
 	);
@@ -3528,124 +3034,29 @@ export default function BlackHoleShader({
 		}
 	};
 
+	const benchmarkAbortRef = useRef<AbortController | null>(null);
+	useEffect(() => () => benchmarkAbortRef.current?.abort(), []);
 	const runBenchmark = async () => {
 		if (benchmarkRunning) return;
 		setBenchmarkRunning(true);
-		setBenchmarkResults([]);
-		const previousRendererMode = rendererModeRef.current;
-		const previousBackend = backendRef.current;
-		const scenarios: Array<{
-			label: string;
-			rendererMode: RendererMode;
-			backend: ShaderBackend;
-		}> = [
-			{ label: "Full WebGL2", rendererMode: "full", backend: "webgl2" },
-			{
-				label: "Fallback Full WebGL2",
-				rendererMode: "fallback-full",
-				backend: "webgl2",
-			},
-		];
-		if (isWebGpuAvailable()) {
-			scenarios.push({
-				label: "Full WebGPU",
-				rendererMode: "full",
-				backend: "webgpu",
-			});
-		}
-		const wait = (ms: number) =>
-			new Promise((resolve) => window.setTimeout(resolve, ms));
-		const results: BenchmarkResult[] = [];
-
+		const abort = new AbortController();
+		benchmarkAbortRef.current = abort;
 		try {
-			for (const scenario of scenarios) {
-				window.__blackHoleStats = undefined;
-				setRendererModeState(scenario.rendererMode);
-				setBackendState(scenario.backend);
-				await wait(900);
-				const cpuFrameTimes: number[] = [];
-				const wallFrameTimes: number[] = [];
-				let latestStats: BlackHoleStats | undefined;
-				let lastFrame = window.__blackHoleStats?.frame ?? -1;
-				let lastFrameSampleTime = performance.now();
-				let framesSeen = 0;
-				const benchmarkStart = performance.now();
-
-				for (let i = 0; i < 40; i++) {
-					await wait(50);
-					const sampleTime = performance.now();
-					latestStats = window.__blackHoleStats;
-					if (!latestStats || latestStats.frame === lastFrame) continue;
-
-					const frameDelta =
-						lastFrame >= 0 && latestStats.frame >= lastFrame
-							? Math.max(1, latestStats.frame - lastFrame)
-							: 1;
-					const sampleDelta = sampleTime - lastFrameSampleTime;
-
-					if (lastFrame >= 0 && sampleDelta > 0) {
-						wallFrameTimes.push(sampleDelta / frameDelta);
-					}
-					if (latestStats.frameTimeMs > 0) {
-						cpuFrameTimes.push(latestStats.frameTimeMs);
-					}
-
-					framesSeen += frameDelta;
-					lastFrame = latestStats.frame;
-					lastFrameSampleTime = sampleTime;
-				}
-
-				const benchmarkElapsedMs = performance.now() - benchmarkStart;
-				const averageFrameTimeMs =
-					framesSeen > 0
-						? benchmarkElapsedMs / framesSeen
-						: (latestStats?.averageFrameTimeMs ?? 0);
-				const p95FrameTimeMs =
-					wallFrameTimes.length > 0
-						? benchmarkP95(wallFrameTimes)
-						: averageFrameTimeMs;
-				const cpuAverageFrameTimeMs =
-					cpuFrameTimes.length > 0
-						? cpuFrameTimes.reduce((sum, value) => sum + value, 0) /
-							cpuFrameTimes.length
-						: (latestStats?.frameTimeMs ?? 0);
-				const cpuP95FrameTimeMs =
-					cpuFrameTimes.length > 0
-						? benchmarkP95(cpuFrameTimes)
-						: cpuAverageFrameTimeMs;
-				const result: BenchmarkResult = {
-					label: scenario.label,
-					rendererMode: scenario.rendererMode,
-					backend: scenario.backend,
-					activeMode: latestStats?.mode ?? "unavailable",
-					activeBackend: latestStats?.backend ?? "unavailable",
-					averageFps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : 0,
-					averageFrameTimeMs,
-					p95FrameTimeMs,
-					cpuAverageFrameTimeMs,
-					cpuP95FrameTimeMs,
-					initTimeMs: latestStats?.initTimeMs ?? 0,
-					cellCount: latestStats?.cellCount ?? 0,
-					passCount: latestStats?.passCount ?? 0,
-					computeWorkgroups: latestStats?.computeWorkgroups ?? 0,
-					computeInvocations: latestStats?.computeInvocations ?? 0,
-					renderTargetPixels:
-						(latestStats?.sceneWidth ?? 0) * (latestStats?.sceneHeight ?? 0),
-					estimatedTextureMemoryBytes:
-						latestStats?.estimatedTextureMemoryBytes ?? 0,
-					gpuFrameTimeMs: latestStats?.gpuFrameTimeMs ?? null,
-					gpuTimingSupported: latestStats?.gpuTimingSupported ?? false,
-					fallbackReason: latestStats?.fallbackReason ?? null,
-				};
-				results.push(result);
-				setBenchmarkResults([...results]);
-			}
-			window.__blackHoleBenchmark = results;
+			const benchmark = await import("./BlackHoleBenchmark");
+			if (abort.signal.aborted) return;
+			await benchmark.runBenchmark({
+				signal: abort.signal,
+				rendererModeRef,
+				backendRef,
+				setRendererModeState,
+				setBackendState,
+				setBenchmarkResults,
+				requestRenderRef,
+			});
+		} catch (error) {
+			if (!abort.signal.aborted) setError(formatError(error));
 		} finally {
-			setRendererModeState(previousRendererMode);
-			setBackendState(previousBackend);
-			setBenchmarkRunning(false);
-			requestRenderRef.current();
+			if (!abort.signal.aborted) setBenchmarkRunning(false);
 		}
 	};
 
@@ -3665,18 +3076,16 @@ export default function BlackHoleShader({
 		}
 	};
 
+	initialPropsRef.current.initialCameraPosition = initialCameraPosition;
+	initialPropsRef.current.initialCameraForward = initialCameraForward;
+	initialPropsRef.current.initialUniverseSign = initialUniverseSign;
+
 	useEffect(() => {
 		void contextRestoreToken;
 
 		const initialCameraChanged =
 			initialCameraKeyRef.current !== initialCameraKey;
 		initialCameraKeyRef.current = initialCameraKey;
-		initialPropsRef.current = {
-			...initialPropsRef.current,
-			initialCameraPosition,
-			initialCameraForward,
-			initialUniverseSign,
-		};
 
 		if (initialCameraChanged) {
 			runtimeSnapshotRef.current = {
@@ -3698,1002 +3107,47 @@ export default function BlackHoleShader({
 		const setupStart = performance.now();
 
 		if (resolvedRendererMode === "ascii-cell" || resolvedBackend === "webgpu") {
-			const sourceIsCellGrid = resolvedRendererMode === "ascii-cell";
-			let disposed = false;
-			let animationFrame = 0;
-			let frame = 0;
-			let renderWidth = 1;
-			let renderHeight = 1;
-			let cellTextureWidth = 1;
-			let cellTextureHeight = 1;
-			let lastTime = performance.now();
-			let lastRenderNow = 0;
-			let shaderTime = runtimeSnapshotRef.current.shaderTime ?? 0;
-			let averageFrameTimeMs = 16.7;
-			let cpuAverageFrameTimeMs = 16.7;
-			let lastStatsPublish = 0;
-			let pointerActive = false;
-			let lastPointerX = 0;
-			let lastPointerY = 0;
-			let contextLost = false;
-			let initTimeMs = 0;
-			const frameTimes: number[] = [];
-			const reducedMotion = window.matchMedia(
-				"(prefers-reduced-motion: reduce)",
-			);
-			const keyboardData = new Uint8Array(256 * 4);
-			const mouse = new Float32Array([0, 0, -1, -1]);
-			const camera = createInitialCamera({
-				position:
-					runtimeSnapshotRef.current.cameraPosition ??
-					initialPropsRef.current.initialCameraPosition,
-				forward:
-					runtimeSnapshotRef.current.cameraForward ??
-					initialPropsRef.current.initialCameraForward,
-				universeSign:
-					runtimeSnapshotRef.current.universeSign ??
-					initialPropsRef.current.initialUniverseSign,
-			});
-			const movementSpeed =
-				runtimeSnapshotRef.current.movementSpeed ?? MOVE_SPEED;
-			let activeAsciiBackend = resolvedBackend;
-			let fallbackReason: string | null =
-				resolvedBackend === "webgpu" && !isWebGpuAvailable()
-					? "WebGPU is not available in this browser."
-					: null;
-
-			const snapshotRuntime = (now = performance.now()) => {
-				const snapshot = runtimeSnapshotRef.current;
-				snapshot.cameraPosition = snapshot.cameraPosition
-					? copyVec3Into(snapshot.cameraPosition, camera.position)
-					: cloneVec3(camera.position);
-				snapshot.cameraForward = snapshot.cameraForward
-					? copyVec3Into(snapshot.cameraForward, camera.forward)
-					: cloneVec3(camera.forward);
-				snapshot.universeSign = camera.universeSign;
-				snapshot.shaderTime = shaderTime;
-				snapshot.movementSpeed = movementSpeed;
-				void now;
-			};
-
-			const publishStats = (
-				frameTimeMs: number,
-				now: number,
-				passCount: number,
-				estimatedTextureMemoryBytes: number,
-				gpuFrameTimeMs: number | null,
-				gpuTimingSupported: boolean,
-			) => {
-				if (!debugStats && !import.meta.env.DEV && !showControls) return;
-				if (!showControls && now - lastStatsPublish < 250) return;
-				lastStatsPublish = now;
-				const activeAtlas = atlasConfigRef.current;
-				const activeControls = controlsRef.current;
-				const cellCount = cellTextureWidth * cellTextureHeight;
-				const computeWorkgroups =
-					Math.ceil(cellTextureWidth / 8) * Math.ceil(cellTextureHeight / 8);
-				const stats: BlackHoleStats = {
-					mode: sourceIsCellGrid ? "ascii-cell" : "webgpu",
-					backend: activeAsciiBackend,
-					requestedRendererMode: rendererModeState,
-					runtimeProfile,
-					frame,
-					frameTimeMs,
-					cpuAverageFrameTimeMs,
-					averageFrameTimeMs,
-					fps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : 0,
-					reactRenderCount: reactRenderCountRef.current,
-					dpr: renderWidth / Math.max(1, canvas.getBoundingClientRect().width),
-					targetAllocationScale: 1,
-					prepassScale: 0,
-					bloomScale: settings.bloomScale,
-					sceneScale: settings.sceneScale,
-					asciiEnabled: settings.asciiEnabled,
-					asciiCellSize: sourceIsCellGrid
-						? {
-								x: settings.cellWidth,
-								y: settings.cellHeight,
-							}
-						: activeAtlas.cellSize,
-					renderWidth,
-					renderHeight,
-					sceneWidth: cellTextureWidth,
-					sceneHeight: cellTextureHeight,
-					prepassWidth: cellTextureWidth,
-					prepassHeight: cellTextureHeight,
-					bloomWidth: 0,
-					bloomHeight: 0,
-					cameraPosition: [...camera.position],
-					cameraForward: [...camera.forward],
-					universeSign: camera.universeSign,
-					movementSpeed,
-					timeScale: activeControls.timeScale,
-					exposure: activeControls.exposure,
-					bloomStrength: activeControls.bloomStrength,
-					temporalJitter: activeControls.temporalJitter,
-					invertControls: activeControls.invertControls,
-					paletteMode: activeControls.paletteMode,
-					glyphCount: activeAtlas.glyphCount,
-					fontFamily: activeAtlas.fontFamily,
-					textSize: activeAtlas.textSize,
-					asciiBrightness: activeControls.brightness,
-					asciiContrast: activeControls.contrast,
-					shaderTime,
-					qualityPreset: settings.qualityPreset,
-					qualityValue: settings.qualityValue,
-					maxDevicePixelRatio: settings.maxDevicePixelRatio,
-					resolutionScale: settings.resolutionScale,
-					cellWidth: settings.cellWidth,
-					cellHeight: settings.cellHeight,
-					cellCount,
-					computeWorkgroups,
-					computeInvocations: computeWorkgroups * 64,
-					frameIntervalMs: settings.frameIntervalMs,
-					enableBloomPass: false,
-					passCount,
-					estimatedTextureMemoryBytes,
-					initTimeMs,
-					gpuFrameTimeMs,
-					gpuTimingSupported,
-					webgpuAvailable: isWebGpuAvailable(),
-					fallbackReason,
-					lastAllocationFailure: null,
-					animationMode,
-					animationRoute: normalizeBlackHoleAnimationRoute(
-						animationRouteRef.current,
-					),
-					animationPhase: "off",
-					animationPlaying: false,
-					animationFrameIndex: 0,
-					animationSequenceTime: 0,
-				};
-				window.__blackHoleStats = stats;
-				frameTimes.push(frameTimeMs);
-				if (frameTimes.length > 180) frameTimes.shift();
-			};
-
-			const writeCameraReadout = (force = false) => {
-				const activeElement = document.activeElement;
-				if (!showControls) return;
-
-				if (
-					cameraPositionInputRef.current &&
-					(force || activeElement !== cameraPositionInputRef.current)
-				) {
-					cameraPositionInputRef.current.value = formatCameraVec3(
-						camera.position,
-					);
-				}
-				if (
-					cameraForwardInputRef.current &&
-					(force || activeElement !== cameraForwardInputRef.current)
-				) {
-					cameraForwardInputRef.current.value = formatCameraVec3(
-						camera.forward,
-					);
-				}
-				if (
-					cameraUniverseInputRef.current &&
-					(force || activeElement !== cameraUniverseInputRef.current)
-				) {
-					cameraUniverseInputRef.current.value = formatCameraNumber(
-						camera.universeSign,
-					);
-				}
-			};
-
-			cameraEditorRef.current = {
-				applyPosition: (value: string) => {
-					const nextPosition = parseCameraVec3(value);
-					if (!nextPosition) {
-						writeCameraReadout(true);
-						return false;
-					}
-					camera.position = nextPosition;
-					snapshotRuntime();
-					writeCameraReadout(true);
-					requestRenderRef.current();
-					return true;
-				},
-				applyForward: (value: string) => {
-					const nextForward = parseCameraVec3(value);
-					if (!nextForward || length(nextForward) <= 1e-9) {
-						writeCameraReadout(true);
-						return false;
-					}
-					setCameraForward(camera, nextForward);
-					snapshotRuntime();
-					writeCameraReadout(true);
-					requestRenderRef.current();
-					return true;
-				},
-				applyUniverse: (value: string) => {
-					const nextUniverseSign = parseUniverseSign(value);
-					if (nextUniverseSign === null) {
-						writeCameraReadout(true);
-						return false;
-					}
-					camera.universeSign = nextUniverseSign;
-					snapshotRuntime();
-					writeCameraReadout(true);
-					requestRenderRef.current();
-					return true;
-				},
-				sync: () => writeCameraReadout(true),
-			};
-
-			animationEditorRef.current = {
-				play: () => {},
-				pause: () => {},
-				restartIntro: () => {},
-				previewIdle: () => {},
-				setRoute: () => {},
-				currentKeyframe: () =>
-					stringifyAnimationValue(
-						animationKeyframeFromCamera(camera, controlsRef.current, true, 2.5),
-					),
-				routeConfig: () => "",
-			};
-
-			const setKey = (event: KeyboardEvent, pressed: boolean) => {
-				if (!interactive) return;
-				if (isControlKeyboardTarget(event.target)) return;
-				if (event.keyCode < 0 || event.keyCode > 255) return;
-				keyboardData[event.keyCode * 4] = pressed ? 255 : 0;
-				requestRenderRef.current();
-			};
-
-			const handlePointerDown = (event: PointerEvent) => {
-				if (!interactive) return;
-				pointerActive = true;
-				lastPointerX = event.clientX;
-				lastPointerY = event.clientY;
-				canvas.setPointerCapture?.(event.pointerId);
-				requestRenderRef.current();
-			};
-			const handlePointerMove = (event: PointerEvent) => {
-				if (!interactive || !pointerActive) return;
-				const direction = controlsRef.current.invertControls ? -1 : 1;
-				camera.pendingYaw -=
-					(event.clientX - lastPointerX) * MOUSE_SENSITIVITY * direction;
-				camera.pendingPitch -=
-					(event.clientY - lastPointerY) * MOUSE_SENSITIVITY * direction;
-				lastPointerX = event.clientX;
-				lastPointerY = event.clientY;
-				requestRenderRef.current();
-			};
-			const handlePointerUp = (event: PointerEvent) => {
-				pointerActive = false;
-				canvas.releasePointerCapture?.(event.pointerId);
-				requestRenderRef.current();
-			};
-
-			const startWebGlAsciiCell = () => {
-				const gl = canvas.getContext("webgl2", {
-					alpha: false,
-					antialias: false,
-					depth: false,
-					preserveDrawingBuffer: false,
-					stencil: false,
-				});
-				if (!gl) {
-					setError("WebGL2 is not available in this browser.");
-					return;
-				}
-
-				const byteFormat = chooseByteTextureFormat(gl);
-				const maxTextureSize = Math.max(
-					2,
-					Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) ||
-						MAX_GLYPH_ATLAS_DIMENSION,
-				);
-				const vertexBuffer = gl.createBuffer();
-				if (!vertexBuffer) {
-					setError("Could not create ASCII-cell vertex buffer.");
-					return;
-				}
-				gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-				gl.bufferData(
-					gl.ARRAY_BUFFER,
-					new Float32Array([-1, -1, 3, -1, -1, 3]),
-					gl.STATIC_DRAW,
-				);
-
-				const fallbackTexture = createSolidTexture(gl, [0, 0, 0, 255]);
-				let glyphAtlasConfig = atlasConfigRef.current;
-				let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
-				let glyphTextures = createGlyphTextureSet(gl, glyphAtlasConfig);
-				const cellPass = createPass(
-					gl,
-					"ASCII Cell Trace",
-					createBlackHoleFragmentSource(ASCII_CELL_TRACE_SOURCE),
-				);
-				const asciiPass = createPass(
-					gl,
-					"ASCII Cell Composite",
-					createStandardFragmentSource("ASCII", asciiSource),
-				);
-				let cellTarget: RenderTarget | null = null;
-				const channelResolutionScratch = new Float32Array(12);
-				const activeRenderUniforms = createRenderUniforms(
-					controlsRef.current,
-					glyphAtlasConfig,
-					settings.asciiEnabled,
-					asciiMix,
-				);
-
-				const disposeCellTarget = () => {
-					disposeRenderTarget(gl, cellTarget);
-					cellTarget = null;
-				};
-
-				const resize = () => {
-					const rect = canvas.getBoundingClientRect();
-					const dpr = Math.min(
-						window.devicePixelRatio || 1,
-						settings.maxDevicePixelRatio,
-					);
-					const nextWidth = Math.min(
-						maxTextureSize,
-						Math.max(
-							1,
-							Math.floor(rect.width * dpr * settings.resolutionScale),
-						),
-					);
-					const nextHeight = Math.min(
-						maxTextureSize,
-						Math.max(
-							1,
-							Math.floor(rect.height * dpr * settings.resolutionScale),
-						),
-					);
-					const nextCellWidth = Math.min(
-						maxTextureSize,
-						Math.max(1, Math.ceil(nextWidth / Math.max(2, settings.cellWidth))),
-					);
-					const nextCellHeight = Math.min(
-						maxTextureSize,
-						Math.max(
-							1,
-							Math.ceil(nextHeight / Math.max(2, settings.cellHeight)),
-						),
-					);
-					if (
-						nextWidth === renderWidth &&
-						nextHeight === renderHeight &&
-						nextCellWidth === cellTextureWidth &&
-						nextCellHeight === cellTextureHeight
-					)
-						return;
-					renderWidth = nextWidth;
-					renderHeight = nextHeight;
-					cellTextureWidth = nextCellWidth;
-					cellTextureHeight = nextCellHeight;
-					canvas.width = renderWidth;
-					canvas.height = renderHeight;
-					disposeCellTarget();
-					cellTarget = createRenderTarget(
-						gl,
-						cellTextureWidth,
-						cellTextureHeight,
-						byteFormat,
-						"nearest",
-					);
-					frame = 0;
-					lastRenderNow = 0;
-				};
-
-				const renderFrame = (now: number) => {
-					if (disposed || contextLost) return;
-					animationFrame = 0;
-					const cpuFrameStart = performance.now();
-					try {
-						resize();
-						const targetInterval = reducedMotion.matches
-							? Math.max(settings.frameIntervalMs, 120)
-							: settings.frameIntervalMs;
-						if (
-							frame > 0 &&
-							targetInterval > 0 &&
-							now - lastRenderNow < targetInterval
-						) {
-							animationFrame = requestAnimationFrame(renderFrame);
-							return;
-						}
-						const delta = Math.min(
-							0.1,
-							Math.max(0.001, (now - lastTime) / 1000),
-						);
-						lastTime = now;
-						lastRenderNow = now;
-						const liveControls = controlsRef.current;
-						const nextGlyphControlsKey = glyphControlsKey(liveControls);
-						if (nextGlyphControlsKey !== liveGlyphControlsKey) {
-							liveGlyphControlsKey = nextGlyphControlsKey;
-							glyphTextures.dispose();
-							glyphAtlasConfig = createGlyphAtlasConfig(liveControls);
-							glyphTextures = createGlyphTextureSet(gl, glyphAtlasConfig);
-						}
-						writeRenderUniforms(
-							activeRenderUniforms,
-							liveControls,
-							glyphAtlasConfig,
-							settings.asciiEnabled,
-							asciiMix,
-						);
-						activeRenderUniforms.asciiCellSize = {
-							x: settings.cellWidth,
-							y: settings.cellHeight,
-						};
-						shaderTime += delta * liveControls.timeScale;
-						updateCamera(camera, keyboardData, delta, movementSpeed);
-						snapshotRuntime(now);
-						if (!cellTarget) return;
-						gl.disable(gl.DEPTH_TEST);
-						gl.disable(gl.BLEND);
-						gl.clearColor(0, 0, 0, 1);
-						renderPass(
-							gl,
-							cellPass,
-							vertexBuffer,
-							cellTarget,
-							cellTextureWidth,
-							cellTextureHeight,
-							shaderTime,
-							delta,
-							frame,
-							mouse,
-							[
-								fallbackTexture,
-								fallbackTexture,
-								fallbackTexture,
-								fallbackTexture,
-							],
-							camera,
-							settings.qualityValue,
-							1,
-							0,
-							channelResolutionScratch,
-							activeRenderUniforms,
-							{ x: renderWidth, y: renderHeight },
-						);
-						renderPass(
-							gl,
-							asciiPass,
-							vertexBuffer,
-							null,
-							renderWidth,
-							renderHeight,
-							shaderTime,
-							delta,
-							frame,
-							mouse,
-							[
-								cellTarget,
-								glyphTextures.atlas,
-								glyphTextures.metrics,
-								fallbackTexture,
-							],
-							camera,
-							settings.qualityValue,
-							1,
-							0,
-							channelResolutionScratch,
-							activeRenderUniforms,
-						);
-						const frameTimeMs = performance.now() - cpuFrameStart;
-						cpuAverageFrameTimeMs =
-							cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
-						averageFrameTimeMs =
-							averageFrameTimeMs * 0.94 + delta * 1000 * 0.06;
-						publishStats(
-							frameTimeMs,
-							now,
-							2,
-							estimateTextureMemoryBytes(
-								cellTextureWidth,
-								cellTextureHeight,
-								4,
-							) +
-								estimateTextureMemoryBytes(
-									glyphTextures.atlas.width,
-									glyphTextures.atlas.height,
-									4,
-								) +
-								estimateTextureMemoryBytes(
-									glyphTextures.metrics.width,
-									glyphTextures.metrics.height,
-									4,
-								),
-							null,
-							false,
-						);
-						writeCameraReadout();
-						frame += 1;
-					} catch (renderError) {
-						setError(formatError(renderError));
-						disposed = true;
-						return;
-					}
-					if (!document.hidden)
-						animationFrame = requestAnimationFrame(renderFrame);
-				};
-
-				const requestRender = () => {
-					if (
-						!disposed &&
-						!contextLost &&
-						!animationFrame &&
-						!document.hidden
-					) {
-						animationFrame = requestAnimationFrame(renderFrame);
-					}
-				};
-				requestRenderRef.current = requestRender;
-
-				const handleContextLost = (event: Event) => {
-					event.preventDefault();
-					contextLost = true;
-					setError("WebGL context lost. Restoring ASCII-cell renderer...");
-				};
-				const handleContextRestored = () => {
-					contextLost = false;
-					setError(null);
-					setContextRestoreToken((token) => token + 1);
-				};
-				const resizeObserver = new ResizeObserver(requestRender);
-				resizeObserver.observe(canvas);
-				canvas.addEventListener("webglcontextlost", handleContextLost);
-				canvas.addEventListener("webglcontextrestored", handleContextRestored);
-				initTimeMs = performance.now() - setupStart;
-				writeCameraReadout(true);
-				requestRender();
-
-				return () => {
-					disposed = true;
-					snapshotRuntime();
-					if (animationFrame) cancelAnimationFrame(animationFrame);
-					resizeObserver.disconnect();
-					canvas.removeEventListener("webglcontextlost", handleContextLost);
-					canvas.removeEventListener(
-						"webglcontextrestored",
-						handleContextRestored,
-					);
-					disposeCellTarget();
-					gl.deleteProgram(cellPass.program);
-					gl.deleteProgram(asciiPass.program);
-					gl.deleteBuffer(vertexBuffer);
-					gl.deleteTexture(fallbackTexture.texture);
-					glyphTextures.dispose();
-					delete window.__blackHoleStats;
-				};
-			};
-
-			const startWebGpuAsciiCell = async () => {
-				// biome-ignore lint/suspicious/noExplicitAny: WebGPU DOM types are not available in every TypeScript lib target used by Astro yet.
-				const gpuNavigator = navigator as Navigator & { gpu?: any };
-				if (!gpuNavigator.gpu)
-					throw new Error("WebGPU is not available in this browser.");
-				const adapter = await gpuNavigator.gpu.requestAdapter();
-				if (!adapter) throw new Error("No WebGPU adapter is available.");
-				const timestampSupported = Boolean(
-					adapter.features?.has?.("timestamp-query"),
-				);
-				const device = await adapter.requestDevice();
-				// biome-ignore lint/suspicious/noExplicitAny: WebGPU canvas context is intentionally guarded at runtime.
-				const context = canvas.getContext("webgpu") as any;
-				if (!context)
-					throw new Error("Could not create WebGPU canvas context.");
-				const presentationFormat = gpuNavigator.gpu.getPreferredCanvasFormat();
-				context.configure({
-					device,
-					format: presentationFormat,
-					alphaMode: "opaque",
-				});
-
-				const sampler = device.createSampler({
-					magFilter: "nearest",
-					minFilter: "nearest",
-				});
-				const uniformBuffer = device.createBuffer({
-					size: 44 * 4,
-					usage: 0x0040 | 0x0008,
-				});
-				const computeModule = device.createShaderModule({
-					label: "ASCII Cell Compute",
-					code: WEBGPU_COMPUTE_SOURCE,
-				});
-				const renderModule = device.createShaderModule({
-					label: "ASCII Cell Render",
-					code: WEBGPU_RENDER_SOURCE,
-				});
-				const computePipeline = await device.createComputePipelineAsync({
-					label: "ASCII Cell Compute Pipeline",
-					layout: "auto",
-					compute: { module: computeModule, entryPoint: "main" },
-				});
-				const renderPipeline = await device.createRenderPipelineAsync({
-					label: "ASCII Cell Render Pipeline",
-					layout: "auto",
-					vertex: { module: renderModule, entryPoint: "vertex_main" },
-					fragment: {
-						module: renderModule,
-						entryPoint: "fragment_main",
-						targets: [{ format: presentationFormat }],
-					},
-					primitive: { topology: "triangle-list" },
-				});
-				let glyphAtlasConfig = atlasConfigRef.current;
-				let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
-				let glyphRaster = createGlyphAtlasRaster(glyphAtlasConfig);
-				let glyphTexture = device.createTexture({
-					size: [glyphRaster.canvas.width, glyphRaster.canvas.height, 1],
-					format: "rgba8unorm",
-					usage: 0x0004 | 0x0002 | 0x0010,
-				});
-				device.queue.copyExternalImageToTexture(
-					{ source: glyphRaster.canvas },
-					{ texture: glyphTexture },
-					[glyphRaster.canvas.width, glyphRaster.canvas.height],
-				);
-				let glyphMetricsTexture = device.createTexture({
-					size: [
-						glyphRaster.metricsCanvas.width,
-						glyphRaster.metricsCanvas.height,
-						1,
-					],
-					format: "rgba8unorm",
-					usage: 0x0004 | 0x0002 | 0x0010,
-				});
-				device.queue.copyExternalImageToTexture(
-					{ source: glyphRaster.metricsCanvas },
-					{ texture: glyphMetricsTexture },
-					[glyphRaster.metricsCanvas.width, glyphRaster.metricsCanvas.height],
-				);
-				// biome-ignore lint/suspicious/noExplicitAny: WebGPU texture shape is browser-provided and experimental here.
-				let cellTexture: any = null;
-				// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
-				let computeBindGroup: any = null;
-				// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
-				let renderBindGroup: any = null;
-				const uniformData = new Float32Array(44);
-
-				const writeUniforms = () => {
-					const activeControls = controlsRef.current;
-					const activeAtlas = glyphAtlasConfig;
-					const renderUniforms = createRenderUniforms(
-						activeControls,
-						activeAtlas,
-						settings.asciiEnabled,
-						asciiMix,
-					);
-					uniformData[0] = shaderTime;
-					uniformData[1] = renderUniforms.exposure;
-					uniformData[2] = settings.qualityValue;
-					uniformData[3] = renderUniforms.glyphCount;
-					uniformData.set(renderUniforms.shadowColor, 4);
-					uniformData[7] = 1;
-					uniformData.set(renderUniforms.midColor, 8);
-					uniformData[11] = 1;
-					uniformData.set(renderUniforms.highlightColor, 12);
-					uniformData[15] = 1;
-					uniformData[16] = cellTextureWidth;
-					uniformData[17] = cellTextureHeight;
-					uniformData[18] = renderUniforms.asciiMix;
-					uniformData[19] = sourceIsCellGrid ? 1 : 0;
-					uniformData[20] = renderWidth;
-					uniformData[21] = renderHeight;
-					uniformData[22] = renderUniforms.asciiBrightness;
-					uniformData[23] = renderUniforms.asciiContrast;
-					uniformData[24] = sourceIsCellGrid
-						? settings.cellWidth
-						: activeAtlas.cellSize.x;
-					uniformData[25] = sourceIsCellGrid
-						? settings.cellHeight
-						: activeAtlas.cellSize.y;
-					uniformData[26] = renderUniforms.paletteMode;
-					uniformData[27] = renderUniforms.bloomStrength;
-					uniformData.set(camera.position, 28);
-					uniformData[31] = camera.universeSign;
-					uniformData.set(camera.right, 32);
-					uniformData[35] = 0;
-					uniformData.set(camera.up, 36);
-					uniformData[39] = 0;
-					uniformData.set(camera.forward, 40);
-					uniformData[43] = 0;
-					device.queue.writeBuffer(uniformBuffer, 0, uniformData);
-				};
-
-				const recreateBindGroups = () => {
-					computeBindGroup = device.createBindGroup({
-						layout: computePipeline.getBindGroupLayout(0),
-						entries: [
-							{ binding: 0, resource: cellTexture.createView() },
-							{ binding: 1, resource: { buffer: uniformBuffer } },
-						],
-					});
-					renderBindGroup = device.createBindGroup({
-						layout: renderPipeline.getBindGroupLayout(0),
-						entries: [
-							{ binding: 0, resource: cellTexture.createView() },
-							{ binding: 1, resource: glyphTexture.createView() },
-							{ binding: 2, resource: glyphMetricsTexture.createView() },
-							{ binding: 3, resource: sampler },
-							{ binding: 4, resource: { buffer: uniformBuffer } },
-						],
-					});
-				};
-
-				const resize = () => {
-					const rect = canvas.getBoundingClientRect();
-					const dpr = Math.min(
-						window.devicePixelRatio || 1,
-						settings.maxDevicePixelRatio,
-					);
-					const nextWidth = Math.max(
-						1,
-						Math.floor(rect.width * dpr * settings.resolutionScale),
-					);
-					const nextHeight = Math.max(
-						1,
-						Math.floor(rect.height * dpr * settings.resolutionScale),
-					);
-					const nextCellWidth = Math.max(
-						1,
-						sourceIsCellGrid
-							? Math.ceil(nextWidth / Math.max(2, settings.cellWidth))
-							: nextWidth,
-					);
-					const nextCellHeight = Math.max(
-						1,
-						sourceIsCellGrid
-							? Math.ceil(nextHeight / Math.max(2, settings.cellHeight))
-							: nextHeight,
-					);
-					if (
-						nextWidth === renderWidth &&
-						nextHeight === renderHeight &&
-						nextCellWidth === cellTextureWidth &&
-						nextCellHeight === cellTextureHeight
-					)
-						return;
-					renderWidth = nextWidth;
-					renderHeight = nextHeight;
-					cellTextureWidth = nextCellWidth;
-					cellTextureHeight = nextCellHeight;
-					canvas.width = renderWidth;
-					canvas.height = renderHeight;
-					cellTexture?.destroy?.();
-					cellTexture = device.createTexture({
-						size: [cellTextureWidth, cellTextureHeight, 1],
-						format: "rgba8unorm",
-						usage: 0x0004 | 0x0002 | 0x0008,
-					});
-					recreateBindGroups();
-					frame = 0;
-					lastRenderNow = 0;
-				};
-
-				const renderFrame = (now: number) => {
-					if (disposed) return;
-					animationFrame = 0;
-					const cpuFrameStart = performance.now();
-					try {
-						resize();
-						const targetInterval = reducedMotion.matches
-							? Math.max(settings.frameIntervalMs, 120)
-							: settings.frameIntervalMs;
-						if (
-							frame > 0 &&
-							targetInterval > 0 &&
-							now - lastRenderNow < targetInterval
-						) {
-							animationFrame = requestAnimationFrame(renderFrame);
-							return;
-						}
-						const delta = Math.min(
-							0.1,
-							Math.max(0.001, (now - lastTime) / 1000),
-						);
-						lastTime = now;
-						lastRenderNow = now;
-						const liveControls = controlsRef.current;
-						const nextGlyphControlsKey = glyphControlsKey(liveControls);
-						if (nextGlyphControlsKey !== liveGlyphControlsKey) {
-							liveGlyphControlsKey = nextGlyphControlsKey;
-							glyphTexture.destroy?.();
-							glyphMetricsTexture.destroy?.();
-							glyphAtlasConfig = createGlyphAtlasConfig(liveControls);
-							glyphRaster = createGlyphAtlasRaster(glyphAtlasConfig);
-							glyphTexture = device.createTexture({
-								size: [glyphRaster.canvas.width, glyphRaster.canvas.height, 1],
-								format: "rgba8unorm",
-								usage: 0x0004 | 0x0002 | 0x0010,
-							});
-							device.queue.copyExternalImageToTexture(
-								{ source: glyphRaster.canvas },
-								{ texture: glyphTexture },
-								[glyphRaster.canvas.width, glyphRaster.canvas.height],
-							);
-							glyphMetricsTexture = device.createTexture({
-								size: [
-									glyphRaster.metricsCanvas.width,
-									glyphRaster.metricsCanvas.height,
-									1,
-								],
-								format: "rgba8unorm",
-								usage: 0x0004 | 0x0002 | 0x0010,
-							});
-							device.queue.copyExternalImageToTexture(
-								{ source: glyphRaster.metricsCanvas },
-								{ texture: glyphMetricsTexture },
-								[
-									glyphRaster.metricsCanvas.width,
-									glyphRaster.metricsCanvas.height,
-								],
-							);
-							recreateBindGroups();
-						}
-						shaderTime += delta * liveControls.timeScale;
-						updateCamera(camera, keyboardData, delta, movementSpeed);
-						snapshotRuntime(now);
-						writeUniforms();
-						const commandEncoder = device.createCommandEncoder();
-						const computePass = commandEncoder.beginComputePass();
-						computePass.setPipeline(computePipeline);
-						computePass.setBindGroup(0, computeBindGroup);
-						computePass.dispatchWorkgroups(
-							Math.ceil(cellTextureWidth / 8),
-							Math.ceil(cellTextureHeight / 8),
-							1,
-						);
-						computePass.end();
-						const currentTexture = context.getCurrentTexture();
-						const renderPass = commandEncoder.beginRenderPass({
-							colorAttachments: [
-								{
-									view: currentTexture.createView(),
-									clearValue: { r: 0, g: 0, b: 0, a: 1 },
-									loadOp: "clear",
-									storeOp: "store",
-								},
-							],
-						});
-						renderPass.setPipeline(renderPipeline);
-						renderPass.setBindGroup(0, renderBindGroup);
-						renderPass.draw(3, 1, 0, 0);
-						renderPass.end();
-						device.queue.submit([commandEncoder.finish()]);
-						const frameTimeMs = performance.now() - cpuFrameStart;
-						cpuAverageFrameTimeMs =
-							cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
-						averageFrameTimeMs =
-							averageFrameTimeMs * 0.94 + delta * 1000 * 0.06;
-						publishStats(
-							frameTimeMs,
-							now,
-							2,
-							estimateTextureMemoryBytes(
-								cellTextureWidth,
-								cellTextureHeight,
-								4,
-							) +
-								estimateTextureMemoryBytes(
-									glyphRaster.canvas.width,
-									glyphRaster.canvas.height,
-									4,
-								) +
-								estimateTextureMemoryBytes(
-									glyphRaster.metricsCanvas.width,
-									glyphRaster.metricsCanvas.height,
-									4,
-								),
-							null,
-							timestampSupported,
-						);
-						writeCameraReadout();
-						frame += 1;
-					} catch (renderError) {
-						setError(formatError(renderError));
-						disposed = true;
-						return;
-					}
-					if (!document.hidden)
-						animationFrame = requestAnimationFrame(renderFrame);
-				};
-
-				const requestRender = () => {
-					if (!disposed && !animationFrame && !document.hidden) {
-						animationFrame = requestAnimationFrame(renderFrame);
-					}
-				};
-				requestRenderRef.current = requestRender;
-				initTimeMs = performance.now() - setupStart;
-				const resizeObserver = new ResizeObserver(requestRender);
-				resizeObserver.observe(canvas);
-				writeCameraReadout(true);
-				requestRender();
-
-				return () => {
-					disposed = true;
-					snapshotRuntime();
-					if (animationFrame) cancelAnimationFrame(animationFrame);
-					resizeObserver.disconnect();
-					cellTexture?.destroy?.();
-					glyphTexture.destroy?.();
-					glyphMetricsTexture.destroy?.();
-					device.destroy?.();
-					delete window.__blackHoleStats;
-				};
-			};
-
+			let cancelled = false;
 			let cleanup: (() => void) | undefined;
-			const handleKeyDown = (event: KeyboardEvent) => setKey(event, true);
-			const handleKeyUp = (event: KeyboardEvent) => setKey(event, false);
-
-			if (interactive) {
-				window.addEventListener("keydown", handleKeyDown);
-				window.addEventListener("keyup", handleKeyUp);
-				canvas.addEventListener("pointerdown", handlePointerDown);
-				canvas.addEventListener("pointermove", handlePointerMove);
-				canvas.addEventListener("pointerup", handlePointerUp);
-				canvas.addEventListener("pointercancel", handlePointerUp);
-			}
-
-			if (resolvedBackend === "webgpu") {
-				void startWebGpuAsciiCell()
-					.then((nextCleanup) => {
-						if (disposed) {
-							nextCleanup?.();
-							return;
-						}
-						cleanup = nextCleanup;
-						setError(null);
-					})
-					.catch((webGpuError) => {
-						fallbackReason = formatError(webGpuError);
-						activeAsciiBackend = "webgl2";
-						if (!sourceIsCellGrid) {
-							setError(null);
-							setBackendState("webgl2");
-							return;
-						}
-						try {
-							cleanup = startWebGlAsciiCell();
-							setError(null);
-						} catch (webGlError) {
-							fallbackReason = formatError(webGlError);
-							setError(fallbackReason);
-						}
+			void import("./BlackHoleAlternateRenderer")
+				.then(({ startAlternateRenderer }) => {
+					if (cancelled) return;
+					cleanup = startAlternateRenderer({
+						runtimeProfile,
+						animationMode,
+						resolvedRendererMode,
+						resolvedBackend,
+						runtimeSnapshotRef,
+						initialPropsRef,
+						debugStats,
+						showControls,
+						atlasConfigRef,
+						controlsRef,
+						rendererModeState,
+						reactRenderCountRef,
+						canvas,
+						settings,
+						animationRouteRef,
+						cameraPositionInputRef,
+						cameraForwardInputRef,
+						cameraUniverseInputRef,
+						cameraEditorRef,
+						requestRenderRef,
+						animationEditorRef,
+						interactive,
+						setError,
+						asciiMix,
+						setContextRestoreToken,
+						setupStart,
+						setBackendState,
 					});
-			} else {
-				try {
-					cleanup = startWebGlAsciiCell();
-				} catch (webGlError) {
-					fallbackReason = formatError(webGlError);
-					setError(fallbackReason);
-				}
-			}
-
+				})
+				.catch((error) => {
+					if (!cancelled) setError(formatError(error));
+				});
 			return () => {
-				disposed = true;
+				cancelled = true;
 				cleanup?.();
-				if (animationFrame) cancelAnimationFrame(animationFrame);
-				if (interactive) {
-					window.removeEventListener("keydown", handleKeyDown);
-					window.removeEventListener("keyup", handleKeyUp);
-					canvas.removeEventListener("pointerdown", handlePointerDown);
-					canvas.removeEventListener("pointermove", handlePointerMove);
-					canvas.removeEventListener("pointerup", handlePointerUp);
-					canvas.removeEventListener("pointercancel", handlePointerUp);
-				}
-				requestRenderRef.current = () => {};
-				cameraEditorRef.current = {
-					applyPosition: () => false,
-					applyForward: () => false,
-					applyUniverse: () => false,
-					sync: () => {},
-				};
 			};
 		}
 
@@ -4710,16 +3164,23 @@ export default function BlackHoleShader({
 			return;
 		}
 
-		const idleRenderInterval = Math.max(
-			0,
-			finiteNumber(idleRenderIntervalMs, DEFAULT_IDLE_RENDER_INTERVAL_MS),
-		);
+		gl.disable(gl.DEPTH_TEST);
+		gl.disable(gl.BLEND);
+		gl.clearColor(0, 0, 0, 1);
+
+		let perfSearch = "";
+		let perfFlags = new Set<string>();
 		const rootPerfFlagActive = (flag: string) => {
 			if (window.location.pathname !== "/") return false;
-			return (new URLSearchParams(window.location.search).get("bhPerf") ?? "")
-				.split(",")
-				.map((value) => value.trim())
-				.includes(flag);
+			if (window.location.search !== perfSearch) {
+				perfSearch = window.location.search;
+				perfFlags = new Set(
+					(new URLSearchParams(perfSearch).get("bhPerf") ?? "")
+						.split(",")
+						.map((value) => value.trim()),
+				);
+			}
+			return perfFlags.has(flag);
 		};
 		const activeAnimationMode = (): AnimationMode =>
 			animationModeRef.current === "route" &&
@@ -4728,12 +3189,19 @@ export default function BlackHoleShader({
 				: animationModeRef.current;
 		const activeAnimationAutoplay = () =>
 			activeAnimationMode() !== "off" && animationAutoplayRef.current;
-		const currentAnimationRoute = () =>
-			normalizeBlackHoleAnimationRoute(
+		let cachedRouteSource: string | undefined;
+		let cachedRoute: BlackHoleAnimationRouteKey = "/";
+		const currentAnimationRoute = () => {
+			const source =
 				activeAnimationMode() === "editor"
 					? animationRouteRef.current
-					: window.location.pathname || animationRouteRef.current,
-			);
+					: window.location.pathname || animationRouteRef.current;
+			if (source !== cachedRouteSource) {
+				cachedRouteSource = source;
+				cachedRoute = normalizeBlackHoleAnimationRoute(source);
+			}
+			return cachedRoute;
+		};
 		const persistedAnimationSnapshot =
 			activeAnimationMode() === "route"
 				? window.__blackHoleAnimationSnapshot
@@ -4753,9 +3221,15 @@ export default function BlackHoleShader({
 		let disposed = false;
 		let animationFrame = 0;
 		let frame = 0;
-		let mode: "optimized" | "fallback" =
-			rendererModeState === "fallback-full" ? "fallback" : "optimized";
-		let fallbackReason: string | null =
+		let resetFrameRequested = false;
+		resetFrameRef.current = () => {
+			resetFrameRequested = true;
+			requestRenderRef.current();
+		};
+		// Preserve the full pipeline already displayed by every WebGL2 route.
+		// The former prepass setup always failed (undefined scale), then rebuilt this pipeline.
+		const mode = "fallback";
+		const fallbackReason: string | null =
 			rendererModeState === "fallback-full"
 				? "Forced fallback renderer selected."
 				: null;
@@ -4777,11 +3251,10 @@ export default function BlackHoleShader({
 		let targetAllocationScale = 1;
 		let allocationScaleReason: string | null = null;
 		let lastAllocationFailure: string | null = null;
-		let currentPrepassScale = settings.initialPrepassScale;
+
 		let averageFrameTimeMs = 16.7;
 		let cpuAverageFrameTimeMs = 16.7;
 		let initTimeMs = 0;
-		let lastRenderNow = 0;
 		let lastStatsPublish = 0;
 		let lastRuntimeSnapshotUpdate = 0;
 		let lastPersistentSnapshotUpdate = 0;
@@ -4867,7 +3340,7 @@ export default function BlackHoleShader({
 			}
 		};
 		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-		const floatFormat = chooseFloatTextureFormat(gl);
+
 		const fallbackFormat = chooseFallbackTextureFormat(gl);
 		const fallbackTexture = createSolidTexture(gl, [0, 0, 0, 255]);
 		const keyboardTexture = createKeyboardTexture(gl, keyboardData);
@@ -4892,47 +3365,36 @@ export default function BlackHoleShader({
 			gl.STATIC_DRAW,
 		);
 
-		let optimizedPasses: OptimizedPassSet | null = null;
 		let fallbackPasses: FallbackPassSet | null = null;
-		let optimizedTargets: OptimizedTargets | null = null;
+
 		let fallbackTargets: FallbackTargets | null = null;
 		let contextLost = false;
 
 		const ensureFallbackPasses = () => {
 			if (fallbackPasses) return;
 
-			fallbackPasses = {
-				a: createPass(
+			const next: Partial<FallbackPassSet> = {};
+			try {
+				next.a = createPass(
 					gl,
 					"Buffer A",
 					createStandardFragmentSource("Buffer A", bufferASource),
-				),
-				b: createPass(
-					gl,
-					"Buffer B",
-					createStandardFragmentSource("Buffer B", bufferBSource),
-				),
-				c: createPass(
-					gl,
-					"Buffer C",
-					createStandardFragmentSource("Buffer C", bufferCSource),
-				),
-				d: createPass(
-					gl,
-					"Buffer D",
-					createStandardFragmentSource("Buffer D", bufferDSource),
-				),
-				image: createPass(
+				);
+				next.image = createPass(
 					gl,
 					"Image",
 					createStandardFragmentSource("Image", imageSource),
-				),
-				ascii: createPass(
+				);
+				next.ascii = createPass(
 					gl,
 					"ASCII",
 					createStandardFragmentSource("ASCII", asciiSource),
-				),
-			};
+				);
+				fallbackPasses = next as FallbackPassSet;
+			} catch (error) {
+				for (const pass of Object.values(next)) gl.deleteProgram(pass.program);
+				throw error;
+			}
 		};
 
 		const writeCameraReadout = (force = false) => {
@@ -5009,74 +3471,20 @@ export default function BlackHoleShader({
 			},
 			sync: () => writeCameraReadout(true),
 		};
-
-		if (mode === "optimized") {
-			try {
-				if (!floatFormat)
-					throw new Error("EXT_color_buffer_float is unavailable.");
-
-				const testTarget = createMultiRenderTarget(gl, 4, 4, floatFormat, 2);
-				testTarget.dispose();
-
-				optimizedPasses = {
-					prepass: createPass(
-						gl,
-						"NPGS prepass",
-						createBlackHoleFragmentSource(PREPASS_MAIN),
-					),
-					composite: createPass(
-						gl,
-						"NPGS composite",
-						createBlackHoleFragmentSource(COMPOSITE_MAIN),
-					),
-					bloom: createPass(
-						gl,
-						"NPGS bloom",
-						createStandardFragmentSource("NPGS bloom", bloomSource),
-					),
-					image: createPass(
-						gl,
-						"Image",
-						createStandardFragmentSource("Image", imageSource),
-					),
-					ascii: createPass(
-						gl,
-						"ASCII",
-						createStandardFragmentSource("ASCII", asciiSource),
-					),
-				};
-			} catch (optimizedError) {
-				mode = "fallback";
-				fallbackReason = formatError(optimizedError);
-			}
+		try {
+			ensureFallbackPasses();
+		} catch (fallbackError) {
+			setError(formatError(fallbackError));
+			gl.deleteBuffer(vertexBuffer);
+			gl.deleteTexture(fallbackTexture.texture);
+			gl.deleteTexture(keyboardTexture.texture);
+			glyphTextures.dispose();
+			return;
 		}
-
-		if (mode === "fallback") {
-			try {
-				ensureFallbackPasses();
-			} catch (fallbackError) {
-				setError(formatError(fallbackError));
-				gl.deleteBuffer(vertexBuffer);
-				gl.deleteTexture(fallbackTexture.texture);
-				gl.deleteTexture(keyboardTexture.texture);
-				glyphTextures.dispose();
-				return;
-			}
-		}
-
-		const disposeOptimizedTargets = () => {
-			optimizedTargets?.prepass.dispose();
-			optimizedTargets?.composite.dispose();
-			disposeRenderTarget(gl, optimizedTargets?.bloomMip ?? null);
-			disposeRenderTarget(gl, optimizedTargets?.bloomHorizontal ?? null);
-			disposeRenderTarget(gl, optimizedTargets?.bloomVertical ?? null);
-			disposeRenderTarget(gl, optimizedTargets?.scene ?? null);
-			optimizedTargets = null;
-		};
 
 		const disposeFallbackTargets = () => {
 			fallbackTargets?.a.dispose();
-			fallbackTargets?.b.dispose();
+			disposeRenderTarget(gl, fallbackTargets?.b ?? null);
 			disposeRenderTarget(gl, fallbackTargets?.c ?? null);
 			disposeRenderTarget(gl, fallbackTargets?.d ?? null);
 			disposeRenderTarget(gl, fallbackTargets?.scene ?? null);
@@ -5084,24 +3492,12 @@ export default function BlackHoleShader({
 		};
 
 		const disposeTargets = () => {
-			disposeOptimizedTargets();
 			disposeFallbackTargets();
-		};
-
-		const disposeOptimizedTargetGroup = (
-			targets: Partial<OptimizedTargets>,
-		) => {
-			targets.prepass?.dispose();
-			targets.composite?.dispose();
-			disposeRenderTarget(gl, targets.bloomMip ?? null);
-			disposeRenderTarget(gl, targets.bloomHorizontal ?? null);
-			disposeRenderTarget(gl, targets.bloomVertical ?? null);
-			disposeRenderTarget(gl, targets.scene ?? null);
 		};
 
 		const disposeFallbackTargetGroup = (targets: Partial<FallbackTargets>) => {
 			targets.a?.dispose();
-			targets.b?.dispose();
+			disposeRenderTarget(gl, targets.b ?? null);
 			disposeRenderTarget(gl, targets.c ?? null);
 			disposeRenderTarget(gl, targets.d ?? null);
 			disposeRenderTarget(gl, targets.scene ?? null);
@@ -5160,11 +3556,6 @@ export default function BlackHoleShader({
 		};
 
 		const animationIsEnabled = () => activeAnimationMode() !== "off";
-
-		const animationIsOwningCamera = () =>
-			animationIsEnabled() &&
-			animationPhase !== "off" &&
-			(animationPlayingRef.current || animationSequence.length > 0);
 
 		const currentAnimationKeyframe = (duration = 0) =>
 			animationKeyframeFromCamera(
@@ -5470,87 +3861,6 @@ export default function BlackHoleShader({
 				: new Error("Could not allocate render targets.");
 		};
 
-		const createOptimizedTargets = () => {
-			if (!floatFormat) throw new Error("Float targets are unavailable.");
-			const nextSceneWidth = allocatedTargetDimension(
-				renderWidth * settings.sceneScale,
-			);
-			const nextSceneHeight = allocatedTargetDimension(
-				renderHeight * settings.sceneScale,
-			);
-			const nextPrepassWidth = targetDimension(
-				nextSceneWidth * currentPrepassScale,
-			);
-			const nextPrepassHeight = targetDimension(
-				nextSceneHeight * currentPrepassScale,
-			);
-			const nextBloomWidth = targetDimension(
-				settings.enableBloomPass ? nextSceneWidth * settings.bloomScale : 1,
-			);
-			const nextBloomHeight = targetDimension(
-				settings.enableBloomPass ? nextSceneHeight * settings.bloomScale : 1,
-			);
-
-			sceneWidth = nextSceneWidth;
-			sceneHeight = nextSceneHeight;
-			prepassWidth = nextPrepassWidth;
-			prepassHeight = nextPrepassHeight;
-			bloomWidth = nextBloomWidth;
-			bloomHeight = nextBloomHeight;
-
-			const nextTargets: Partial<OptimizedTargets> = {};
-
-			try {
-				nextTargets.prepass = createMultiRenderTarget(
-					gl,
-					prepassWidth,
-					prepassHeight,
-					floatFormat,
-					2,
-				);
-				nextTargets.composite = createPingPongTarget(
-					gl,
-					sceneWidth,
-					sceneHeight,
-					floatFormat,
-					"linear",
-				);
-				nextTargets.bloomMip = createRenderTarget(
-					gl,
-					bloomWidth,
-					bloomHeight,
-					floatFormat,
-					"linear",
-				);
-				nextTargets.bloomHorizontal = createRenderTarget(
-					gl,
-					bloomWidth,
-					bloomHeight,
-					floatFormat,
-					"linear",
-				);
-				nextTargets.bloomVertical = createRenderTarget(
-					gl,
-					bloomWidth,
-					bloomHeight,
-					floatFormat,
-					"linear",
-				);
-				nextTargets.scene = createRenderTarget(
-					gl,
-					sceneWidth,
-					sceneHeight,
-					floatFormat,
-					"linear",
-				);
-
-				optimizedTargets = nextTargets as OptimizedTargets;
-			} catch (error) {
-				disposeOptimizedTargetGroup(nextTargets);
-				throw error;
-			}
-		};
-
 		const createFallbackTargets = () => {
 			sceneWidth = allocatedTargetDimension(renderWidth * settings.sceneScale);
 			sceneHeight = allocatedTargetDimension(
@@ -5564,27 +3874,6 @@ export default function BlackHoleShader({
 
 			try {
 				nextTargets.a = createPingPongTarget(
-					gl,
-					sceneWidth,
-					sceneHeight,
-					fallbackFormat,
-					"linear",
-				);
-				nextTargets.b = createPingPongTarget(
-					gl,
-					sceneWidth,
-					sceneHeight,
-					fallbackFormat,
-					"linear",
-				);
-				nextTargets.c = createRenderTarget(
-					gl,
-					sceneWidth,
-					sceneHeight,
-					fallbackFormat,
-					"linear",
-				);
-				nextTargets.d = createRenderTarget(
 					gl,
 					sceneWidth,
 					sceneHeight,
@@ -5606,12 +3895,18 @@ export default function BlackHoleShader({
 			}
 		};
 
+		let sizeDirty = true;
+		let measuredDpr = 0;
 		const resize = () => {
+			const deviceDpr = window.devicePixelRatio || 1;
+			if (!sizeDirty && measuredDpr === deviceDpr) return;
+			sizeDirty = false;
+			measuredDpr = deviceDpr;
 			const rect = canvas.getBoundingClientRect();
-			const dprCap =
-				mode === "fallback"
-					? Math.min(settings.maxDevicePixelRatio, DIRECT_FALLBACK_DPR)
-					: settings.maxDevicePixelRatio;
+			const dprCap = Math.min(
+				settings.maxDevicePixelRatio,
+				DIRECT_FALLBACK_DPR,
+			);
 			const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
 			const nextWidth = Math.min(
 				maxTextureSize,
@@ -5627,30 +3922,10 @@ export default function BlackHoleShader({
 			const nextSceneHeight = allocatedTargetDimension(
 				nextHeight * settings.sceneScale,
 			);
-			const nextPrepassWidth =
-				mode === "optimized"
-					? targetDimension(nextSceneWidth * currentPrepassScale)
-					: nextSceneWidth;
-			const nextPrepassHeight =
-				mode === "optimized"
-					? targetDimension(nextSceneHeight * currentPrepassScale)
-					: nextSceneHeight;
-			const nextBloomWidth =
-				mode === "optimized"
-					? targetDimension(
-							settings.enableBloomPass
-								? nextSceneWidth * settings.bloomScale
-								: 1,
-						)
-					: nextSceneWidth;
-			const nextBloomHeight =
-				mode === "optimized"
-					? targetDimension(
-							settings.enableBloomPass
-								? nextSceneHeight * settings.bloomScale
-								: 1,
-						)
-					: nextSceneHeight;
+			const nextPrepassWidth = nextSceneWidth;
+			const nextPrepassHeight = nextSceneHeight;
+			const nextBloomWidth = nextSceneWidth;
+			const nextBloomHeight = nextSceneHeight;
 
 			if (
 				nextWidth === renderWidth &&
@@ -5672,32 +3947,16 @@ export default function BlackHoleShader({
 			canvas.height = renderHeight;
 			disposeTargets();
 
-			try {
-				if (mode === "optimized")
-					createTargetsWithRetry(createOptimizedTargets);
-				else createTargetsWithRetry(createFallbackTargets);
-			} catch (targetError) {
-				if (mode === "optimized") {
-					mode = "fallback";
-					fallbackReason = formatError(targetError);
-					targetAllocationScale = 1;
-					disposeOptimizedTargets();
-					ensureFallbackPasses();
-					createTargetsWithRetry(createFallbackTargets);
-				} else {
-					throw targetError;
-				}
-			}
+			createTargetsWithRetry(createFallbackTargets);
 
 			frame = 0;
 			startTime = performance.now();
 			lastTime = startTime;
 			shaderTime = 0;
-			lastRenderNow = 0;
 		};
 
 		const publishStats = (frameTimeMs: number, now: number) => {
-			if (!debugStats && !import.meta.env.DEV) return;
+			if (!debugStats && !import.meta.env.DEV && !showControls) return;
 			if (!showControls && now - lastStatsPublish < 250) return;
 			lastStatsPublish = now;
 
@@ -5716,7 +3975,7 @@ export default function BlackHoleShader({
 				reactRenderCount: reactRenderCountRef.current,
 				dpr: currentDpr,
 				targetAllocationScale,
-				prepassScale: currentPrepassScale,
+				prepassScale: 1,
 				bloomScale: settings.bloomScale,
 				sceneScale: settings.sceneScale,
 				asciiEnabled: lastAnimatedAsciiEnabled,
@@ -5756,13 +4015,19 @@ export default function BlackHoleShader({
 				computeInvocations: 0,
 				frameIntervalMs: settings.frameIntervalMs,
 				enableBloomPass: settings.enableBloomPass,
-				passCount: mode === "optimized" ? 5 : 6,
-				estimatedTextureMemoryBytes:
-					mode === "optimized"
-						? estimateTextureMemoryBytes(prepassWidth, prepassHeight, 8, 2) +
-							estimateTextureMemoryBytes(sceneWidth, sceneHeight, 8, 3) +
-							estimateTextureMemoryBytes(bloomWidth, bloomHeight, 8, 3)
-						: estimateTextureMemoryBytes(sceneWidth, sceneHeight, 4, 7),
+				passCount:
+					2 +
+					Number(lastAnimatedAsciiEnabled) +
+					(activeControls.bloomStrength !== 0 ? 3 : 0),
+				estimatedTextureMemoryBytes: estimateTextureMemoryBytes(
+					sceneWidth,
+					sceneHeight,
+					4,
+					3 +
+						Number(Boolean(fallbackTargets?.b)) +
+						Number(Boolean(fallbackTargets?.c)) +
+						Number(Boolean(fallbackTargets?.d)),
+				),
 				initTimeMs,
 				gpuFrameTimeMs: null,
 				gpuTimingSupported: false,
@@ -5782,258 +4047,29 @@ export default function BlackHoleShader({
 			window.__blackHoleStats = stats;
 		};
 
-		const maybeAdaptQuality = () => {
-			if (
-				mode !== "optimized" ||
-				frame < 120 ||
-				frame % 90 !== 0 ||
-				hasFixedPrepassScaleRef.current ||
-				settings.qualityPreset === "custom"
-			)
-				return;
-
-			const previousScale = currentPrepassScale;
-			if (averageFrameTimeMs > FRAME_TARGET_MS * 1.15) {
-				currentPrepassScale = Math.max(
-					MIN_PREPASS_SCALE,
-					currentPrepassScale - 0.06,
-				);
-			}
-
-			if (Math.abs(previousScale - currentPrepassScale) > 0.001) {
-				disposeOptimizedTargets();
-				try {
-					createTargetsWithRetry(createOptimizedTargets);
-				} catch (targetError) {
-					mode = "fallback";
-					fallbackReason = formatError(targetError);
-					targetAllocationScale = 1;
-					disposeOptimizedTargets();
-					ensureFallbackPasses();
-					createTargetsWithRetry(createFallbackTargets);
-				}
-				frame = 0;
-				startTime = performance.now();
-				lastTime = startTime;
-				shaderTime = 0;
-				lastRenderNow = 0;
-			}
-		};
-
-		const renderOptimized = (
-			time: number,
-			delta: number,
-			shouldUpdatePrepass: boolean,
-			shouldUpdateBloom: boolean,
-			activeRenderUniforms: RenderUniforms,
-			activeAsciiEnabled: boolean,
-		) => {
-			if (!optimizedPasses || !optimizedTargets) return;
-
-			if (shouldUpdatePrepass) {
-				renderPass(
-					gl,
-					optimizedPasses.prepass,
-					vertexBuffer,
-					optimizedTargets.prepass,
-					prepassWidth,
-					prepassHeight,
-					time,
-					delta,
-					frame,
-					mouse,
-					[fallbackTexture, fallbackTexture, fallbackTexture, fallbackTexture],
-					camera,
-					settings.qualityValue,
-					0.5,
-					0,
-					channelResolutionScratch,
-					activeRenderUniforms,
-				);
-			}
-
-			renderPass(
+		const ensureBloomTargets = () => {
+			if (!fallbackTargets) return;
+			fallbackTargets.b ??= createRenderTarget(
 				gl,
-				optimizedPasses.composite,
-				vertexBuffer,
-				optimizedTargets.composite.write,
 				sceneWidth,
 				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[
-					optimizedTargets.prepass.textures[0],
-					optimizedTargets.prepass.textures[1],
-					optimizedTargets.composite.read,
-					fallbackTexture,
-				],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
+				fallbackFormat,
+				"linear",
 			);
-
-			if (shouldUpdateBloom) {
-				renderPass(
-					gl,
-					optimizedPasses.bloom,
-					vertexBuffer,
-					optimizedTargets.bloomMip,
-					bloomWidth,
-					bloomHeight,
-					time,
-					delta,
-					frame,
-					mouse,
-					[
-						optimizedTargets.composite.write,
-						fallbackTexture,
-						fallbackTexture,
-						fallbackTexture,
-					],
-					camera,
-					settings.qualityValue,
-					0.5,
-					0,
-					channelResolutionScratch,
-					activeRenderUniforms,
-				);
-				renderPass(
-					gl,
-					optimizedPasses.bloom,
-					vertexBuffer,
-					optimizedTargets.bloomHorizontal,
-					bloomWidth,
-					bloomHeight,
-					time,
-					delta,
-					frame,
-					mouse,
-					[
-						optimizedTargets.bloomMip,
-						fallbackTexture,
-						fallbackTexture,
-						fallbackTexture,
-					],
-					camera,
-					settings.qualityValue,
-					0.5,
-					1,
-					channelResolutionScratch,
-					activeRenderUniforms,
-				);
-				renderPass(
-					gl,
-					optimizedPasses.bloom,
-					vertexBuffer,
-					optimizedTargets.bloomVertical,
-					bloomWidth,
-					bloomHeight,
-					time,
-					delta,
-					frame,
-					mouse,
-					[
-						optimizedTargets.bloomHorizontal,
-						fallbackTexture,
-						fallbackTexture,
-						fallbackTexture,
-					],
-					camera,
-					settings.qualityValue,
-					0.5,
-					2,
-					channelResolutionScratch,
-					activeRenderUniforms,
-				);
-			}
-
-			if (activeAsciiEnabled) {
-				renderPass(
-					gl,
-					optimizedPasses.image,
-					vertexBuffer,
-					optimizedTargets.scene,
-					sceneWidth,
-					sceneHeight,
-					time,
-					delta,
-					frame,
-					mouse,
-					[
-						optimizedTargets.composite.write,
-						fallbackTexture,
-						fallbackTexture,
-						settings.enableBloomPass
-							? optimizedTargets.bloomVertical
-							: fallbackTexture,
-					],
-					camera,
-					settings.qualityValue,
-					0.5,
-					0,
-					channelResolutionScratch,
-					activeRenderUniforms,
-				);
-
-				renderPass(
-					gl,
-					optimizedPasses.ascii,
-					vertexBuffer,
-					null,
-					renderWidth,
-					renderHeight,
-					time,
-					delta,
-					frame,
-					mouse,
-					[
-						optimizedTargets.scene,
-						glyphTextures.atlas,
-						glyphTextures.metrics,
-						fallbackTexture,
-					],
-					camera,
-					settings.qualityValue,
-					0.5,
-					0,
-					channelResolutionScratch,
-					activeRenderUniforms,
-				);
-			} else {
-				renderPass(
-					gl,
-					optimizedPasses.image,
-					vertexBuffer,
-					null,
-					renderWidth,
-					renderHeight,
-					time,
-					delta,
-					frame,
-					mouse,
-					[
-						optimizedTargets.composite.write,
-						fallbackTexture,
-						fallbackTexture,
-						settings.enableBloomPass
-							? optimizedTargets.bloomVertical
-							: fallbackTexture,
-					],
-					camera,
-					settings.qualityValue,
-					0.5,
-					0,
-					channelResolutionScratch,
-					activeRenderUniforms,
-				);
-			}
-
-			optimizedTargets.composite.swap();
+			fallbackTargets.c ??= createRenderTarget(
+				gl,
+				sceneWidth,
+				sceneHeight,
+				fallbackFormat,
+				"linear",
+			);
+			fallbackTargets.d ??= createRenderTarget(
+				gl,
+				sceneWidth,
+				sceneHeight,
+				fallbackFormat,
+				"linear",
+			);
 		};
 
 		const renderFallback = (
@@ -6043,6 +4079,18 @@ export default function BlackHoleShader({
 			activeAsciiEnabled: boolean,
 		) => {
 			if (!fallbackPasses || !fallbackTargets) return;
+
+			if (activeRenderUniforms.bloomStrength !== 0 && !fallbackTargets.d) {
+				try {
+					ensureBloomTargets();
+				} catch {
+					// Lazy bloom allocation needs the same fallback as initial allocation.
+					createTargetsWithRetry(() => {
+						createFallbackTargets();
+						ensureBloomTargets();
+					});
+				}
+			}
 
 			renderPass(
 				gl,
@@ -6055,12 +4103,10 @@ export default function BlackHoleShader({
 				delta,
 				frame,
 				mouse,
-				[
-					keyboardTexture,
-					fallbackTexture,
-					fallbackTargets.b.read,
-					fallbackTargets.a.read,
-				],
+				keyboardTexture,
+				fallbackTexture,
+				fallbackTexture,
+				fallbackTargets.a.read,
 				camera,
 				settings.qualityValue,
 				0.5,
@@ -6068,73 +4114,91 @@ export default function BlackHoleShader({
 				channelResolutionScratch,
 				activeRenderUniforms,
 			);
-			renderPass(
-				gl,
-				fallbackPasses.b,
-				vertexBuffer,
-				fallbackTargets.b.write,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[
+			// These passes only feed bloom; camera state is CPU-owned.
+			if (activeRenderUniforms.bloomStrength !== 0) {
+				fallbackPasses.b ??= createPass(
+					gl,
+					"Buffer B",
+					createStandardFragmentSource("Buffer B", bufferBSource),
+				);
+				fallbackPasses.c ??= createPass(
+					gl,
+					"Buffer C",
+					createStandardFragmentSource("Buffer C", bufferCSource),
+				);
+				fallbackPasses.d ??= createPass(
+					gl,
+					"Buffer D",
+					createStandardFragmentSource("Buffer D", bufferDSource),
+				);
+
+				renderPass(
+					gl,
+					fallbackPasses.b,
+					vertexBuffer,
+					fallbackTargets.b,
+					sceneWidth,
+					sceneHeight,
+					time,
+					delta,
+					frame,
+					mouse,
 					fallbackTargets.a.write,
-					fallbackTargets.b.read,
+					fallbackTexture,
 					fallbackTexture,
 					keyboardTexture,
-				],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-			renderPass(
-				gl,
-				fallbackPasses.c,
-				vertexBuffer,
-				fallbackTargets.c,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[
-					fallbackTargets.b.write,
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+				renderPass(
+					gl,
+					fallbackPasses.c,
+					vertexBuffer,
+					fallbackTargets.c,
+					sceneWidth,
+					sceneHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					fallbackTargets.b ?? fallbackTexture,
 					fallbackTexture,
 					fallbackTexture,
 					fallbackTexture,
-				],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-			renderPass(
-				gl,
-				fallbackPasses.d,
-				vertexBuffer,
-				fallbackTargets.d,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				[fallbackTargets.c, fallbackTexture, fallbackTexture, fallbackTexture],
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+				renderPass(
+					gl,
+					fallbackPasses.d,
+					vertexBuffer,
+					fallbackTargets.d,
+					sceneWidth,
+					sceneHeight,
+					time,
+					delta,
+					frame,
+					mouse,
+					fallbackTargets.c ?? fallbackTexture,
+					fallbackTexture,
+					fallbackTexture,
+					fallbackTexture,
+					camera,
+					settings.qualityValue,
+					0.5,
+					0,
+					channelResolutionScratch,
+					activeRenderUniforms,
+				);
+			}
 			if (activeAsciiEnabled) {
 				renderPass(
 					gl,
@@ -6147,12 +4211,10 @@ export default function BlackHoleShader({
 					delta,
 					frame,
 					mouse,
-					[
-						fallbackTargets.a.write,
-						fallbackTargets.b.write,
-						fallbackTargets.c,
-						fallbackTargets.d,
-					],
+					fallbackTargets.a.write,
+					fallbackTargets.b ?? fallbackTexture,
+					fallbackTargets.c ?? fallbackTexture,
+					fallbackTargets.d ?? fallbackTexture,
 					camera,
 					settings.qualityValue,
 					0.5,
@@ -6171,12 +4233,10 @@ export default function BlackHoleShader({
 					delta,
 					frame,
 					mouse,
-					[
-						fallbackTargets.scene,
-						glyphTextures.atlas,
-						glyphTextures.metrics,
-						fallbackTexture,
-					],
+					fallbackTargets.scene,
+					glyphTextures.atlas,
+					glyphTextures.metrics,
+					fallbackTexture,
 					camera,
 					settings.qualityValue,
 					0.5,
@@ -6196,12 +4256,10 @@ export default function BlackHoleShader({
 					delta,
 					frame,
 					mouse,
-					[
-						fallbackTargets.a.write,
-						fallbackTargets.b.write,
-						fallbackTargets.c,
-						fallbackTargets.d,
-					],
+					fallbackTargets.a.write,
+					fallbackTargets.b ?? fallbackTexture,
+					fallbackTargets.c ?? fallbackTexture,
+					fallbackTargets.d ?? fallbackTexture,
 					camera,
 					settings.qualityValue,
 					0.5,
@@ -6212,7 +4270,6 @@ export default function BlackHoleShader({
 			}
 
 			fallbackTargets.a.swap();
-			fallbackTargets.b.swap();
 		};
 
 		const renderFrame = (now: number) => {
@@ -6222,6 +4279,12 @@ export default function BlackHoleShader({
 			animationFrame = 0;
 
 			try {
+				if (resetFrameRequested) {
+					frame = 0;
+					shaderTime = 0;
+					lastTime = now;
+					resetFrameRequested = false;
+				}
 				resize();
 
 				if (keyboardDirty) {
@@ -6230,23 +4293,6 @@ export default function BlackHoleShader({
 				}
 
 				syncAnimationRoute();
-				const animationActiveBeforeFrame = animationIsOwningCamera();
-				const activeControlInput =
-					forceActiveRender ||
-					animationActiveBeforeFrame ||
-					hasActiveControls(keyboardData, pointerActive);
-				if (
-					mode === "optimized" &&
-					frame > 2 &&
-					!activeControlInput &&
-					lastRenderNow > 0 &&
-					idleRenderInterval > 0 &&
-					now - lastRenderNow < idleRenderInterval
-				) {
-					animationFrame = requestAnimationFrame(renderFrame);
-					return;
-				}
-				lastRenderNow = now;
 
 				const delta = Math.min(0.1, Math.max(0.001, (now - lastTime) / 1000));
 				const animationFrameState = evaluateAnimationFrame(delta);
@@ -6273,36 +4319,12 @@ export default function BlackHoleShader({
 				}
 				snapshotRuntime(false, now);
 
-				gl.disable(gl.DEPTH_TEST);
-				gl.disable(gl.BLEND);
-				gl.clearColor(0, 0, 0, 1);
-
-				if (mode === "optimized") {
-					const prepassStride = activeControlInput
-						? ACTIVE_PREPASS_STRIDE
-						: IDLE_PREPASS_STRIDE;
-					const shouldUpdatePrepass = frame < 2 || frame % prepassStride === 0;
-					const shouldUpdateBloom =
-						settings.enableBloomPass &&
-						(frame < 2 ||
-							shouldUpdatePrepass ||
-							frame % BLOOM_FRAME_STRIDE === 0);
-
-					renderOptimized(
-						shaderTime,
-						shaderDelta,
-						shouldUpdatePrepass,
-						shouldUpdateBloom,
-						activeRenderUniforms,
-						activeAsciiEnabled,
-					);
-				} else
-					renderFallback(
-						shaderTime,
-						shaderDelta,
-						activeRenderUniforms,
-						activeAsciiEnabled,
-					);
+				renderFallback(
+					shaderTime,
+					shaderDelta,
+					activeRenderUniforms,
+					activeAsciiEnabled,
+				);
 
 				const frameTimeMs = performance.now() - cpuFrameStart;
 				cpuAverageFrameTimeMs =
@@ -6310,13 +4332,12 @@ export default function BlackHoleShader({
 				averageFrameTimeMs = averageFrameTimeMs * 0.94 + delta * 1000 * 0.06;
 				publishStats(frameTimeMs, now);
 				updateCameraReadout(now);
-				maybeAdaptQuality();
 
 				frame += 1;
 			} catch (renderError) {
 				setError(formatError(renderError));
 				disposed = true;
-				disposeTargets();
+				disposeGpuResources();
 				return;
 			}
 
@@ -6415,10 +4436,29 @@ export default function BlackHoleShader({
 			requestRender();
 		};
 
+		let gpuResourcesDisposed = false;
+		const disposeGpuResources = () => {
+			if (gpuResourcesDisposed) return;
+			gpuResourcesDisposed = true;
+			disposeTargets();
+			gl.deleteBuffer(vertexBuffer);
+			gl.deleteTexture(fallbackTexture.texture);
+			gl.deleteTexture(keyboardTexture.texture);
+			Object.values(fallbackPasses ?? {}).forEach((pass) => {
+				if (!pass) return;
+				gl.deleteVertexArray(pass.vao);
+				gl.deleteProgram(pass.program);
+			});
+			glyphTextures.dispose();
+		};
+
 		const handleContextLost = (event: Event) => {
 			event.preventDefault();
 			contextLost = true;
 			disposed = true;
+			// Release handles while the context is lost, before restoration makes
+			// the old objects invalid for the new context generation.
+			disposeGpuResources();
 			if (animationFrame) cancelAnimationFrame(animationFrame);
 			animationFrame = 0;
 			setError("WebGL context lost. Restoring renderer...");
@@ -6430,7 +4470,11 @@ export default function BlackHoleShader({
 			setContextRestoreToken((token) => token + 1);
 		};
 
-		const resizeObserver = new ResizeObserver(requestRender);
+		const invalidateSize = () => {
+			sizeDirty = true;
+			requestRender();
+		};
+		const resizeObserver = new ResizeObserver(invalidateSize);
 		resizeObserver.observe(canvas);
 
 		const handleKeyDown = (event: KeyboardEvent) => setKey(event, true);
@@ -6468,18 +4512,9 @@ export default function BlackHoleShader({
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 			canvas.removeEventListener("webglcontextlost", handleContextLost);
 			canvas.removeEventListener("webglcontextrestored", handleContextRestored);
-			disposeTargets();
-			gl.deleteBuffer(vertexBuffer);
-			gl.deleteTexture(fallbackTexture.texture);
-			gl.deleteTexture(keyboardTexture.texture);
-			Object.values(optimizedPasses ?? {}).forEach((pass) => {
-				gl.deleteProgram(pass.program);
-			});
-			Object.values(fallbackPasses ?? {}).forEach((pass) => {
-				gl.deleteProgram(pass.program);
-			});
-			glyphTextures.dispose();
+			disposeGpuResources();
 			requestRenderRef.current = () => {};
+			resetFrameRef.current = () => {};
 			cameraEditorRef.current = {
 				applyPosition: () => false,
 				applyForward: () => false,
@@ -6494,49 +4529,81 @@ export default function BlackHoleShader({
 		showControls,
 		interactive,
 		debugStats,
-		idleRenderIntervalMs,
-		forceActiveRender,
 		rendererModeState,
 		backendState,
 		initialCameraKey,
-		initialCameraPosition,
-		initialCameraForward,
-		initialUniverseSign,
 		contextRestoreToken,
 		animationMode,
 	]);
 
-	const glyphPresetOptions: Array<{ label: string; value: GlyphPreset }> = [
-		{ label: "Gargantua", value: "gargantua" },
-		{ label: "Classic", value: "classic" },
-		{ label: "Dense", value: "dense" },
-		{ label: "Custom", value: "custom" },
-	];
-	const qualityPresetOptions: Array<{ label: string; value: QualityPreset }> = [
-		{ label: "Mobile Safe", value: "mobile-safe" },
-		{ label: "ASCII Balanced", value: "ascii-balanced" },
-		{ label: "ASCII Sharp", value: "ascii-sharp" },
-		{ label: "Performance", value: "performance" },
-		{ label: "Balanced", value: "balanced" },
-		{ label: "Visual", value: "visual" },
-		{ label: "Desktop Full", value: "desktop-full" },
-		{ label: "Stress Test", value: "stress-test" },
-		{ label: "Custom", value: "custom" },
-	];
-	const rendererModeOptions: Array<{ label: string; value: RendererMode }> = [
-		{ label: "Auto", value: "auto" },
-		{ label: "Full", value: "full" },
-		{ label: "Fallback Full", value: "fallback-full" },
-	];
-	const backendOptions: Array<{ label: string; value: ShaderBackend }> = [
-		{ label: "Auto", value: "auto" },
-		{ label: "WebGL2", value: "webgl2" },
-		{ label: "WebGPU Experimental", value: "webgpu" },
-	];
-	const fontOptions = FONT_OPTIONS.map((font) => ({
-		label: font,
-		value: font,
-	}));
+	// Astro supplies fresh camera arrays when updating persisted island props.
+	// Preserve the previous time/history reset without recompiling or reallocating.
+	useEffect(() => {
+		void initialCameraPosition;
+		void initialCameraForward;
+		void initialUniverseSign;
+		resetFrameRef.current();
+	}, [initialCameraPosition, initialCameraForward, initialUniverseSign]);
+
+	return {
+		controls,
+		renderSettings,
+		rendererModeState,
+		backendState,
+		updateControl,
+		updateRenderSetting,
+		applyQualityPreset,
+		updateRendererMode,
+		updateBackend,
+		updateAsciiEnabled,
+		animationMode,
+		animationEditorStatus,
+		animationEditorRoute,
+		setAnimationEditorRoute,
+		animationPlaying,
+		animationEditorRef,
+		copyAnimationText,
+		cameraPositionInputRef,
+		cameraForwardInputRef,
+		cameraUniverseInputRef,
+		applyCameraPositionInput,
+		applyCameraForwardInput,
+		applyCameraUniverseInput,
+		handleCameraInputKeyDown,
+		blackHolePanelOpen,
+		setBlackHolePanelOpen,
+		asciiPanelOpen,
+		setAsciiPanelOpen,
+		benchmarkPanelOpen,
+		setBenchmarkPanelOpen,
+		benchmarkRunning,
+		benchmarkResults,
+		runBenchmark,
+		className,
+		interactive,
+		showControls,
+		canvasRef,
+		contextRestoreToken,
+		error,
+	};
+}
+
+export type BlackHoleController = ReturnType<typeof useBlackHoleController>;
+
+const BlackHoleControls = lazy(() => import("./BlackHoleControls"));
+
+export default function BlackHoleShader(props: Props) {
+	const controller = useBlackHoleController(props);
+	const {
+		className,
+		interactive,
+		showControls,
+		canvasRef,
+		contextRestoreToken,
+		error,
+		rendererModeState,
+		backendState,
+	} = controller;
 
 	return (
 		<div className={`relative h-full w-full bg-black ${className}`}>
@@ -6549,452 +4616,9 @@ export default function BlackHoleShader({
 				aria-label="Interactive black hole shader"
 			/>
 			{showControls ? (
-				<div className="pointer-events-auto absolute inset-x-3 bottom-3 z-20 grid max-h-[calc(100dvh-1.5rem)] gap-2 overflow-y-auto overscroll-contain pr-1 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:max-h-[calc(100dvh-2rem)] sm:w-[22rem]">
-					<div className="pointer-events-auto overflow-hidden rounded-md">
-						<ControlPanel
-							title="Black Hole"
-							icon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
-							open={blackHolePanelOpen}
-							onToggle={() => setBlackHolePanelOpen((open) => !open)}
-						>
-							<NumberControl
-								label="Speed"
-								value={controls.timeScale}
-								step={0.05}
-								onChange={(value) => updateControl("timeScale", value)}
-							/>
-							<NumberControl
-								label="Exposure"
-								value={controls.exposure}
-								step={0.05}
-								onChange={(value) => updateControl("exposure", value)}
-							/>
-							<NumberControl
-								label="Bloom"
-								value={controls.bloomStrength}
-								step={0.05}
-								onChange={(value) => updateControl("bloomStrength", value)}
-							/>
-							<ToggleControl
-								label="Invert Look"
-								checked={controls.invertControls}
-								onChange={(checked) => updateControl("invertControls", checked)}
-							/>
-							<SelectControl
-								label="Color"
-								value={controls.paletteMode}
-								options={[
-									{ label: "Source", value: "source" },
-									{ label: "Custom", value: "custom" },
-								]}
-								onChange={(value) => updateControl("paletteMode", value)}
-							/>
-							{controls.paletteMode === "custom" ? (
-								<div className="grid grid-cols-3 gap-2">
-									<ColorControl
-										label="Shadow"
-										value={controls.shadowColor}
-										onChange={(value) => updateControl("shadowColor", value)}
-									/>
-									<ColorControl
-										label="Mid"
-										value={controls.midColor}
-										onChange={(value) => updateControl("midColor", value)}
-									/>
-									<ColorControl
-										label="High"
-										value={controls.highlightColor}
-										onChange={(value) => updateControl("highlightColor", value)}
-									/>
-								</div>
-							) : null}
-							<div className="grid gap-3 border-t border-white/10 pt-3">
-								<SelectControl
-									label="Renderer"
-									value={rendererModeState}
-									options={rendererModeOptions}
-									onChange={updateRendererMode}
-								/>
-								<SelectControl
-									label="Backend"
-									value={backendState}
-									options={backendOptions}
-									onChange={updateBackend}
-								/>
-								<ToggleControl
-									label="ASCII Effect"
-									checked={renderSettings.asciiEnabled}
-									onChange={updateAsciiEnabled}
-								/>
-								<ToggleControl
-									label="Bloom Pass"
-									checked={renderSettings.enableBloomPass}
-									onChange={(checked) =>
-										updateRenderSetting("enableBloomPass", checked)
-									}
-								/>
-								<SelectControl
-									label="Preset"
-									value={renderSettings.qualityPreset}
-									options={qualityPresetOptions}
-									onChange={applyQualityPreset}
-								/>
-								<div className="grid gap-1">
-									<NumberControl
-										label="Temporal jitter"
-										value={controls.temporalJitter}
-										min={0}
-										step={0.01}
-										onChange={(value) => updateControl("temporalJitter", value)}
-									/>
-									<p className="font-mono text-[10px] leading-snug text-white/35">
-										0 stable, 0.05 tiny AA, 0.25+ shimmer
-									</p>
-								</div>
-								<div className="grid grid-cols-2 gap-3">
-									<NumberControl
-										label="Trace"
-										value={renderSettings.qualityValue}
-										min={MIN_QUALITY_VALUE}
-										step={0.01}
-										onChange={(value) =>
-											updateRenderSetting("qualityValue", value)
-										}
-									/>
-									<NumberControl
-										label="DPR"
-										value={renderSettings.maxDevicePixelRatio}
-										min={MIN_DPR}
-										step={0.05}
-										onChange={(value) =>
-											updateRenderSetting("maxDevicePixelRatio", value)
-										}
-									/>
-									<NumberControl
-										label="Scene"
-										value={renderSettings.sceneScale}
-										min={MIN_RENDER_SCALE}
-										step={0.01}
-										onChange={(value) =>
-											updateRenderSetting("sceneScale", value)
-										}
-									/>
-									<NumberControl
-										label="Prepass"
-										value={renderSettings.prepassScale}
-										min={MIN_RENDER_SCALE}
-										step={0.01}
-										onChange={(value) =>
-											updateRenderSetting("prepassScale", value)
-										}
-									/>
-									<NumberControl
-										label="Bloom Res"
-										value={renderSettings.bloomScale}
-										min={MIN_RENDER_SCALE}
-										step={0.01}
-										onChange={(value) =>
-											updateRenderSetting("bloomScale", value)
-										}
-									/>
-									<NumberControl
-										label="Canvas"
-										value={renderSettings.resolutionScale}
-										min={MIN_RENDER_SCALE}
-										step={0.05}
-										onChange={(value) =>
-											updateRenderSetting("resolutionScale", value)
-										}
-									/>
-									<NumberControl
-										label="Cell W"
-										value={renderSettings.cellWidth}
-										min={2}
-										step={1}
-										onChange={(value) =>
-											updateRenderSetting("cellWidth", value)
-										}
-									/>
-									<NumberControl
-										label="Cell H"
-										value={renderSettings.cellHeight}
-										min={2}
-										step={1}
-										onChange={(value) =>
-											updateRenderSetting("cellHeight", value)
-										}
-									/>
-									<NumberControl
-										label="Frame Cap"
-										value={renderSettings.frameIntervalMs}
-										min={0}
-										step={1}
-										onChange={(value) =>
-											updateRenderSetting("frameIntervalMs", value)
-										}
-									/>
-								</div>
-							</div>
-							{animationMode !== "off" ? (
-								<div className="grid gap-3 border-t border-white/10 pt-3">
-									<div className="flex items-center justify-between gap-3 font-mono text-[11px] text-white/70">
-										<span>Animation</span>
-										<span className="truncate text-white/35">
-											{animationEditorStatus}
-										</span>
-									</div>
-									<SelectControl
-										label="Route"
-										value={animationEditorRoute}
-										options={[...BLACK_HOLE_ANIMATION_ROUTE_OPTIONS]}
-										onChange={setAnimationEditorRoute}
-									/>
-									<div className="grid grid-cols-2 gap-2">
-										<button
-											type="button"
-											onClick={() =>
-												animationPlaying
-													? animationEditorRef.current.pause()
-													: animationEditorRef.current.play()
-											}
-											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
-										>
-											{animationPlaying ? (
-												<Pause aria-hidden className="h-3.5 w-3.5" />
-											) : (
-												<Play aria-hidden className="h-3.5 w-3.5" />
-											)}
-											{animationPlaying ? "Pause" : "Play"}
-										</button>
-										<button
-											type="button"
-											onClick={() => animationEditorRef.current.restartIntro()}
-											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
-										>
-											<RotateCcw aria-hidden className="h-3.5 w-3.5" />
-											Intro
-										</button>
-										<button
-											type="button"
-											onClick={() => animationEditorRef.current.previewIdle()}
-											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
-										>
-											<Play aria-hidden className="h-3.5 w-3.5" />
-											Idle
-										</button>
-										<button
-											type="button"
-											onClick={() =>
-												copyAnimationText(
-													"route",
-													animationEditorRef.current.routeConfig(),
-												)
-											}
-											className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
-										>
-											<Copy aria-hidden className="h-3.5 w-3.5" />
-											Route
-										</button>
-									</div>
-									<button
-										type="button"
-										onClick={() =>
-											copyAnimationText(
-												"keyframe",
-												animationEditorRef.current.currentKeyframe(),
-											)
-										}
-										className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
-									>
-										<Copy aria-hidden className="h-3.5 w-3.5" />
-										Copy Current Keyframe
-									</button>
-								</div>
-							) : null}
-							<div className="grid gap-2 border-t border-white/10 pt-3 font-mono text-[11px] text-white/70">
-								<div className="flex items-center justify-between gap-3">
-									<span>Camera</span>
-									<span className="text-white/35">enter to apply</span>
-								</div>
-								<label className="grid gap-1">
-									<span>Position</span>
-									<input
-										ref={cameraPositionInputRef}
-										type="text"
-										onFocus={(event) => event.currentTarget.select()}
-										onBlur={applyCameraPositionInput}
-										onKeyDown={(event) =>
-											handleCameraInputKeyDown(event, applyCameraPositionInput)
-										}
-										className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
-									/>
-								</label>
-								<label className="grid gap-1">
-									<span>Forward</span>
-									<input
-										ref={cameraForwardInputRef}
-										type="text"
-										onFocus={(event) => event.currentTarget.select()}
-										onBlur={applyCameraForwardInput}
-										onKeyDown={(event) =>
-											handleCameraInputKeyDown(event, applyCameraForwardInput)
-										}
-										className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
-									/>
-								</label>
-								<label className="grid gap-1">
-									<span>Universe</span>
-									<input
-										ref={cameraUniverseInputRef}
-										type="text"
-										onFocus={(event) => event.currentTarget.select()}
-										onBlur={applyCameraUniverseInput}
-										onKeyDown={(event) =>
-											handleCameraInputKeyDown(event, applyCameraUniverseInput)
-										}
-										className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
-									/>
-								</label>
-							</div>
-						</ControlPanel>
-					</div>
-
-					<div className="pointer-events-auto overflow-hidden rounded-md">
-						<ControlPanel
-							title="ASCII"
-							icon={<Type aria-hidden className="h-4 w-4" />}
-							open={asciiPanelOpen}
-							onToggle={() => setAsciiPanelOpen((open) => !open)}
-						>
-							<SelectControl
-								label="Text"
-								value={controls.glyphPreset}
-								options={glyphPresetOptions}
-								onChange={(value) => updateControl("glyphPreset", value)}
-							/>
-							<label className="grid gap-1 font-mono text-[11px] text-white/70">
-								<span>Custom</span>
-								<input
-									type="text"
-									value={controls.customGlyphs}
-									disabled={controls.glyphPreset !== "custom"}
-									onChange={(event) =>
-										updateControl("customGlyphs", event.currentTarget.value)
-									}
-									className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none disabled:cursor-not-allowed disabled:opacity-40 focus:border-cyan-300"
-								/>
-							</label>
-							<SelectControl
-								label="Font"
-								value={controls.fontFamily}
-								options={fontOptions}
-								onChange={(value) => updateControl("fontFamily", value)}
-							/>
-							<NumberControl
-								label="Size"
-								value={controls.textSize}
-								min={MIN_TEXT_SIZE}
-								step={1}
-								onChange={(value) => updateControl("textSize", value)}
-							/>
-							<div className="grid grid-cols-2 gap-3">
-								<NumberControl
-									label="Bright"
-									value={controls.brightness}
-									step={0.01}
-									onChange={(value) => updateControl("brightness", value)}
-								/>
-								<NumberControl
-									label="Contrast"
-									value={controls.contrast}
-									step={0.05}
-									onChange={(value) => updateControl("contrast", value)}
-								/>
-							</div>
-						</ControlPanel>
-					</div>
-
-					<div className="pointer-events-auto overflow-hidden rounded-md">
-						<ControlPanel
-							title="Benchmark"
-							icon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
-							open={benchmarkPanelOpen}
-							onToggle={() => setBenchmarkPanelOpen((open) => !open)}
-						>
-							<button
-								type="button"
-								onClick={() => void runBenchmark()}
-								disabled={benchmarkRunning}
-								className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white disabled:cursor-wait disabled:opacity-50"
-							>
-								{benchmarkRunning ? "Running..." : "Run Benchmark"}
-							</button>
-							<div className="grid gap-2 font-mono text-[10px] text-white/65">
-								{benchmarkResults.length === 0 ? (
-									<p className="leading-snug text-white/35">
-										Runs full, fallback, and WebGPU when available.
-									</p>
-								) : (
-									benchmarkResults.map((result) => (
-										<div
-											key={`${result.label}:${result.activeMode}:${result.activeBackend}`}
-											className="grid gap-1 border border-white/10 bg-black/50 p-2"
-										>
-											<div className="flex items-center justify-between gap-2 text-white/80">
-												<span>{result.label}</span>
-												<span>{formatMetric(result.averageFps)} fps</span>
-											</div>
-											<div className="grid grid-cols-2 gap-x-3 gap-y-1 text-white/45">
-												<span>Mode {result.activeMode}</span>
-												<span>Backend {result.activeBackend}</span>
-												<span>
-													Wall {formatMetric(result.averageFrameTimeMs)} ms
-												</span>
-												<span>
-													Wall P95 {formatMetric(result.p95FrameTimeMs)} ms
-												</span>
-												<span>
-													CPU {formatMetric(result.cpuAverageFrameTimeMs)} ms
-												</span>
-												<span>
-													CPU P95 {formatMetric(result.cpuP95FrameTimeMs)} ms
-												</span>
-												<span>Cells {result.cellCount.toLocaleString()}</span>
-												<span>Passes {result.passCount}</span>
-												<span>
-													Groups {result.computeWorkgroups.toLocaleString()}
-												</span>
-												<span>
-													Invokes {result.computeInvocations.toLocaleString()}
-												</span>
-												<span>
-													Pixels {result.renderTargetPixels.toLocaleString()}
-												</span>
-												<span>
-													{formatBytes(result.estimatedTextureMemoryBytes)}
-												</span>
-												<span>Init {formatMetric(result.initTimeMs)} ms</span>
-												<span>
-													GPU{" "}
-													{result.gpuFrameTimeMs === null
-														? result.gpuTimingSupported
-															? "pending"
-															: "n/a"
-														: `${formatMetric(result.gpuFrameTimeMs)} ms`}
-												</span>
-											</div>
-											{result.fallbackReason ? (
-												<p className="text-red-200/70">
-													{result.fallbackReason}
-												</p>
-											) : null}
-										</div>
-									))
-								)}
-							</div>
-						</ControlPanel>
-					</div>
-				</div>
+				<Suspense fallback={null}>
+					<BlackHoleControls controller={controller} />
+				</Suspense>
 			) : null}
 			{error ? (
 				<div className="absolute inset-x-4 bottom-4 border border-red-500/60 bg-black/85 p-3 font-mono text-xs text-red-200">
