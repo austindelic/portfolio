@@ -1,13 +1,11 @@
-import {
-	ChevronDown,
-	ChevronUp,
-	Copy,
-	Pause,
-	Play,
-	RotateCcw,
-	SlidersHorizontal,
-	Type,
-} from "lucide-react";
+import { ChevronDown } from "pixelarticons/react/ChevronDown.js";
+import { ChevronUp } from "pixelarticons/react/ChevronUp.js";
+import { Copy } from "pixelarticons/react/Copy.js";
+import { Pause } from "pixelarticons/react/Pause.js";
+import { Play } from "pixelarticons/react/Play.js";
+import { Reload } from "pixelarticons/react/Reload.js";
+import { SlidersHorizontal } from "pixelarticons/react/SlidersHorizontal.js";
+import { TextStartT } from "pixelarticons/react/TextStartT.js";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { BLACK_HOLE_ANIMATION_ROUTE_OPTIONS } from "../config/black-hole-animation";
@@ -486,9 +484,9 @@ export default function BlackHoleControls({
 									className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
 								>
 									{animationPlaying ? (
-										<Pause aria-hidden className="h-3.5 w-3.5" />
+										<Pause aria-hidden className="h-3.5 w-3.5 shrink-0" />
 									) : (
-										<Play aria-hidden className="h-3.5 w-3.5" />
+										<Play aria-hidden className="h-3.5 w-3.5 shrink-0" />
 									)}
 									{animationPlaying ? "Pause" : "Play"}
 								</button>
@@ -497,7 +495,7 @@ export default function BlackHoleControls({
 									onClick={() => animationEditorRef.current.restartIntro()}
 									className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
 								>
-									<RotateCcw aria-hidden className="h-3.5 w-3.5" />
+									<Reload aria-hidden className="h-3.5 w-3.5 shrink-0" />
 									Intro
 								</button>
 								<button
@@ -505,7 +503,7 @@ export default function BlackHoleControls({
 									onClick={() => animationEditorRef.current.previewIdle()}
 									className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
 								>
-									<Play aria-hidden className="h-3.5 w-3.5" />
+									<Play aria-hidden className="h-3.5 w-3.5 shrink-0" />
 									Idle
 								</button>
 								<button
@@ -518,7 +516,7 @@ export default function BlackHoleControls({
 									}
 									className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
 								>
-									<Copy aria-hidden className="h-3.5 w-3.5" />
+									<Copy aria-hidden className="h-3.5 w-3.5 shrink-0" />
 									Route
 								</button>
 							</div>
@@ -532,7 +530,7 @@ export default function BlackHoleControls({
 								}
 								className="inline-flex h-8 items-center justify-center gap-2 border border-white/15 bg-black/80 px-2 font-mono text-[11px] text-white/75 hover:border-cyan-300 hover:text-white"
 							>
-								<Copy aria-hidden className="h-3.5 w-3.5" />
+								<Copy aria-hidden className="h-3.5 w-3.5 shrink-0" />
 								Copy Current Keyframe
 							</button>
 						</div>
@@ -588,7 +586,7 @@ export default function BlackHoleControls({
 			<div className="pointer-events-auto overflow-hidden rounded-md">
 				<ControlPanel
 					title="ASCII"
-					icon={<Type aria-hidden className="h-4 w-4" />}
+					icon={<TextStartT aria-hidden className="h-4 w-4" />}
 					open={asciiPanelOpen}
 					onToggle={() => setAsciiPanelOpen((open) => !open)}
 				>

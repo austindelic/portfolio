@@ -1,4 +1,6 @@
 ---
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
+import { ArrowLeft } from "pixelarticons/react/ArrowLeft.js";
 import { Picture } from "astro:assets";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -25,7 +27,7 @@ const displayDate = dayjs(publishDate).format("ll");
   navbarActiveItemID="blog"
 >
   <article class="portfolio-article portfolio-section">
-    <div class="section-label"><span>Writing</span><a href="/blog">← Back to posts</a></div>
+    <div class="section-label"><span>Writing</span><a href="/blog"><ArrowLeft className="ui-icon" aria-hidden="true" /> Back to posts</a></div>
     {
       heroImage && (
         <Picture
