@@ -8,11 +8,14 @@ const props: Props = Astro.props;
 </div>
 <script>
 import {createRuntimeState, mountBlackHoleRuntime, runtimeOptions} from "./BlackHoleRuntime";
+import { bindBlackHoleExplore } from "./BlackHoleExplore";
 import type {Props} from "./BlackHoleCore";
 let host: HTMLElement | null = null;
 let runtime: ReturnType<typeof mountBlackHoleRuntime> | undefined;
 let previousRoute = "";
+let unbindExplore: (() => void) | undefined;
 function syncBackground() {
+ unbindExplore?.();
  const next = document.querySelector<HTMLElement>("[data-black-hole-background]");
  if (host !== next) {
    runtime?.dispose(); runtime = undefined; host = next;
@@ -28,10 +31,12 @@ function syncBackground() {
    runtime.updateRoute(location.pathname);
    previousRoute = location.pathname;
  }
+ unbindExplore = bindBlackHoleExplore(() => runtime);
 }
 syncBackground();
 document.addEventListener("astro:page-load", syncBackground);
 document.addEventListener("astro:before-swap", (event) => {
+ unbindExplore?.();
  const nextDocument = (event as Event & {newDocument: Document}).newDocument;
  if (!nextDocument.querySelector("[data-black-hole-background]")) {
    runtime?.dispose(); runtime = undefined; host = null;
