@@ -270,10 +270,68 @@ body::-webkit-scrollbar {
 	}
 }
 
+::view-transition-group(root),
 ::view-transition-old(root),
 ::view-transition-new(root) {
 	animation: none;
 	mix-blend-mode: normal;
+}
+
+/* Keep the canvas in place while the foreground moves between route layouts. */
+::view-transition-group(portfolio-header),
+::view-transition-group(portfolio-content) {
+	animation-duration: 320ms;
+	animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(portfolio-header),
+::view-transition-new(portfolio-header) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+
+/* Show one crisp header snapshot while its group glides to the new bounds. */
+::view-transition-old(portfolio-header) {
+	opacity: 0;
+}
+
+::view-transition-old(portfolio-content) {
+	animation: portfolio-content-out 120ms ease-out both;
+	mix-blend-mode: normal;
+}
+
+::view-transition-new(portfolio-content) {
+	animation: portfolio-content-in 220ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	mix-blend-mode: normal;
+}
+
+@keyframes portfolio-content-out {
+	to {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+}
+
+@keyframes portfolio-content-in {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(portfolio-header),
+	::view-transition-group(portfolio-content),
+	::view-transition-old(portfolio-header),
+	::view-transition-new(portfolio-header),
+	::view-transition-old(portfolio-content),
+	::view-transition-new(portfolio-content) {
+		animation: none;
+	}
 }
 
 /* Gruvbox Material Dark code surfaces */
