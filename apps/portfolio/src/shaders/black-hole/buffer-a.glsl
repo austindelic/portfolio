@@ -123,23 +123,24 @@ The code rain effect is sourced from https://www.shadertoy.com/view/4t3BWl
 #define iBackShiftMax           2.0       // 背景最大频移限制 / Max Background Frequency Shift
 #define iInterRadiusRs          2.0       // 吸积盘内半径 (Rs) / Accretion Disk Inner Radius (Rs)
 #define iOuterRadiusRs          20.0      // 吸积盘外半径 (Rs) / Accretion Disk Outer Radius (Rs)
-#define iThinRs                 0.75      // 吸积盘半厚度 (Rs) / Accretion Disk Half-Thickness (Rs)
-#define iHopper                 0.24      // 吸积盘厚度斜率 / Accretion Disk Thickness Slope
+#define iThinRs                 0.10      // 吸积盘半厚度 (Rs) / Accretion Disk Half-Thickness (Rs)
+#define iHopper                 0.01      // 吸积盘厚度斜率 / Accretion Disk Thickness Slope
 #define iBrightmut              1.0       // 吸积盘亮度乘数 / Accretion Disk Brightness Multiplier
 #define iDarkmut                0.5       // 吸积盘不透明度 / Accretion Disk Opacity
 #define iReddening              0.3       // 盘红化因子 / Disk Reddening Factor
-#define iSaturation             0.5       // 吸积盘饱和度 / Accretion Disk Saturation
+#define iDiskReddening          0.0       // Film disk: neutral absorption; retain iReddening for jets.
+#define iSaturation             0.0       // 吸积盘饱和度 / Accretion Disk Saturation
 #define iBlackbodyIntensityExponent 0.5   // 黑体强度指数 / Blackbody Intensity Exponent
-#define iRedShiftColorExponent      3.0   // 频移色温指数 / Redshift Color Temp Exponent
-#define iRedShiftIntensityExponent  4.0   // 频移亮度指数 / Redshift Intensity Exponent
+#define iRedShiftColorExponent      0.0   // 频移色温指数 / Redshift Color Temp Exponent
+#define iRedShiftIntensityExponent  0.0   // 频移亮度指数 / Redshift Intensity Exponent
 
 #define iPolarizationAngle      0.0       // 偏振片角度 / Polarization Filter Angle
 #define iHeatHaze               1.0       // 热浪扰动强度 / Heat Haze Disturbance Strength
 #define iBackgroundBrightmut    1.0       // 背景亮度乘数 / Background Brightness Multiplier
 
-#define iPhotonRingBoost             7.0  // 光子环亮度增亮 / Photon Ring Brightness Boost
-#define iPhotonRingColorTempBoost    2.0  // 光子环色温增益 (蓝移) / Photon Ring Color Temp Boost (Blue Shift)
-#define iBoostRot                    0.75 // 旋转导致的亮度非对称程度 / Brightness Asymmetry Boost for Spin
+#define iPhotonRingBoost             2.0  // 光子环亮度增亮 / Photon Ring Brightness Boost
+#define iPhotonRingColorTempBoost    0.0  // 光子环色温增益 (蓝移) / Photon Ring Color Temp Boost (Blue Shift)
+#define iBoostRot                    0.0 // 旋转导致的亮度非对称程度 / Brightness Asymmetry Boost for Spin
 
 #define iJetRedShiftIntensityExponent 2.0 // 喷流频移亮度指数 / Jet Redshift Intensity Exponent
 #define iJetBrightmut           1.0       // 喷流亮度乘数 / Jet Brightness Multiplier
@@ -149,7 +150,7 @@ The code rain effect is sourced from https://www.shadertoy.com/view/4t3BWl
 #define iBlendWeight            0.5       // TAA 混合权重 / TAA Blend Weight
 #define iCameraVelocity         vec3(0.0) // 相机坐标速度 / Camera Coordinate Velocity
 
-#define HAZE_STRENGTH           0.3     // 热浪折射强度 / Heat Haze Refraction Strength
+#define HAZE_STRENGTH           0.04     // 热浪折射强度 / Heat Haze Refraction Strength
 #define HAZE_SCALE              5.2     // 噪声频率 / Heat Haze Noise Scale
 #define HAZE_DENSITY_THRESHOLD  0.1     // 密度阈值 / Heat Haze Density Threshold
 #define HAZE_LAYER_THICKNESS    0.8     // 层厚度范围 / Heat Haze Layer Thickness
@@ -278,6 +279,18 @@ vec3 KelvinToRgb(float Kelvin) {
     float BrightnessScale = 1.0 / max(max(1.5 * RgbColor.r, RgbColor.g), RgbColor.b);
     if (Kelvin < 1000.0) BrightnessScale *= (Kelvin - 400.0) / 600.0;
     return RgbColor * BrightnessScale;
+}
+
+// Authored emission from the film stills and supplied copper/gold reference.
+// Applied per disk sample, before accumulation; this is not a screen tint.
+vec3 GargantuaEmission(float heat) {
+    vec3 copper = vec3(0.75, 0.12, 0.012);
+    vec3 amber = vec3(0.95, 0.32, 0.055);
+    vec3 peach = vec3(1.0, 0.65, 0.36);
+    vec3 ivory = vec3(1.0, 0.87, 0.60);
+    vec3 color = mix(copper, amber, smoothstep(0.0, 0.45, heat));
+    color = mix(color, peach, smoothstep(0.35, 0.80, heat));
+    return 0.72 * mix(color, ivory, smoothstep(0.86, 0.99, heat));
 }
 
 vec3 WavelengthToRgb(float wavelength) {
@@ -839,7 +852,7 @@ vec4 DiskColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 l
                float ThetaInShell, inout float RayMarchPhase, vec2 WP_CamX, vec2 WP_CamY, inout vec2 StokesQU) 
 {
     vec4 CurrentResult = BaseColor;
-    float MaxDiskHalfHeight = Thin + max(0.0, Hopper * OuterRadius) + 2.0; 
+    float MaxDiskHalfHeight = 1.5 * (Thin + max(0.0, Hopper * (OuterRadius - 3.0)));
     if ((LastRayPos.y > MaxDiskHalfHeight && RayPos.y > MaxDiskHalfHeight) || (LastRayPos.y < -MaxDiskHalfHeight && RayPos.y < -MaxDiskHalfHeight)) return BaseColor;
 
     vec2 P0 = LastRayPos.xz; vec2 P1 = RayPos.xz; vec2 V = P1 - P0; float LenSq = dot(V, V);
@@ -847,7 +860,6 @@ vec4 DiskColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 l
     if (dot(ClosestPoint, ClosestPoint) > (OuterRadius * 1.1) * (OuterRadius * 1.1)) return BaseColor;
 
     vec3 StartPos = LastRayPos.xyz; vec3 EndPos = RayPos.xyz; vec3 ChordDelta = EndPos - StartPos;
-    vec3 ChordDir = length(ChordDelta) > 1e-8 ? normalize(ChordDelta) : vec3(0.0, 1.0, 0.0);
 
     // --- 【固有距离（Proper Distance）】 ---
     vec3 MidPos = 0.5 * (StartPos + EndPos);
@@ -856,42 +868,32 @@ vec4 DiskColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 l
 
     if (max(KerrSchildRadius(StartPos, PhysicalSpinA, 1.0), KerrSchildRadius(EndPos, PhysicalSpinA, 1.0)) < InterRadius * 0.9) return BaseColor;
 
-    float TotalDist = proper_dist; float TraveledDist = 0.0;
-    int SafetyLoopCount = 0; const int MaxLoops = 114514; 
-
-    while (TraveledDist < TotalDist && SafetyLoopCount < MaxLoops) {
-        if (CurrentResult.a > 0.99) break; SafetyLoopCount++;
-
-        vec3 CurrentPos = mix(StartPos, EndPos, clamp(TraveledDist / max(1e-9, TotalDist), 0.0, 1.0));
-        float DistanceToBlackHole = length(CurrentPos); 
-        float SmallStepBoundary = max(OuterRadius, 12.0); float StepSize = 1.0; 
-        
-        StepSize *= 0.15 + 0.25 * min(max(0.0, 0.5 * (0.5 * DistanceToBlackHole / max(10.0 , SmallStepBoundary) - 1.0)), 1.0);
-        if ((DistanceToBlackHole) >= 2.0 * SmallStepBoundary) StepSize *= DistanceToBlackHole;
-        else if ((DistanceToBlackHole) >= 1.0 * SmallStepBoundary) StepSize *= ((1.0 + 0.25 * max(DistanceToBlackHole - 12.0, 0.0)) * (2.0 * SmallStepBoundary - DistanceToBlackHole) + DistanceToBlackHole * (DistanceToBlackHole - SmallStepBoundary)) / SmallStepBoundary;
-        else StepSize *= min(1.0 + 0.25 * max(DistanceToBlackHole - 12.0, 0.0), DistanceToBlackHole);
-        StepSize = max(0.01, StepSize); 
-
-        float DistToNextSample = RayMarchPhase * StepSize;
-        float NextTarget = min(TotalDist, TraveledDist + DistToNextSample);
-
-        vec3 PosPrev = mix(StartPos, EndPos, clamp(TraveledDist / max(1e-9, TotalDist), 0.0, 1.0));
-        vec3 PosNext = mix(StartPos, EndPos, clamp(NextTarget / max(1e-9, TotalDist), 0.0, 1.0));
-
-        bool crossed = (PosPrev.y * PosNext.y < 0.0); bool shouldSample = false; vec3 SamplePos = PosNext; crossed = false;
-
-        if (crossed) {
-            float t_cross = abs(PosPrev.y) / max(1e-9, abs(PosPrev.y) + abs(PosNext.y));
-            vec3 CPoint = mix(PosPrev, PosNext, t_cross);
-            SamplePos = CPoint + min(Thin, length(CPoint - PosPrev)) * ChordDir * (-1.0 + 2.0 * RandomStep(10000.0 * (CPoint.zx / OuterRadius), fract(iTime * 1.0 + 0.5)));
-            shouldSample = true; RayMarchPhase = 1.0; TraveledDist = NextTarget; 
-        } else {
-            if (NextTarget < TotalDist) { shouldSample = true; RayMarchPhase = 1.0; TraveledDist = NextTarget; }
-            else { RayMarchPhase = max(0.0, RayMarchPhase - (TotalDist - TraveledDist) / StepSize); TraveledDist = TotalDist; }
-        }
-
-        if (shouldSample) {
-            float TimeInterpolant = min(1.0, TraveledDist / max(1e-9, TotalDist));
+    // Clip the entire geodesic chord to a conservative finite disk slab.
+    // Midpoint quadrature includes both partial end cells: no random crossing
+    // shortcut or carried phase can skip a disk thinner than the ray step.
+    float slabHeight = 1.5 * (Thin + max(0.0,
+        (min(OuterRadius, max(length(StartPos.xz), length(EndPos.xz))) - 3.0) * Hopper));
+    float enter = 0.0; float leave = 1.0;
+    if (abs(ChordDelta.y) < 1e-8) {
+        if (abs(StartPos.y) >= slabHeight) return BaseColor;
+    } else {
+        float t0 = (-slabHeight - StartPos.y) / ChordDelta.y;
+        float t1 = ( slabHeight - StartPos.y) / ChordDelta.y;
+        enter = max(0.0, min(t0, t1));
+        leave = min(1.0, max(t0, t1));
+        if (leave <= enter) return BaseColor;
+    }
+    float segmentLength = proper_dist * (leave - enter);
+    int sampleLimit = int(clamp(12.0 * iQuality, 8.0, 24.0));
+    int sampleCount = int(clamp(ceil(segmentLength / max(0.015, Thin * 0.25)),
+        6.0, float(sampleLimit)));
+    float StepSize = segmentLength / float(sampleCount);
+    for (int sampleIndex = 0; sampleIndex < 24; sampleIndex++) {
+        if (sampleIndex >= sampleCount || CurrentResult.a > 0.99) break;
+        {
+            float TimeInterpolant = mix(enter, leave,
+                (float(sampleIndex) + 0.5) / float(sampleCount));
+            vec3 SamplePos = mix(StartPos, EndPos, TimeInterpolant);
             vec4 Sample_X = vec4(SamplePos, mix(LastRayPos.w, RayPos.w, TimeInterpolant));
             vec4 Sample_P_cov = mix(lastiP_cov, iP_cov, TimeInterpolant);
             
@@ -936,19 +938,18 @@ vec4 DiskColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 l
                      float P_phi = - SamplePos.x * Sample_P_cov.z + SamplePos.z * Sample_P_cov.x;
                      float E_emit = u_t * (iE_obs - AngularVelocity * P_phi);
                      float FreqRatio = 1.0 / max(1e-6, E_emit);
-                     float VisionTemperature = pow(DiskTemperatureArgument * pow(1.0 / max(1e-6, PosR), 3.0) * max(1.0 - sqrt(InterRadius / max(1e-6, PosR)), 0.000001), 0.25) * pow(FreqRatio, RedShiftColorExponent); 
                      float BrightWithoutRedshift = (0.05 * min(OuterRadius / 1000.0, 1000.0 / OuterRadius) + 0.55 / exp(5.0 * EffectiveRadius) * mix(0.2 + 0.8 * abs(local_Dir.y), 1.0, clamp(GeometricThin - 0.8, 0.2, 1.0))) * pow(pow(DiskTemperatureArgument * pow(1.0 / max(1e-6, PosR), 3.0) * max(1.0 - sqrt(InterRadius / max(1e-6, PosR)), 0.000001), 0.25) / PeakTemperature, BlackbodyIntensityExponent); 
                      
                      float Density = DenAndThiFactor; vec4 SampleColor = vec4(0.0);
 
                      if (abs(PosY) < PerturbedThickness) {
                          float Levelmut = 0.91 * log(1.0 + (0.06 / 0.91 * max(0.0, min(1000.0, PosR) - 10.0))); float Conmut = 80.0 * log(1.0 + (0.1 * 0.06 * max(0.0, min(1000000.0, PosR) - 10.0)));
-                         SampleColor = vec4(GenerateAccretionDiskNoise(vec3(0.1 * (PosR + 0.25 / 3.0 * EmissionTime), 0.1 * PosY, 0.02 * pow(OuterRadius, 0.7) * PosTheta), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 4.0 - Levelmut, 80.0 - Conmut)); 
-                         if(PosTheta + kPi < 0.1 * kPi) { SampleColor *= (PosTheta + kPi) / (0.1 * kPi); SampleColor += (1.0 - ((PosTheta + kPi) / (0.1 * kPi))) * vec4(GenerateAccretionDiskNoise(vec3(0.1 * (PosR + 0.25 / 3.0 * EmissionTime), 0.1 * PosY, 0.02 * pow(OuterRadius, 0.7) * (PosTheta + 2.0 * kPi)), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 4.0 - Levelmut, 80.0 - Conmut)); }
+                         SampleColor = vec4(GenerateAccretionDiskNoise(vec3(0.1 * (PosR + 0.25 / 3.0 * EmissionTime), 0.1 * PosY / max(GeometricThin, 0.01), 0.007 * pow(OuterRadius, 0.7) * PosTheta), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 4.0 - Levelmut, 80.0 - Conmut));
+                         if(PosTheta + kPi < 0.1 * kPi) { SampleColor *= (PosTheta + kPi) / (0.1 * kPi); SampleColor += (1.0 - ((PosTheta + kPi) / (0.1 * kPi))) * vec4(GenerateAccretionDiskNoise(vec3(0.1 * (PosR + 0.25 / 3.0 * EmissionTime), 0.1 * PosY / max(GeometricThin, 0.01), 0.007 * pow(OuterRadius, 0.7) * (PosTheta + 2.0 * kPi)), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 4.0 - Levelmut, 80.0 - Conmut)); }
                          if(PosR > max(0.15379 * OuterRadius, 0.15379 * 64.0)) {
                              float TimeShiftedRadiusTerm = PosR * (4.65114e-6) - 0.1 / 3.0 * EmissionTime;
-                             float Spir = (GenerateAccretionDiskNoise(vec3(0.1 * (TimeShiftedRadiusTerm - 0.08 * OuterRadius * PosLogarithmicTheta), 0.1 * PosY, 0.02 * pow(OuterRadius, 0.7) * PosLogarithmicTheta), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 3.0 - Levelmut, 80.0 - Conmut)); 
-                             if(PosLogarithmicTheta + kPi < 0.1 * kPi) { Spir *= (PosLogarithmicTheta + kPi) / (0.1 * kPi); Spir += (1.0 - ((PosLogarithmicTheta + kPi) / (0.1 * kPi))) * (GenerateAccretionDiskNoise(vec3(0.1 * (TimeShiftedRadiusTerm - 0.08 * OuterRadius * (PosLogarithmicTheta + 2.0 * kPi)), 0.1 * PosY, 0.02 * pow(OuterRadius, 0.7) * (PosLogarithmicTheta + 2.0 * kPi)), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 3.0 - Levelmut, 80.0 - Conmut)); }
+                             float Spir = (GenerateAccretionDiskNoise(vec3(0.1 * (TimeShiftedRadiusTerm - 0.08 * OuterRadius * PosLogarithmicTheta), 0.1 * PosY / max(GeometricThin, 0.01), 0.007 * pow(OuterRadius, 0.7) * PosLogarithmicTheta), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 3.0 - Levelmut, 80.0 - Conmut));
+                             if(PosLogarithmicTheta + kPi < 0.1 * kPi) { Spir *= (PosLogarithmicTheta + kPi) / (0.1 * kPi); Spir += (1.0 - ((PosLogarithmicTheta + kPi) / (0.1 * kPi))) * (GenerateAccretionDiskNoise(vec3(0.1 * (TimeShiftedRadiusTerm - 0.08 * OuterRadius * (PosLogarithmicTheta + 2.0 * kPi)), 0.1 * PosY / max(GeometricThin, 0.01), 0.007 * pow(OuterRadius, 0.7) * (PosLogarithmicTheta + 2.0 * kPi)), NoiseLevel + 2.0 - Levelmut, NoiseLevel + 3.0 - Levelmut, 80.0 - Conmut)); }
                              SampleColor *= mix(1.0, clamp(0.7 * Spir * 1.5 - 0.5, 0.0, 3.0), 0.5 + 0.5 * max(-1.0, 1.0 - exp(-1.5 * 0.1 * (100.0 * PosR / max(OuterRadius, 64.0) - 20.0))));
                          }
                          Density *= 0.7 * max(0.0, 1.0 - abs(PosY) / PerturbedThickness);
@@ -956,8 +957,10 @@ vec4 DiskColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 l
                          SampleColor.a *= (Density * Density) / 0.3;
                      }
         
+                     float filamentHeat = SampleColor.r / (0.35 + max(SampleColor.r, 0.0));
+                     float emissionHeat = clamp(0.30 * (1.0 - EffectiveRadius) + 0.70 * filamentHeat, 0.0, 1.0);
+                     vec3 diskEmission = GargantuaEmission(emissionHeat);
                      SampleColor.xyz *= 1.0 + clamp(iPhotonRingBoost, 0.0, 10.0) * clamp(0.3 * ThetaInShell - 0.1, 0.0, 1.0);
-                     VisionTemperature *= 1.0 + clamp(iPhotonRingColorTempBoost, 0.0, 10.0) * clamp(0.3 * ThetaInShell - 0.1, 0.0, 1.0);
                      
                      float InnerCloudTimePhase = kPi / (kPi / max(1e-6, GetKeplerianAngularVelocity(max(3.0, InterRadius), 1.0, PhysicalSpinA, PhysicalQ))) * EmissionTime; 
                      if (abs(PosY) < InnerCloudBound) {
@@ -965,8 +968,10 @@ vec4 DiskColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 l
                          if (DustIntensity > 0.0) SampleColor += 0.02 * vec4(vec3(DustIntensity * GenerateAccretionDiskNoise(vec3(1.5 * fract((1.5 * Vec2ToTheta(SamplePos.zx, vec2(cos(0.666666 * InnerCloudTimePhase), sin(0.666666 * InnerCloudTimePhase))) + InnerCloudTimePhase) / 2.0 / kPi) * 2.0 * kPi, PosR, PosY), 0.0, 6.0, 80.0)), 0.2 * DustIntensity * GenerateAccretionDiskNoise(vec3(1.5 * fract((1.5 * Vec2ToTheta(SamplePos.zx, vec2(cos(0.666666 * InnerCloudTimePhase), sin(0.666666 * InnerCloudTimePhase))) + InnerCloudTimePhase) / 2.0 / kPi) * 2.0 * kPi, PosR, PosY), 0.0, 6.0, 80.0)) * sqrt(max(0.0, 1.0001 - local_Dir.y * local_Dir.y));
                      }
 
-                     SampleColor.xyz *= BrightWithoutRedshift * KelvinToRgb(VisionTemperature) * min(pow(FreqRatio, RedShiftIntensityExponent), ShiftMax) * min(1.0, 1.3 * (OuterRadius - PosR) / (OuterRadius - InterRadius)); SampleColor.a *= 0.125;
-                     SampleColor *= max(mix(vec4(5.0 / (max(Thin, 0.2) + (Hopper * 0.5) * OuterRadius)), vec4(vec3(0.3 + 0.7 * 5.0 / (Thin + (Hopper * 0.5) * OuterRadius)), 1.0), 0.0), mix(vec4(100.0 / OuterRadius), vec4(vec3(0.3 + 0.7 * 100.0 / OuterRadius), 1.0), exp(-pow(20.0 * PosR / OuterRadius, 2.0))));
+                     SampleColor.xyz *= BrightWithoutRedshift * diskEmission * min(pow(FreqRatio, RedShiftIntensityExponent), ShiftMax) * min(1.0, 1.3 * (OuterRadius - PosR) / (OuterRadius - InterRadius)); SampleColor.a *= 0.125;
+                     // Preserve the reference column emission as the disk thins.
+                     // Normalize once by local half-height, not by sample count.
+                     SampleColor *= 1.1 / max(GeometricThin, 0.01);
                      SampleColor.xyz *= mix(1.0, max(1.0, abs(local_Dir.y) / 0.2), clamp(0.3 - 0.6 * (PerturbedThickness / max(1e-6, Density) - 1.0), 0.0, 0.3)) * (1.0 + 1.2 * max(0.0, max(0.0, min(1.0, 3.0 - 2.0 * Thin)) * min(0.5, 1.0 - 5.0 * Hopper))) * Brightmut * clamp(4.0 - 18.0 * (PosR - InterRadius) / (OuterRadius - InterRadius), 1.0, 4.0);
                      SampleColor.a *= Darkmut * clamp(5.0 - 24.0 * (PosR - InterRadius) / (OuterRadius - InterRadius), 1.0, 5.0);
                      
@@ -975,7 +980,12 @@ vec4 DiskColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 l
                          if(iWhitehole == 0) SampleColor.rgba = vec4(0.0);
                      }
 
-                     vec4 StepColor = SampleColor * StepSize;
+                     // Integrate extinction analytically to keep opacity bounded and
+                     // brightness stable when the quadrature count changes.
+                     float opticalDepth = max(0.0, SampleColor.a * StepSize);
+                     float stepAlpha = 1.0 - exp(-opticalDepth);
+                     vec4 StepColor = vec4(SampleColor.rgb * StepSize *
+                         (opticalDepth > 1e-5 ? stepAlpha / opticalDepth : 1.0), stepAlpha);
 
                      if (iPolarization != 0) {
                          vec4 B_up = normalize(vec4(-SamplePos.z, 0.0, SamplePos.x, 0.0)) * cos(-0.7) + normalize(vec4(SamplePos.x, SamplePos.y, SamplePos.z, 0.0)) * sin(-0.7); B_up.w = 0.0;
@@ -1479,7 +1489,7 @@ TraceResult TraceRay(vec2 FragUv, vec2 Resolution, mat4 iInverseCamRot, vec4 iBl
         
         KerrGeometry geo; ComputeGeometryScalars(X.xyz, PhysicalSpinA, PhysicalQ, GravityFade, CurrentUniverseSign, isoutgoing, geo);
         if (CurrentUniverseSign > 0.0 && geo.r < TerminationR && !bIsNakedSingularity && TerminationR != -1.0 && iWhitehole==0) { bShouldContinueMarchRay = false; bWaitCalBack = false; break; }
-        if (Count > int(float(MaxStep)*iQuality*(1.0+0.3*iQuality))) { bShouldContinueMarchRay = false; bWaitCalBack = false; if(bIsNakedSingularity&&RadialTurningCounts <= 2) bWaitCalBack = true; break; }
+        if (Count > int(float(MaxStep)*iQuality*(1.0+0.3*iQuality)*1.35)) { bShouldContinueMarchRay = false; bWaitCalBack = false; if(bIsNakedSingularity&&RadialTurningCounts <= 2) bWaitCalBack = true; break; }
 
         State s0; s0.X = X; s0.P = P_cov; State k1 = GetDerivativesAnalytic(s0, PhysicalSpinA, PhysicalQ, GravityFade, isoutgoing, geo);
         float CurrentDr = dot(geo.grad_r, k1.X.xyz); shiftinout = false;
@@ -1515,6 +1525,14 @@ TraceResult TraceRay(vec2 FragUv, vec2 Resolution, mat4 iInverseCamRot, vec4 iBl
         
         float rho = length(X.xz); float DistRing = sqrt(X.y * X.y + pow(rho - abs(PhysicalSpinA), 2.0));
         float dLambda = max(0.5 * (bIsNakedSingularity ? 1.0 : mix(max(abs(iSpin),0.1), 1.0, clamp((geo.r - InnerHorizonR) / (0.5 - InnerHorizonR), 0.0, 1.0))) * (1.0 / (1.0 + 1.0 * ((PhysicalQ * PhysicalQ) / (geo.r2 + 0.01)))) * min(DistRing / (length(k1.X) + 1e-9), length(P_cov) / (length(k1.P) + 1e-15)), 1e-7); 
+        float diskHeight = iThinRs + max(0.0, (length(X.xz) - 3.0) * iHopper);
+        float predictedY = X.y - k1.X.y * dLambda / iQuality;
+        bool nearDisk = geo.r > iInterRadiusRs * 0.9 && geo.r < iOuterRadiusRs * 1.05 &&
+            (min(abs(X.y), abs(predictedY)) < 2.0 * diskHeight || X.y * predictedY < 0.0);
+        float radialMotion = abs(dot(normalize(X.xyz), normalize(k1.X.xyz)));
+        bool nearOrbit = geo.r < 4.0 && radialMotion < 0.55;
+        if (nearDisk || nearOrbit) dLambda *= 0.6;
+
 
         vec4 LastX = X; vec4 LastP_cov=P_cov; LastX_ingoing = X_ingoing; LastP_cov_ingoing = P_cov_ingoing; 
         GravityFade = CubicInterpolate(max(min(1.0 - ( DistanceToBlackHole - 100.0) / (RaymarchingBoundary - 100.0), 1.0), 0.0));
@@ -1533,7 +1551,7 @@ TraceResult TraceRay(vec2 FragUv, vec2 Resolution, mat4 iInverseCamRot, vec4 iBl
         if (LastX.y * X.y < 0.0) { if (length(mix(LastX.xz, X.xz, LastX.y / (LastX.y - X.y))) < abs(PhysicalSpinA)) CurrentUniverseSign *= -1.0; }
 
         if (CurrentUniverseSign > 0.0 && iBlackHoleMassSol > 0.0 && int(33+iInWhichUniverse-universeoffset)%3==0) {
-           if(IsAccretionDiskVisible(iInterRadiusRs, iOuterRadiusRs, iThinRs, iHopper, iBrightmut, iDarkmut)) Result = DiskColor(Result, X, LastX, P_cov, LastP_cov, E_conserved, iInterRadiusRs, iOuterRadiusRs, iThinRs, iHopper, iBrightmut, iDarkmut, iReddening, iSaturation, DiskArgument, iBlackbodyIntensityExponent, iRedShiftColorExponent, iRedShiftIntensityExponent, PeakTemperature, ShiftMax, PhysicalSpinA, PhysicalQ, isoutgoing, ThetaInShell, RayMarchPhase, WP_CamX, WP_CamY, StokesQU); 
+           if(IsAccretionDiskVisible(iInterRadiusRs, iOuterRadiusRs, iThinRs, iHopper, iBrightmut, iDarkmut)) Result = DiskColor(Result, X, LastX, P_cov, LastP_cov, E_conserved, iInterRadiusRs, iOuterRadiusRs, iThinRs, iHopper, iBrightmut, iDarkmut, iDiskReddening, iSaturation, DiskArgument, iBlackbodyIntensityExponent, iRedShiftColorExponent, iRedShiftIntensityExponent, PeakTemperature, ShiftMax, PhysicalSpinA, PhysicalQ, isoutgoing, ThetaInShell, RayMarchPhase, WP_CamX, WP_CamY, StokesQU);
            if(IsJetVisible(iAccretionRate, iJetBrightmut)) Result = JetColor(Result, X, LastX, P_cov, LastP_cov, E_conserved, iInterRadiusRs, iOuterRadiusRs, iJetRedShiftIntensityExponent, iJetBrightmut, iReddening, iJetSaturation, iAccretionRate, iJetShiftMax, clamp(PhysicalSpinA, -0.049, 0.049), PhysicalQ, isoutgoing, RayMarchPhase); 
         }
 

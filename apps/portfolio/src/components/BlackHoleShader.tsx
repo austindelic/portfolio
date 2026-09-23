@@ -18,7 +18,15 @@ import {
 	getBlackHoleRouteAnimation,
 	normalizeBlackHoleAnimationRoute,
 } from "../config/black-hole-animation";
+import {
+	asciiSampleSide,
+	asciiSourceDimension,
+	glyphDirection,
+	rankGlyphs,
+} from "../lib/ascii-analysis";
 import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
+import asciiAnalysisSource from "../shaders/black-hole/ascii-analysis.glsl?raw";
+import asciiAnalysisWgsl from "../shaders/black-hole/ascii-analysis.wgsl?raw";
 import bloomSource from "../shaders/black-hole/bloom.glsl?raw";
 import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
 import bufferBSource from "../shaders/black-hole/buffer-b.glsl?raw";
@@ -36,6 +44,7 @@ type AsciiCellSize = {
 type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
 type PaletteMode = "source" | "custom";
 type QualityPreset =
+	| "cinematic-ascii"
 	| "mobile-safe"
 	| "ascii-balanced"
 	| "ascii-sharp"
@@ -160,7 +169,16 @@ type TextureFormat = {
 	canFilterLinear: boolean;
 };
 
+type AsciiAnalysisTargets = {
+	pass: ProgramPass;
+	read: MultiRenderTarget;
+	write: MultiRenderTarget;
+	key: string;
+	atlas: WebGLTexture;
+	frame: number;
+};
 type ProgramPass = {
+	analysis?: AsciiAnalysisTargets;
 	name: string;
 	program: WebGLProgram;
 	locations: {
@@ -192,6 +210,8 @@ type ProgramPass = {
 		uHighlightColor: WebGLUniformLocation | null;
 		uExposure: WebGLUniformLocation | null;
 		uBloomStrength: WebGLUniformLocation | null;
+		uAsciiAnalysisColor: WebGLUniformLocation | null;
+		uAsciiAnalysisState: WebGLUniformLocation | null;
 	};
 };
 
@@ -230,6 +250,7 @@ type FallbackTargets = {
 };
 
 type CameraState = {
+	asciiHistoryVersion?: number;
 	position: Vec3;
 	right: Vec3;
 	up: Vec3;
@@ -434,6 +455,8 @@ uniform sampler2D iChannel0;
 uniform sampler2D iChannel1;
 uniform sampler2D iChannel2;
 uniform sampler2D iChannel3;
+uniform sampler2D uAsciiAnalysisColor;
+uniform sampler2D uAsciiAnalysisState;
 
 uniform vec3 uCameraPosition;
 uniform vec3 uCameraRight;
@@ -640,12 +663,7 @@ out vec4 shadertoyFragColor;
 void main()
 {
 	vec2 canvasResolution = max(uCanvasResolution, vec2(1.0));
-	vec2 cellSize = max(uAsciiCellSize, vec2(2.0));
-	vec2 fullFragCoord = min(
-		(gl_FragCoord.xy + vec2(0.5)) * cellSize,
-		canvasResolution - vec2(0.5)
-	);
-	vec2 uv = fullFragCoord / canvasResolution;
+	vec2 uv = gl_FragCoord.xy / iResolution.xy;
 	mat4 inverseCamRot;
 	vec3 mapCamDir;
 	TraceResult res = TraceFromCamera(uv, canvasResolution, 0.5, inverseCamRot, mapCamDir);
@@ -669,21 +687,11 @@ struct Params {
 	camera_forward: vec4<f32>,
 };
 
-@group(0) @binding(0) var cell_texture: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(0) var cell_texture: texture_storage_2d<rgba16float, write>;
 @group(0) @binding(1) var<uniform> params: Params;
 
 fn hash3(p: vec3<f32>) -> f32 {
 	return fract(sin(dot(p, vec3<f32>(127.1, 311.7, 74.7))) * 43758.5453123);
-}
-
-fn saturate_color(color: vec3<f32>) -> vec3<f32> {
-	return clamp(color, vec3<f32>(0.0), vec3<f32>(1.0));
-}
-
-fn tone_map(color: vec3<f32>) -> vec3<f32> {
-	var mapped = color / (vec3<f32>(1.0) + color);
-	mapped = pow(saturate_color(mapped), vec3<f32>(0.72));
-	return mapped;
 }
 
 fn star_field(dir: vec3<f32>) -> vec3<f32> {
@@ -693,6 +701,13 @@ fn star_field(dir: vec3<f32>) -> vec3<f32> {
 	let cold = vec3<f32>(0.45, 0.62, 1.0);
 	let warm = vec3<f32>(1.0, 0.86, 0.62);
 	return mix(cold, warm, hash3(cell + vec3<f32>(17.0, 3.0, 91.0))) * star * (0.25 + 1.6 * hash3(cell + vec3<f32>(9.0)));
+}
+
+// Match the per-sample GLSL emission ramp, not a post-process palette.
+fn gargantua_emission(heat: f32) -> vec3<f32> {
+	var color = mix(vec3<f32>(0.75, 0.12, 0.012), vec3<f32>(0.95, 0.32, 0.055), smoothstep(0.0, 0.45, heat));
+	color = mix(color, vec3<f32>(1.0, 0.65, 0.36), smoothstep(0.35, 0.80, heat));
+	return 0.72 * mix(color, vec3<f32>(1.0, 0.87, 0.60), smoothstep(0.86, 0.99, heat));
 }
 
 fn black_hole_color(uv: vec2<f32>) -> vec3<f32> {
@@ -729,20 +744,21 @@ fn black_hole_color(uv: vec2<f32>) -> vec3<f32> {
 	let disk_radial = smoothstep(2.0, 3.0, disk_radius) * (1.0 - smoothstep(14.0, 19.0, disk_radius));
 	let disk_visible = select(0.0, 1.0, disk_t > 0.0);
 	let disk_grazing = clamp(0.15 / max(abs(denom), 0.04), 0.0, 1.0);
-	let orbital = 0.62 + 0.38 * sin(disk_angle * 18.0 - time * 5.0 + disk_radius * 0.9);
-	let tangent = normalize(vec3<f32>(-disk_pos.z, 0.0, disk_pos.x));
-	let doppler = clamp(0.72 + 0.52 * dot(tangent, -ray_dir), 0.25, 1.75);
-	let disk = disk_visible * disk_radial * disk_grazing * orbital;
-	let lensed_disk = center_facing * exp(-abs(impact - 2.35) * 1.35) * (0.25 + 0.75 * smoothstep(-0.2, 0.8, closest.y)) * (0.5 + 0.5 * sin(atan2(closest.z, closest.x) * 14.0 - time * 4.0));
+	// Sheared, nested phases break up regular bands into flowing filaments.
+	let flow = disk_angle * 5.0 - time * 2.0;
+	let filament = 0.5 + 0.5 * sin(disk_radius * 9.0 + flow + 2.0 * sin(disk_radius * 2.3 + disk_angle * 3.0 - time));
+	let orbital = (0.22 + 0.78 * pow(filament, 3.0)) * (0.65 + 0.35 * sin(disk_radius * 4.7 - flow));
+	let disk = disk_visible * disk_radial * disk_grazing * orbital * exp(-0.18 * max(disk_radius - 3.0, 0.0));
+	let lensed_disk = center_facing * exp(-abs(impact - 2.35) * 3.8) * (0.25 + 0.75 * smoothstep(-0.2, 0.8, closest.y)) * (0.5 + 0.5 * sin(atan2(closest.z, closest.x) * 5.0 - time * 2.0 + impact * 18.0));
 
-	let heat = clamp(disk * doppler + lensed_disk * 0.45, 0.0, 2.5);
-	let disk_color = mix(vec3<f32>(0.95, 0.24, 0.05), vec3<f32>(1.0, 0.92, 0.72), clamp(heat * 0.85 + photon_ring * 0.35, 0.0, 1.0));
+	let heat = clamp(disk + lensed_disk * 0.30, 0.0, 2.5);
+	let disk_color = gargantua_emission(clamp(0.30 * (1.0 - smoothstep(2.0, 19.0, disk_radius)) + 0.70 * heat, 0.0, 1.0));
 	color += disk_color * heat * 1.75;
-	color += vec3<f32>(0.6, 0.82, 1.0) * photon_ring * 1.4;
-	color += vec3<f32>(0.95, 0.62, 0.32) * inner_ring * 0.35;
+	color += gargantua_emission(0.94) * photon_ring * 0.65;
+	color += gargantua_emission(0.65) * inner_ring * 0.15;
 	color *= 1.0 - horizon * 0.98;
 
-	return tone_map(color * exposure);
+	return max(color * exposure, vec3<f32>(0.0));
 }
 
 @compute @workgroup_size(8, 8, 1)
@@ -754,12 +770,43 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
 	let canvas_resolution = max(params.canvas_dims.xy, vec2<f32>(1.0));
 	let source_coord = vec2<f32>(f32(id.x), f32(id.y)) + vec2<f32>(0.5);
-	let full_coord = select(source_coord, source_coord * max(params.cell_size.xy, vec2<f32>(1.0)), params.source_dims.w > 0.5);
-	let uv = min(full_coord / canvas_resolution, vec2<f32>(0.99999));
+	let uv = source_coord / params.source_dims.xy;
 	let color = black_hole_color(uv);
 
-	textureStore(cell_texture, vec2<i32>(i32(id.x), i32(id.y)), vec4<f32>(saturate_color(color), 1.0));
+	textureStore(cell_texture, vec2<i32>(i32(id.x), i32(id.y)), vec4<f32>(color, 1.0));
 }
+`;
+
+// Two reduced-resolution passes; separate source/destination textures avoid read/write hazards.
+const WEBGPU_BLOOM_SOURCE = `
+@group(0) @binding(0) var source: texture_2d<f32>;
+@group(0) @binding(1) var output: texture_storage_2d<rgba16float, write>;
+
+fn blur(id: vec2<u32>, horizontal: bool) {
+	let size = textureDimensions(output);
+	if (any(id >= size)) { return; }
+	let source_size = vec2<i32>(textureDimensions(source));
+	let uv = (vec2<f32>(id) + 0.5) / vec2<f32>(size);
+	var color = vec3<f32>(0.0);
+	var weight_sum = 0.0;
+	for (var i = -4; i <= 4; i += 1) {
+		let weight = exp(-0.5 * f32(i * i) / 4.0);
+		let offset = select(vec2<f32>(0.0, f32(i)), vec2<f32>(f32(i), 0.0), horizontal) / vec2<f32>(size);
+		let coord = clamp(vec2<i32>((uv + offset) * vec2<f32>(source_size)), vec2<i32>(0), source_size - 1);
+		var sample_color = textureLoad(source, coord, 0).rgb;
+		if (horizontal) {
+			let peak = max(max(sample_color.r, sample_color.g), sample_color.b);
+			sample_color *= smoothstep(0.6, 1.4, peak);
+		}
+		color += sample_color * weight;
+		weight_sum += weight;
+	}
+	textureStore(output, vec2<i32>(id), vec4<f32>(color / weight_sum, 1.0));
+}
+@compute @workgroup_size(8, 8)
+fn horizontal(@builtin(global_invocation_id) id: vec3<u32>) { blur(id.xy, true); }
+@compute @workgroup_size(8, 8)
+fn vertical(@builtin(global_invocation_id) id: vec3<u32>) { blur(id.xy, false); }
 `;
 
 const WEBGPU_RENDER_SOURCE = `
@@ -787,6 +834,18 @@ struct VertexOut {
 @group(0) @binding(2) var glyph_metrics: texture_2d<f32>;
 @group(0) @binding(3) var glyph_sampler: sampler;
 @group(0) @binding(4) var<uniform> params: Params;
+@group(0) @binding(5) var bloom_texture: texture_2d<f32>;
+@group(0) @binding(6) var bloom_sampler: sampler;
+@group(0) @binding(7) var analysis_color: texture_2d<f32>;
+@group(0) @binding(8) var analysis_state: texture_2d<f32>;
+
+fn tone_map(color: vec3<f32>) -> vec3<f32> {
+	return pow(color / (vec3<f32>(1.0) + color), vec3<f32>(0.72));
+}
+fn composite_glow(base: vec3<f32>, uv: vec2<f32>) -> vec3<f32> {
+	let glow = tone_map(textureSampleLevel(bloom_texture, bloom_sampler, uv, 0.0).rgb * params.cell_size.w * 0.16);
+	return base + (vec3<f32>(1.0) - base) * glow;
+}
 
 @vertex
 fn vertex_main(@builtin(vertex_index) vertex_index: u32) -> VertexOut {
@@ -816,26 +875,30 @@ fn fragment_main(input: VertexOut) -> @location(0) vec4<f32> {
 	let cell_origin = floor(frag_coord / cell_size) * cell_size;
 	let cell_uv = (frag_coord - cell_origin) / cell_size;
 	let sample_uv = (cell_origin + cell_size * 0.5) / max(params.canvas_dims.xy, vec2<f32>(1.0));
-	let cell_color = textureSample(cell_texture, glyph_sampler, sample_uv).rgb;
-	let original_color = textureSample(cell_texture, glyph_sampler, input.uv).rgb;
+	let cell_color = tone_map(textureSample(cell_texture, glyph_sampler, sample_uv).rgb);
+	let original_color = tone_map(textureSample(cell_texture, glyph_sampler, input.uv).rgb);
 	let ascii_mix = clamp(params.source_dims.z, 0.0, 1.0);
 
 	if (ascii_mix <= 0.001) {
-		return vec4<f32>(original_color, 1.0);
+		return vec4<f32>(composite_glow(original_color, input.uv), 1.0);
 	}
 
-	var brightness = clamp(dot(cell_color, vec3<f32>(0.3, 0.59, 0.11)), 0.0, 1.0);
-	brightness = clamp((brightness - 0.5) * max(params.canvas_dims.w, 0.01) + 0.5 + params.canvas_dims.z, 0.0, 1.0);
+	let cell = vec2<i32>(floor(frag_coord / cell_size));
+	let analysis = textureLoad(analysis_color, cell, 0);
+	let state = textureLoad(analysis_state, cell, 0);
+	let glyph_index = round(state.r * 255.0);
 	let glyph_count = max(params.time_exposure_quality_glyph.w, 1.0);
-	let glyph_index = clamp(floor(brightness * (glyph_count - 1.0) + 0.5), 0.0, glyph_count - 1.0);
-	let atlas_uv = vec2<f32>((glyph_index + cell_uv.x) / glyph_count, cell_uv.y);
+	let atlas_uv = vec2<f32>((glyph_index + cell_uv.x) / glyph_count, 1.0 - cell_uv.y);
 	let glyph = textureSample(glyph_texture, glyph_sampler, atlas_uv).a;
-	let glyph_coverage = max(textureLoad(glyph_metrics, vec2<i32>(i32(glyph_index), 0), 0).r, 0.035);
-	let normalized_glyph = clamp(glyph / glyph_coverage, 0.0, 2.5);
-	let bright_cell_glow = (1.0 - glyph) * smoothstep(0.45, 0.95, brightness) * brightness * 0.32;
-	let base_color = select(cell_color, palette_color(brightness), params.cell_size.z > 0.5);
-	let ascii_color = clamp(base_color * (0.035 + normalized_glyph * 0.82 + bright_cell_glow), vec3<f32>(0.0), vec3<f32>(1.0));
-	return vec4<f32>(mix(original_color, ascii_color, ascii_mix), 1.0);
+	let coverage = max(textureLoad(glyph_metrics, vec2<i32>(i32(glyph_index), 0), 0).r, 0.035);
+	let ink = min(glyph / coverage, 2.0);
+	let mean = dot(analysis.rgb, vec3<f32>(0.3, 0.59, 0.11));
+	let local = dot(original_color, vec3<f32>(0.3, 0.59, 0.11));
+	let occupied = smoothstep(mean * 0.15, max(0.015, mean * 0.65), local);
+	let boundary = mix(1.0, occupied, state.g * smoothstep(0.0, 0.25, 1.0 - state.b));
+	let base_color = select(analysis.rgb, palette_color(analysis.a), params.cell_size.z > 0.5);
+	let ascii_color = clamp(base_color * ink * boundary * state.a, vec3<f32>(0.0), vec3<f32>(1.0));
+	return vec4<f32>(composite_glow(mix(original_color, ascii_color, ascii_mix), input.uv), 1.0);
 }
 `;
 
@@ -863,7 +926,7 @@ const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 6, y: 9 };
 const DEFAULT_ASCII_CELL_FRAME_INTERVAL_MS = 33;
 const MAX_GLYPHS = 96;
 const GLYPH_PRESETS: Record<Exclude<GlyphPreset, "custom">, string> = {
-	gargantua: " CGO08@",
+	gargantua: " .voidCG08A/\\-|",
 	classic: " .:-=+*#%@",
 	dense:
 		" .'`,^\":;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
@@ -878,14 +941,14 @@ const FONT_OPTIONS: FontFamily[] = [
 const DEFAULT_SHADER_CONTROLS: ShaderControls = {
 	timeScale: 2,
 	exposure: 2,
-	bloomStrength: 0,
+	bloomStrength: 0.65,
 	temporalJitter: 0,
 	invertControls: false,
 	paletteMode: "source",
 	shadowColor: "#08162d",
 	midColor: "#35c7ff",
 	highlightColor: "#fffaf2",
-	glyphPreset: "custom",
+	glyphPreset: "gargantua",
 	customGlyphs: "voidCG08AA",
 	fontFamily: "Departure Mono",
 	textSize: 9,
@@ -898,7 +961,7 @@ const DEFAULT_RENDER_UNIFORMS: RenderUniforms = {
 	glyphCount: 10,
 	temporalJitter: 0,
 	exposure: 2,
-	bloomStrength: 0,
+	bloomStrength: 0.65,
 	asciiBrightness: 0,
 	asciiContrast: 1,
 	paletteMode: 0,
@@ -1621,14 +1684,14 @@ function floorNumber(
 	return nextValue < floor ? floor : nextValue;
 }
 
-function sanitizeGlyphs(value: string): string {
+function sanitizeGlyphs(value: string, addBlank = true): string {
 	const glyphs = Array.from(
 		value.trim().length > 0 ? value : GLYPH_PRESETS.gargantua,
 	);
 	const unique: string[] = [];
 	const seen = new Set<string>();
 
-	if (!seen.has(" ")) {
+	if (addBlank && !seen.has(" ")) {
 		seen.add(" ");
 		unique.push(" ");
 	}
@@ -1645,7 +1708,7 @@ function sanitizeGlyphs(value: string): string {
 
 function glyphsForControls(controls: ShaderControls): string {
 	if (controls.glyphPreset === "custom") {
-		return sanitizeGlyphs(controls.customGlyphs);
+		return sanitizeGlyphs(controls.customGlyphs, false);
 	}
 
 	return sanitizeGlyphs(GLYPH_PRESETS[controls.glyphPreset]);
@@ -1731,24 +1794,36 @@ function createGlyphAtlasRaster(config: GlyphAtlasConfig): GlyphAtlasRaster {
 	const metricsData = metricsContext.createImageData(glyphCount, 1);
 	const cellArea = Math.max(1, config.cellSize.x * config.cellSize.y);
 
-	for (let glyphIndex = 0; glyphIndex < glyphCount; glyphIndex++) {
-		let alphaSum = 0;
-		const minX = glyphIndex * config.cellSize.x;
-		const maxX = Math.min(width, minX + config.cellSize.x);
-
-		for (let y = 0; y < height; y++) {
-			for (let x = minX; x < maxX; x++) {
-				alphaSum += imageData.data[(y * width + x) * 4 + 3] ?? 0;
+	const coverages = glyphs.map((_, glyphIndex) => {
+		let alpha = 0;
+		for (let y = 0; y < height; y++)
+			for (let x = 0; x < config.cellSize.x; x++) {
+				alpha +=
+					imageData.data[
+						(y * width + glyphIndex * config.cellSize.x + x) * 4 + 3
+					];
 			}
-		}
-
-		const coverage = clamp(alphaSum / (255 * cellArea), 0, 1);
-		const offset = glyphIndex * 4;
-		metricsData.data[offset] = Math.round(coverage * 255);
-		metricsData.data[offset + 1] = 255;
-		metricsData.data[offset + 2] = 255;
-		metricsData.data[offset + 3] = 255;
+		return alpha / (255 * cellArea);
+	});
+	const sorted = context.createImageData(width, height);
+	for (const [rank, entry] of rankGlyphs(coverages).entries()) {
+		for (let y = 0; y < height; y++)
+			for (let x = 0; x < config.cellSize.x; x++) {
+				const from = (y * width + entry.index * config.cellSize.x + x) * 4;
+				const to = (y * width + rank * config.cellSize.x + x) * 4;
+				sorted.data.set(imageData.data.subarray(from, from + 4), to);
+			}
+		metricsData.data.set(
+			[
+				Math.round(entry.coverage * 255),
+				Math.round(entry.density * 255),
+				glyphDirection(glyphs[entry.index]),
+				255,
+			],
+			rank * 4,
+		);
 	}
+	context.putImageData(sorted, 0, 0);
 
 	metricsContext.putImageData(metricsData, 0, 0);
 
@@ -1997,7 +2072,7 @@ function resolveQualitySettings({
 
 	if (quality === "mobile-safe") {
 		return {
-			qualityValue: 0.48,
+			qualityValue: 0.72,
 			initialPrepassScale: floorNumber(prepassScale ?? 0.18, MIN_PREPASS_SCALE),
 			bloomScale: floorNumber(bloomScale ?? 0.12, MIN_RENDER_SCALE),
 			sceneScale: floorNumber(sceneScale ?? 0.22, MIN_RENDER_SCALE),
@@ -2007,15 +2082,19 @@ function resolveQualitySettings({
 			cellWidth: floorNumber(cellWidth ?? 7, 2),
 			cellHeight: floorNumber(cellHeight ?? 11, 2),
 			frameIntervalMs: floorNumber(frameIntervalMs ?? 50, 0),
-			enableBloomPass: enableBloomPass ?? false,
+			enableBloomPass: enableBloomPass ?? true,
 		};
 	}
 
-	if (quality === "ascii-balanced") {
+	if (quality === "ascii-balanced" || quality === "cinematic-ascii") {
+		const cinematic = quality === "cinematic-ascii";
 		return {
-			qualityValue: 0.58,
+			qualityValue: cinematic ? 0.72 : 0.58,
 			initialPrepassScale: floorNumber(prepassScale ?? 0.22, MIN_PREPASS_SCALE),
-			bloomScale: floorNumber(bloomScale ?? 0.18, MIN_RENDER_SCALE),
+			bloomScale: floorNumber(
+				bloomScale ?? (cinematic ? 0.3 : 0.18),
+				MIN_RENDER_SCALE,
+			),
 			sceneScale: floorNumber(sceneScale ?? 0.28, MIN_RENDER_SCALE),
 			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 0.85, MIN_DPR),
 			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
@@ -2023,7 +2102,7 @@ function resolveQualitySettings({
 			cellWidth: floorNumber(cellWidth ?? 6, 2),
 			cellHeight: floorNumber(cellHeight ?? 9, 2),
 			frameIntervalMs: floorNumber(frameIntervalMs ?? 33, 0),
-			enableBloomPass: enableBloomPass ?? false,
+			enableBloomPass: enableBloomPass ?? cinematic,
 		};
 	}
 
@@ -2139,10 +2218,10 @@ function qualityPresetFromProp(
 }
 
 function defaultQualityPresetForRuntime(): Exclude<QualityPreset, "custom"> {
-	if (typeof window === "undefined") return "ascii-balanced";
+	if (typeof window === "undefined") return "cinematic-ascii";
 	const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
 	const narrowViewport = Math.min(window.innerWidth, window.innerHeight) <= 768;
-	return coarsePointer || narrowViewport ? "mobile-safe" : "ascii-balanced";
+	return coarsePointer || narrowViewport ? "mobile-safe" : "cinematic-ascii";
 }
 
 function createRenderSettingsFromQuality({
@@ -2259,7 +2338,7 @@ function detectRuntimeProfile(): RuntimeProfile {
 }
 
 function resolveRendererMode(mode: RendererMode): ResolvedRendererMode {
-	if (mode === "full" || mode === "fallback-full") return "full";
+	if (mode === "ascii-cell") return "ascii-cell";
 	return "full";
 }
 
@@ -2442,6 +2521,14 @@ function createPass(
 			uHighlightColor: gl.getUniformLocation(program, "uHighlightColor"),
 			uExposure: gl.getUniformLocation(program, "uExposure"),
 			uBloomStrength: gl.getUniformLocation(program, "uBloomStrength"),
+			uAsciiAnalysisColor: gl.getUniformLocation(
+				program,
+				"uAsciiAnalysisColor",
+			),
+			uAsciiAnalysisState: gl.getUniformLocation(
+				program,
+				"uAsciiAnalysisState",
+			),
 		},
 	};
 }
@@ -2472,6 +2559,17 @@ function chooseByteTextureFormat(gl: WebGL2RenderingContext): TextureFormat {
 function chooseFallbackTextureFormat(
 	gl: WebGL2RenderingContext,
 ): TextureFormat {
+	const floatFormat = chooseFloatTextureFormat(gl);
+	if (floatFormat) {
+		try {
+			const probe = createRenderTarget(gl, 1, 1, floatFormat, "linear");
+			gl.deleteTexture(probe.texture);
+			gl.deleteFramebuffer(probe.framebuffer);
+			return floatFormat;
+		} catch {
+			// Devices without a complete float framebuffer retain the byte fallback.
+		}
+	}
 	return chooseByteTextureFormat(gl);
 }
 
@@ -2876,6 +2974,15 @@ function fillChannelResolution(channels: TextureLike[], output: Float32Array) {
 	}
 }
 
+function disposeProgramPass(gl: WebGL2RenderingContext, pass: ProgramPass) {
+	if (pass.analysis) {
+		pass.analysis.read.dispose();
+		pass.analysis.write.dispose();
+		gl.deleteProgram(pass.analysis.pass.program);
+	}
+	gl.deleteProgram(pass.program);
+}
+
 function renderPass(
 	gl: WebGL2RenderingContext,
 	pass: ProgramPass,
@@ -2896,6 +3003,78 @@ function renderPass(
 	renderUniforms: RenderUniforms = DEFAULT_RENDER_UNIFORMS,
 	canvasResolution: AsciiCellSize | null = null,
 ) {
+	if (pass.locations.uAsciiAnalysisColor) {
+		const cellsX = Math.ceil(
+			width / Math.max(2, renderUniforms.asciiCellSize.x),
+		);
+		const cellsY = Math.ceil(
+			height / Math.max(2, renderUniforms.asciiCellSize.y),
+		);
+		const key = `${width}/${height}/${renderUniforms.asciiCellSize.x}/${renderUniforms.asciiCellSize.y}/${camera.asciiHistoryVersion ?? 0}`;
+		if (!pass.analysis || pass.analysis.key !== key) {
+			if (pass.analysis) {
+				pass.analysis.read.dispose();
+				pass.analysis.write.dispose();
+				gl.deleteProgram(pass.analysis.pass.program);
+			}
+			pass.analysis = {
+				pass: createPass(
+					gl,
+					"ASCII Analysis",
+					FRAGMENT_HEADER + asciiAnalysisSource,
+				),
+				read: createMultiRenderTarget(
+					gl,
+					cellsX,
+					cellsY,
+					chooseByteTextureFormat(gl),
+					2,
+				),
+				write: createMultiRenderTarget(
+					gl,
+					cellsX,
+					cellsY,
+					chooseByteTextureFormat(gl),
+					2,
+				),
+				key,
+				atlas: channels[1].texture,
+				frame: -2,
+			};
+		}
+		const analysis = pass.analysis;
+		const valid =
+			analysis.frame === frame - 1 && analysis.atlas === channels[1].texture;
+		renderPass(
+			gl,
+			analysis.pass,
+			vertexBuffer,
+			analysis.write,
+			cellsX,
+			cellsY,
+			time,
+			delta,
+			valid ? 1 : 0,
+			mouse,
+			[
+				channels[0],
+				analysis.read.textures[1],
+				channels[2],
+				analysis.read.textures[0],
+			],
+			camera,
+			qualityValue,
+			blendWeight,
+			0,
+			channelResolutionScratch,
+			renderUniforms,
+			{ x: width, y: height },
+		);
+		[analysis.read, analysis.write] = [analysis.write, analysis.read];
+		analysis.frame = frame;
+		analysis.atlas = channels[1].texture;
+	}
+
 	gl.bindFramebuffer(gl.FRAMEBUFFER, target?.framebuffer ?? null);
 
 	if (target && "textures" in target) {
@@ -2987,6 +3166,17 @@ function renderPass(
 		gl.bindTexture(gl.TEXTURE_2D, channels[i].texture);
 		if (pass.locations.iChannels[i])
 			gl.uniform1i(pass.locations.iChannels[i], i);
+	}
+
+	if (pass.analysis) {
+		for (const [index, location] of [
+			pass.locations.uAsciiAnalysisColor,
+			pass.locations.uAsciiAnalysisState,
+		].entries()) {
+			gl.activeTexture(gl.TEXTURE4 + index);
+			gl.bindTexture(gl.TEXTURE_2D, pass.analysis.read.textures[index].texture);
+			gl.uniform1i(location, 4 + index);
+		}
 	}
 
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -3214,6 +3404,11 @@ function SelectControl<Value extends string>({
 				onChange={(event) => onChange(event.currentTarget.value as Value)}
 				className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
 			>
+				{!options.some((option) => option.value === value) && (
+					<option value={value} disabled hidden>
+						Custom
+					</option>
+				)}
 				{options.map((option) => (
 					<option key={option.value} value={option.value}>
 						{option.label}
@@ -3258,7 +3453,7 @@ export default function BlackHoleShader({
 	forceActiveRender = false,
 	rendererMode = "auto",
 	backend = "auto",
-	quality = "balanced",
+	quality = "cinematic-ascii",
 	resolutionScale = 1,
 	prepassScale,
 	bloomScale,
@@ -3706,6 +3901,8 @@ export default function BlackHoleShader({
 			let renderHeight = 1;
 			let cellTextureWidth = 1;
 			let cellTextureHeight = 1;
+			let gpuBloomWidth = 0;
+			let gpuBloomHeight = 0;
 			let lastTime = performance.now();
 			let lastRenderNow = 0;
 			let shaderTime = runtimeSnapshotRef.current.shaderTime ?? 0;
@@ -3801,8 +3998,8 @@ export default function BlackHoleShader({
 					sceneHeight: cellTextureHeight,
 					prepassWidth: cellTextureWidth,
 					prepassHeight: cellTextureHeight,
-					bloomWidth: 0,
-					bloomHeight: 0,
+					bloomWidth: gpuBloomWidth,
+					bloomHeight: gpuBloomHeight,
 					cameraPosition: [...camera.position],
 					cameraForward: [...camera.forward],
 					universeSign: camera.universeSign,
@@ -3829,7 +4026,8 @@ export default function BlackHoleShader({
 					computeWorkgroups,
 					computeInvocations: computeWorkgroups * 64,
 					frameIntervalMs: settings.frameIntervalMs,
-					enableBloomPass: false,
+					enableBloomPass:
+						activeAsciiBackend === "webgpu" && settings.enableBloomPass,
 					passCount,
 					estimatedTextureMemoryBytes,
 					initTimeMs,
@@ -3890,6 +4088,7 @@ export default function BlackHoleShader({
 						return false;
 					}
 					camera.position = nextPosition;
+					camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 					snapshotRuntime();
 					writeCameraReadout(true);
 					requestRenderRef.current();
@@ -3902,6 +4101,7 @@ export default function BlackHoleShader({
 						return false;
 					}
 					setCameraForward(camera, nextForward);
+					camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 					snapshotRuntime();
 					writeCameraReadout(true);
 					requestRenderRef.current();
@@ -3914,6 +4114,7 @@ export default function BlackHoleShader({
 						return false;
 					}
 					camera.universeSign = nextUniverseSign;
+					camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 					snapshotRuntime();
 					writeCameraReadout(true);
 					requestRenderRef.current();
@@ -3981,7 +4182,7 @@ export default function BlackHoleShader({
 					return;
 				}
 
-				const byteFormat = chooseByteTextureFormat(gl);
+				const byteFormat = chooseFallbackTextureFormat(gl);
 				const maxTextureSize = Math.max(
 					2,
 					Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) ||
@@ -4011,9 +4212,25 @@ export default function BlackHoleShader({
 				const asciiPass = createPass(
 					gl,
 					"ASCII Cell Composite",
-					createStandardFragmentSource("ASCII", asciiSource),
+					createStandardFragmentSource(
+						"ASCII",
+						imageSource.slice(0, imageSource.indexOf("void mainImage")) +
+							asciiSource,
+					),
+				);
+				const displayPass = createPass(
+					gl,
+					"Cell Display",
+					createStandardFragmentSource("Image", imageSource),
+				);
+				const cellBloomPass = createPass(
+					gl,
+					"Cell Bloom",
+					createStandardFragmentSource("Bloom", bloomSource),
 				);
 				let cellTarget: RenderTarget | null = null;
+				let displayTarget: RenderTarget | null = null;
+				let cellBloomTargets: RenderTarget[] = [];
 				const channelResolutionScratch = new Float32Array(12);
 				const activeRenderUniforms = createRenderUniforms(
 					controlsRef.current,
@@ -4024,6 +4241,10 @@ export default function BlackHoleShader({
 
 				const disposeCellTarget = () => {
 					disposeRenderTarget(gl, cellTarget);
+					disposeRenderTarget(gl, displayTarget);
+					for (const target of cellBloomTargets)
+						disposeRenderTarget(gl, target);
+					cellBloomTargets = [];
 					cellTarget = null;
 				};
 
@@ -4049,13 +4270,24 @@ export default function BlackHoleShader({
 					);
 					const nextCellWidth = Math.min(
 						maxTextureSize,
-						Math.max(1, Math.ceil(nextWidth / Math.max(2, settings.cellWidth))),
+						Math.max(
+							1,
+							Math.min(
+								nextWidth,
+								Math.ceil(nextWidth / Math.max(2, settings.cellWidth)) *
+									asciiSampleSide(settings.qualityValue),
+							),
+						),
 					);
 					const nextCellHeight = Math.min(
 						maxTextureSize,
 						Math.max(
 							1,
-							Math.ceil(nextHeight / Math.max(2, settings.cellHeight)),
+							Math.min(
+								nextHeight,
+								Math.ceil(nextHeight / Math.max(2, settings.cellHeight)) *
+									asciiSampleSide(settings.qualityValue),
+							),
 						),
 					);
 					if (
@@ -4078,6 +4310,29 @@ export default function BlackHoleShader({
 						cellTextureHeight,
 						byteFormat,
 						"nearest",
+					);
+					displayTarget = createRenderTarget(
+						gl,
+						cellTextureWidth,
+						cellTextureHeight,
+						chooseByteTextureFormat(gl),
+						"linear",
+					);
+					cellBloomTargets = [0, 1, 2].map(() =>
+						createRenderTarget(
+							gl,
+							settings.enableBloomPass
+								? Math.max(2, Math.ceil(cellTextureWidth * settings.bloomScale))
+								: 2,
+							settings.enableBloomPass
+								? Math.max(
+										2,
+										Math.ceil(cellTextureHeight * settings.bloomScale),
+									)
+								: 2,
+							byteFormat,
+							"linear",
+						),
 					);
 					frame = 0;
 					lastRenderNow = 0;
@@ -4128,7 +4383,7 @@ export default function BlackHoleShader({
 						shaderTime += delta * liveControls.timeScale;
 						updateCamera(camera, keyboardData, delta, movementSpeed);
 						snapshotRuntime(now);
-						if (!cellTarget) return;
+						if (!cellTarget || !displayTarget) return;
 						gl.disable(gl.DEPTH_TEST);
 						gl.disable(gl.BLEND);
 						gl.clearColor(0, 0, 0, 1);
@@ -4157,6 +4412,53 @@ export default function BlackHoleShader({
 							activeRenderUniforms,
 							{ x: renderWidth, y: renderHeight },
 						);
+						if (settings.enableBloomPass)
+							for (let stage = 0; stage < 3; stage++) {
+								const target = cellBloomTargets[stage];
+								renderPass(
+									gl,
+									cellBloomPass,
+									vertexBuffer,
+									target,
+									target.width,
+									target.height,
+									shaderTime,
+									delta,
+									frame,
+									mouse,
+									[
+										stage === 0 ? cellTarget : cellBloomTargets[stage - 1],
+										fallbackTexture,
+										fallbackTexture,
+										fallbackTexture,
+									],
+									camera,
+									settings.qualityValue,
+									1,
+									stage,
+									channelResolutionScratch,
+									activeRenderUniforms,
+								);
+							}
+						renderPass(
+							gl,
+							displayPass,
+							vertexBuffer,
+							displayTarget,
+							cellTextureWidth,
+							cellTextureHeight,
+							shaderTime,
+							delta,
+							frame,
+							mouse,
+							[cellTarget, fallbackTexture, fallbackTexture, fallbackTexture],
+							camera,
+							settings.qualityValue,
+							1,
+							0,
+							channelResolutionScratch,
+							{ ...activeRenderUniforms, asciiMix: 1 },
+						);
 						renderPass(
 							gl,
 							asciiPass,
@@ -4169,10 +4471,12 @@ export default function BlackHoleShader({
 							frame,
 							mouse,
 							[
-								cellTarget,
+								displayTarget,
 								glyphTextures.atlas,
 								glyphTextures.metrics,
-								fallbackTexture,
+								settings.enableBloomPass
+									? cellBloomTargets[2]
+									: fallbackTexture,
 							],
 							camera,
 							settings.qualityValue,
@@ -4189,7 +4493,7 @@ export default function BlackHoleShader({
 						publishStats(
 							frameTimeMs,
 							now,
-							2,
+							settings.enableBloomPass ? 7 : 4,
 							estimateTextureMemoryBytes(
 								cellTextureWidth,
 								cellTextureHeight,
@@ -4261,7 +4565,9 @@ export default function BlackHoleShader({
 					);
 					disposeCellTarget();
 					gl.deleteProgram(cellPass.program);
-					gl.deleteProgram(asciiPass.program);
+					disposeProgramPass(gl, displayPass);
+					disposeProgramPass(gl, cellBloomPass);
+					disposeProgramPass(gl, asciiPass);
 					gl.deleteBuffer(vertexBuffer);
 					gl.deleteTexture(fallbackTexture.texture);
 					glyphTextures.dispose();
@@ -4295,6 +4601,45 @@ export default function BlackHoleShader({
 					magFilter: "nearest",
 					minFilter: "nearest",
 				});
+				const bloomSampler = device.createSampler({
+					magFilter: "linear",
+					minFilter: "linear",
+				});
+				const bloomModule = device.createShaderModule({
+					label: "Gargantua Bloom",
+					code: WEBGPU_BLOOM_SOURCE,
+				});
+				const bloomHorizontalPipeline = await device.createComputePipelineAsync(
+					{
+						layout: "auto",
+						compute: { module: bloomModule, entryPoint: "horizontal" },
+					},
+				);
+				const bloomVerticalPipeline = await device.createComputePipelineAsync({
+					layout: "auto",
+					compute: { module: bloomModule, entryPoint: "vertical" },
+				});
+				// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+				let bloomHorizontal: any = null;
+				// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+				let bloomVertical: any = null;
+				// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+				let bloomHorizontalGroup: any = null;
+				// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+				let bloomVerticalGroup: any = null;
+				// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+				let analysisColors: any[] = [];
+				// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+				let analysisStates: any[] = [];
+				// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+				const analysisGroups: any[] = [];
+				// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+				const renderGroups: any[] = [];
+				let analysisWidth = 1,
+					analysisHeight = 1,
+					analysisIndex = 0;
+				let historyValid = false,
+					historyCameraVersion = -1;
 				const uniformBuffer = device.createBuffer({
 					size: 44 * 4,
 					usage: 0x0040 | 0x0008,
@@ -4311,6 +4656,20 @@ export default function BlackHoleShader({
 					label: "ASCII Cell Compute Pipeline",
 					layout: "auto",
 					compute: { module: computeModule, entryPoint: "main" },
+				});
+				const analysisPipeline = await device.createComputePipelineAsync({
+					label: "ASCII contour analysis",
+					layout: "auto",
+					compute: {
+						module: device.createShaderModule({
+							code:
+								WEBGPU_COMPUTE_SOURCE.slice(
+									0,
+									WEBGPU_COMPUTE_SOURCE.indexOf("@group"),
+								) + asciiAnalysisWgsl,
+						}),
+						entryPoint: "main",
+					},
 				});
 				const renderPipeline = await device.createRenderPipelineAsync({
 					label: "ASCII Cell Render Pipeline",
@@ -4354,8 +4713,6 @@ export default function BlackHoleShader({
 				let cellTexture: any = null;
 				// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
 				let computeBindGroup: any = null;
-				// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
-				let renderBindGroup: any = null;
 				const uniformData = new Float32Array(44);
 
 				const writeUniforms = () => {
@@ -4380,7 +4737,11 @@ export default function BlackHoleShader({
 					uniformData[16] = cellTextureWidth;
 					uniformData[17] = cellTextureHeight;
 					uniformData[18] = renderUniforms.asciiMix;
-					uniformData[19] = sourceIsCellGrid ? 1 : 0;
+					uniformData[19] =
+						historyValid &&
+						historyCameraVersion === (camera.asciiHistoryVersion ?? 0)
+							? 1
+							: 0;
 					uniformData[20] = renderWidth;
 					uniformData[21] = renderHeight;
 					uniformData[22] = renderUniforms.asciiBrightness;
@@ -4392,7 +4753,9 @@ export default function BlackHoleShader({
 						? settings.cellHeight
 						: activeAtlas.cellSize.y;
 					uniformData[26] = renderUniforms.paletteMode;
-					uniformData[27] = renderUniforms.bloomStrength;
+					uniformData[27] = settings.enableBloomPass
+						? renderUniforms.bloomStrength
+						: 0;
 					uniformData.set(camera.position, 28);
 					uniformData[31] = camera.universeSign;
 					uniformData.set(camera.right, 32);
@@ -4405,6 +4768,20 @@ export default function BlackHoleShader({
 				};
 
 				const recreateBindGroups = () => {
+					bloomHorizontalGroup = device.createBindGroup({
+						layout: bloomHorizontalPipeline.getBindGroupLayout(0),
+						entries: [
+							{ binding: 0, resource: cellTexture.createView() },
+							{ binding: 1, resource: bloomHorizontal.createView() },
+						],
+					});
+					bloomVerticalGroup = device.createBindGroup({
+						layout: bloomVerticalPipeline.getBindGroupLayout(0),
+						entries: [
+							{ binding: 0, resource: bloomHorizontal.createView() },
+							{ binding: 1, resource: bloomVertical.createView() },
+						],
+					});
 					computeBindGroup = device.createBindGroup({
 						layout: computePipeline.getBindGroupLayout(0),
 						entries: [
@@ -4412,16 +4789,41 @@ export default function BlackHoleShader({
 							{ binding: 1, resource: { buffer: uniformBuffer } },
 						],
 					});
-					renderBindGroup = device.createBindGroup({
-						layout: renderPipeline.getBindGroupLayout(0),
-						entries: [
-							{ binding: 0, resource: cellTexture.createView() },
-							{ binding: 1, resource: glyphTexture.createView() },
-							{ binding: 2, resource: glyphMetricsTexture.createView() },
-							{ binding: 3, resource: sampler },
-							{ binding: 4, resource: { buffer: uniformBuffer } },
-						],
-					});
+					historyValid = false;
+					for (let index = 0; index < 2; index++) {
+						analysisGroups[index] = device.createBindGroup({
+							layout: analysisPipeline.getBindGroupLayout(0),
+							entries: [
+								{ binding: 0, resource: cellTexture.createView() },
+								{
+									binding: 1,
+									resource: analysisStates[1 - index].createView(),
+								},
+								{ binding: 2, resource: glyphMetricsTexture.createView() },
+								{
+									binding: 3,
+									resource: analysisColors[1 - index].createView(),
+								},
+								{ binding: 4, resource: analysisColors[index].createView() },
+								{ binding: 5, resource: analysisStates[index].createView() },
+								{ binding: 6, resource: { buffer: uniformBuffer } },
+							],
+						});
+						renderGroups[index] = device.createBindGroup({
+							layout: renderPipeline.getBindGroupLayout(0),
+							entries: [
+								{ binding: 0, resource: cellTexture.createView() },
+								{ binding: 1, resource: glyphTexture.createView() },
+								{ binding: 2, resource: glyphMetricsTexture.createView() },
+								{ binding: 3, resource: sampler },
+								{ binding: 4, resource: { buffer: uniformBuffer } },
+								{ binding: 5, resource: bloomVertical.createView() },
+								{ binding: 6, resource: bloomSampler },
+								{ binding: 7, resource: analysisColors[index].createView() },
+								{ binding: 8, resource: analysisStates[index].createView() },
+							],
+						});
+					}
 				};
 
 				const resize = () => {
@@ -4441,20 +4843,42 @@ export default function BlackHoleShader({
 					const nextCellWidth = Math.max(
 						1,
 						sourceIsCellGrid
-							? Math.ceil(nextWidth / Math.max(2, settings.cellWidth))
+							? Math.min(
+									nextWidth,
+									Math.ceil(nextWidth / Math.max(2, settings.cellWidth)) *
+										asciiSampleSide(settings.qualityValue),
+								)
 							: nextWidth,
 					);
 					const nextCellHeight = Math.max(
 						1,
 						sourceIsCellGrid
-							? Math.ceil(nextHeight / Math.max(2, settings.cellHeight))
+							? Math.min(
+									nextHeight,
+									Math.ceil(nextHeight / Math.max(2, settings.cellHeight)) *
+										asciiSampleSide(settings.qualityValue),
+								)
 							: nextHeight,
+					);
+					const nextAnalysisWidth = Math.ceil(
+						nextWidth /
+							(sourceIsCellGrid
+								? settings.cellWidth
+								: glyphAtlasConfig.cellSize.x),
+					);
+					const nextAnalysisHeight = Math.ceil(
+						nextHeight /
+							(sourceIsCellGrid
+								? settings.cellHeight
+								: glyphAtlasConfig.cellSize.y),
 					);
 					if (
 						nextWidth === renderWidth &&
 						nextHeight === renderHeight &&
 						nextCellWidth === cellTextureWidth &&
-						nextCellHeight === cellTextureHeight
+						nextCellHeight === cellTextureHeight &&
+						nextAnalysisWidth === analysisWidth &&
+						nextAnalysisHeight === analysisHeight
 					)
 						return;
 					renderWidth = nextWidth;
@@ -4463,12 +4887,51 @@ export default function BlackHoleShader({
 					cellTextureHeight = nextCellHeight;
 					canvas.width = renderWidth;
 					canvas.height = renderHeight;
+					analysisWidth = nextAnalysisWidth;
+					analysisHeight = nextAnalysisHeight;
+					for (const texture of [...analysisColors, ...analysisStates])
+						texture.destroy();
+					analysisColors = [0, 1].map(() =>
+						device.createTexture({
+							size: [analysisWidth, analysisHeight, 1],
+							format: "rgba8unorm",
+							usage: 0x0004 | 0x0008,
+						}),
+					);
+					analysisStates = [0, 1].map(() =>
+						device.createTexture({
+							size: [analysisWidth, analysisHeight, 1],
+							format: "rgba8unorm",
+							usage: 0x0004 | 0x0008,
+						}),
+					);
 					cellTexture?.destroy?.();
 					cellTexture = device.createTexture({
 						size: [cellTextureWidth, cellTextureHeight, 1],
-						format: "rgba8unorm",
+						format: "rgba16float",
 						usage: 0x0004 | 0x0002 | 0x0008,
 					});
+					bloomHorizontal?.destroy?.();
+					bloomVertical?.destroy?.();
+					gpuBloomWidth = settings.enableBloomPass
+						? Math.max(
+								1,
+								Math.ceil(nextWidth * Math.min(settings.bloomScale, 0.5)),
+							)
+						: 1;
+					gpuBloomHeight = settings.enableBloomPass
+						? Math.max(
+								1,
+								Math.ceil(nextHeight * Math.min(settings.bloomScale, 0.5)),
+							)
+						: 1;
+					const bloomDescriptor = {
+						size: [gpuBloomWidth, gpuBloomHeight, 1],
+						format: "rgba16float",
+						usage: 0x0004 | 0x0008,
+					};
+					bloomHorizontal = device.createTexture(bloomDescriptor);
+					bloomVertical = device.createTexture(bloomDescriptor);
 					recreateBindGroups();
 					frame = 0;
 					lastRenderNow = 0;
@@ -4548,6 +5011,32 @@ export default function BlackHoleShader({
 							1,
 						);
 						computePass.end();
+						if (settings.asciiEnabled) {
+							const analysisPass = commandEncoder.beginComputePass();
+							analysisPass.setPipeline(analysisPipeline);
+							analysisPass.setBindGroup(0, analysisGroups[analysisIndex]);
+							analysisPass.dispatchWorkgroups(
+								Math.ceil(analysisWidth / 8),
+								Math.ceil(analysisHeight / 8),
+							);
+							analysisPass.end();
+						}
+
+						if (settings.enableBloomPass && liveControls.bloomStrength > 0) {
+							for (const [pipeline, group] of [
+								[bloomHorizontalPipeline, bloomHorizontalGroup],
+								[bloomVerticalPipeline, bloomVerticalGroup],
+							]) {
+								const bloomPass = commandEncoder.beginComputePass();
+								bloomPass.setPipeline(pipeline);
+								bloomPass.setBindGroup(0, group);
+								bloomPass.dispatchWorkgroups(
+									Math.ceil(gpuBloomWidth / 8),
+									Math.ceil(gpuBloomHeight / 8),
+								);
+								bloomPass.end();
+							}
+						}
 						const currentTexture = context.getCurrentTexture();
 						const renderPass = commandEncoder.beginRenderPass({
 							colorAttachments: [
@@ -4560,10 +5049,13 @@ export default function BlackHoleShader({
 							],
 						});
 						renderPass.setPipeline(renderPipeline);
-						renderPass.setBindGroup(0, renderBindGroup);
+						renderPass.setBindGroup(0, renderGroups[analysisIndex]);
 						renderPass.draw(3, 1, 0, 0);
 						renderPass.end();
 						device.queue.submit([commandEncoder.finish()]);
+						historyValid = settings.asciiEnabled;
+						historyCameraVersion = camera.asciiHistoryVersion ?? 0;
+						analysisIndex = 1 - analysisIndex;
 						const frameTimeMs = performance.now() - cpuFrameStart;
 						cpuAverageFrameTimeMs =
 							cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
@@ -4572,12 +5064,20 @@ export default function BlackHoleShader({
 						publishStats(
 							frameTimeMs,
 							now,
-							2,
-							estimateTextureMemoryBytes(
-								cellTextureWidth,
-								cellTextureHeight,
-								4,
-							) +
+							settings.enableBloomPass && liveControls.bloomStrength > 0
+								? settings.asciiEnabled
+									? 5
+									: 4
+								: settings.asciiEnabled
+									? 3
+									: 2,
+							estimateTextureMemoryBytes(analysisWidth, analysisHeight, 16) +
+								estimateTextureMemoryBytes(gpuBloomWidth, gpuBloomHeight, 16) +
+								estimateTextureMemoryBytes(
+									cellTextureWidth,
+									cellTextureHeight,
+									8,
+								) +
 								estimateTextureMemoryBytes(
 									glyphRaster.canvas.width,
 									glyphRaster.canvas.height,
@@ -4619,7 +5119,11 @@ export default function BlackHoleShader({
 					snapshotRuntime();
 					if (animationFrame) cancelAnimationFrame(animationFrame);
 					resizeObserver.disconnect();
+					for (const texture of [...analysisColors, ...analysisStates])
+						texture.destroy();
 					cellTexture?.destroy?.();
+					bloomHorizontal?.destroy?.();
+					bloomVertical?.destroy?.();
 					glyphTexture.destroy?.();
 					glyphMetricsTexture.destroy?.();
 					device.destroy?.();
@@ -4930,7 +5434,11 @@ export default function BlackHoleShader({
 				ascii: createPass(
 					gl,
 					"ASCII",
-					createStandardFragmentSource("ASCII", asciiSource),
+					createStandardFragmentSource(
+						"ASCII",
+						imageSource.slice(0, imageSource.indexOf("void mainImage")) +
+							asciiSource,
+					),
 				),
 			};
 		};
@@ -4978,6 +5486,7 @@ export default function BlackHoleShader({
 					return false;
 				}
 				camera.position = nextPosition;
+				camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 				snapshotRuntime();
 				writeCameraReadout(true);
 				requestRender();
@@ -4990,6 +5499,7 @@ export default function BlackHoleShader({
 					return false;
 				}
 				setCameraForward(camera, nextForward);
+				camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 				snapshotRuntime();
 				writeCameraReadout(true);
 				requestRender();
@@ -5002,6 +5512,7 @@ export default function BlackHoleShader({
 					return false;
 				}
 				camera.universeSign = nextUniverseSign;
+				camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 				snapshotRuntime();
 				writeCameraReadout(true);
 				requestRender();
@@ -5042,7 +5553,11 @@ export default function BlackHoleShader({
 					ascii: createPass(
 						gl,
 						"ASCII",
-						createStandardFragmentSource("ASCII", asciiSource),
+						createStandardFragmentSource(
+							"ASCII",
+							imageSource.slice(0, imageSource.indexOf("void mainImage")) +
+								asciiSource,
+						),
 					),
 				};
 			} catch (optimizedError) {
@@ -5473,10 +5988,26 @@ export default function BlackHoleShader({
 		const createOptimizedTargets = () => {
 			if (!floatFormat) throw new Error("Float targets are unavailable.");
 			const nextSceneWidth = allocatedTargetDimension(
-				renderWidth * settings.sceneScale,
+				asciiSourceDimension(
+					renderWidth,
+					Math.min(
+						atlasConfigRef.current.cellSize.x,
+						atlasConfigRef.current.cellSize.y,
+					),
+					settings.qualityValue,
+					settings.sceneScale,
+				),
 			);
 			const nextSceneHeight = allocatedTargetDimension(
-				renderHeight * settings.sceneScale,
+				asciiSourceDimension(
+					renderHeight,
+					Math.min(
+						atlasConfigRef.current.cellSize.x,
+						atlasConfigRef.current.cellSize.y,
+					),
+					settings.qualityValue,
+					settings.sceneScale,
+				),
 			);
 			const nextPrepassWidth = targetDimension(
 				nextSceneWidth * currentPrepassScale,
@@ -5552,9 +6083,27 @@ export default function BlackHoleShader({
 		};
 
 		const createFallbackTargets = () => {
-			sceneWidth = allocatedTargetDimension(renderWidth * settings.sceneScale);
+			sceneWidth = allocatedTargetDimension(
+				asciiSourceDimension(
+					renderWidth,
+					Math.min(
+						atlasConfigRef.current.cellSize.x,
+						atlasConfigRef.current.cellSize.y,
+					),
+					settings.qualityValue,
+					settings.sceneScale,
+				),
+			);
 			sceneHeight = allocatedTargetDimension(
-				renderHeight * settings.sceneScale,
+				asciiSourceDimension(
+					renderHeight,
+					Math.min(
+						atlasConfigRef.current.cellSize.x,
+						atlasConfigRef.current.cellSize.y,
+					),
+					settings.qualityValue,
+					settings.sceneScale,
+				),
 			);
 			prepassWidth = sceneWidth;
 			prepassHeight = sceneHeight;
@@ -5622,10 +6171,26 @@ export default function BlackHoleShader({
 				Math.max(1, Math.floor(rect.height * dpr * settings.resolutionScale)),
 			);
 			const nextSceneWidth = allocatedTargetDimension(
-				nextWidth * settings.sceneScale,
+				asciiSourceDimension(
+					nextWidth,
+					Math.min(
+						atlasConfigRef.current.cellSize.x,
+						atlasConfigRef.current.cellSize.y,
+					),
+					settings.qualityValue,
+					settings.sceneScale,
+				),
 			);
 			const nextSceneHeight = allocatedTargetDimension(
-				nextHeight * settings.sceneScale,
+				asciiSourceDimension(
+					nextHeight,
+					Math.min(
+						atlasConfigRef.current.cellSize.x,
+						atlasConfigRef.current.cellSize.y,
+					),
+					settings.qualityValue,
+					settings.sceneScale,
+				),
 			);
 			const nextPrepassWidth =
 				mode === "optimized"
@@ -5756,13 +6321,24 @@ export default function BlackHoleShader({
 				computeInvocations: 0,
 				frameIntervalMs: settings.frameIntervalMs,
 				enableBloomPass: settings.enableBloomPass,
-				passCount: mode === "optimized" ? 5 : 6,
+				passCount:
+					(mode === "optimized" ? 5 : 6) + (lastAnimatedAsciiEnabled ? 1 : 0),
 				estimatedTextureMemoryBytes:
-					mode === "optimized"
+					estimateTextureMemoryBytes(
+						Math.ceil(renderWidth / activeAtlas.cellSize.x),
+						Math.ceil(renderHeight / activeAtlas.cellSize.y),
+						16,
+					) +
+					(mode === "optimized"
 						? estimateTextureMemoryBytes(prepassWidth, prepassHeight, 8, 2) +
 							estimateTextureMemoryBytes(sceneWidth, sceneHeight, 8, 3) +
 							estimateTextureMemoryBytes(bloomWidth, bloomHeight, 8, 3)
-						: estimateTextureMemoryBytes(sceneWidth, sceneHeight, 4, 7),
+						: estimateTextureMemoryBytes(
+								sceneWidth,
+								sceneHeight,
+								fallbackFormat.type === gl.HALF_FLOAT ? 8 : 4,
+								7,
+							)),
 				initTimeMs,
 				gpuFrameTimeMs: null,
 				gpuTimingSupported: false,
@@ -5995,7 +6571,9 @@ export default function BlackHoleShader({
 						optimizedTargets.scene,
 						glyphTextures.atlas,
 						glyphTextures.metrics,
-						fallbackTexture,
+						settings.enableBloomPass
+							? optimizedTargets.bloomVertical
+							: fallbackTexture,
 					],
 					camera,
 					settings.qualityValue,
@@ -6151,7 +6729,7 @@ export default function BlackHoleShader({
 						fallbackTargets.a.write,
 						fallbackTargets.b.write,
 						fallbackTargets.c,
-						fallbackTargets.d,
+						settings.enableBloomPass ? fallbackTargets.d : fallbackTexture,
 					],
 					camera,
 					settings.qualityValue,
@@ -6175,7 +6753,7 @@ export default function BlackHoleShader({
 						fallbackTargets.scene,
 						glyphTextures.atlas,
 						glyphTextures.metrics,
-						fallbackTexture,
+						settings.enableBloomPass ? fallbackTargets.d : fallbackTexture,
 					],
 					camera,
 					settings.qualityValue,
@@ -6200,7 +6778,7 @@ export default function BlackHoleShader({
 						fallbackTargets.a.write,
 						fallbackTargets.b.write,
 						fallbackTargets.c,
-						fallbackTargets.d,
+						settings.enableBloomPass ? fallbackTargets.d : fallbackTexture,
 					],
 					camera,
 					settings.qualityValue,
@@ -6473,10 +7051,10 @@ export default function BlackHoleShader({
 			gl.deleteTexture(fallbackTexture.texture);
 			gl.deleteTexture(keyboardTexture.texture);
 			Object.values(optimizedPasses ?? {}).forEach((pass) => {
-				gl.deleteProgram(pass.program);
+				disposeProgramPass(gl, pass);
 			});
 			Object.values(fallbackPasses ?? {}).forEach((pass) => {
-				gl.deleteProgram(pass.program);
+				disposeProgramPass(gl, pass);
 			});
 			glyphTextures.dispose();
 			requestRenderRef.current = () => {};
@@ -6513,15 +7091,9 @@ export default function BlackHoleShader({
 		{ label: "Custom", value: "custom" },
 	];
 	const qualityPresetOptions: Array<{ label: string; value: QualityPreset }> = [
-		{ label: "Mobile Safe", value: "mobile-safe" },
-		{ label: "ASCII Balanced", value: "ascii-balanced" },
-		{ label: "ASCII Sharp", value: "ascii-sharp" },
-		{ label: "Performance", value: "performance" },
 		{ label: "Balanced", value: "balanced" },
-		{ label: "Visual", value: "visual" },
-		{ label: "Desktop Full", value: "desktop-full" },
-		{ label: "Stress Test", value: "stress-test" },
-		{ label: "Custom", value: "custom" },
+		{ label: "Cinematic ASCII", value: "cinematic-ascii" },
+		{ label: "Mobile", value: "mobile-safe" },
 	];
 	const rendererModeOptions: Array<{ label: string; value: RendererMode }> = [
 		{ label: "Auto", value: "auto" },
