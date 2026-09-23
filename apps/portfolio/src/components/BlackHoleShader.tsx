@@ -71,7 +71,7 @@ function useBlackHoleController({
 	animationAutoplay = true,
 	debugStats = false,
 }: Props) {
-	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const canvasRef = useRef<HTMLDivElement>(null);
 	const reactRenderCountRef = useRef(0);
 	const requestRenderRef = useRef<() => void>(() => {});
 	const resetFrameRef = useRef<() => void>(() => {});
@@ -365,8 +365,12 @@ function useBlackHoleController({
 			};
 		}
 
-		const canvas = canvasRef.current;
-		if (!canvas) return;
+		const host = canvasRef.current;
+		if (!host) return;
+		const canvas = document.createElement("canvas");
+		canvas.className = `block h-full w-full bg-black ${interactive ? "cursor-crosshair touch-none" : "pointer-events-none"}`;
+		canvas.setAttribute("aria-label", "Interactive black hole shader");
+		host.replaceChildren(canvas);
 
 		const state: RuntimeState = {
 			get animationAutoplay() {
@@ -561,13 +565,12 @@ export default function BlackHoleShader(props: Props) {
 
 	return (
 		<div className={`relative h-full w-full bg-black ${className}`}>
-			<canvas
+			<div
 				key={`${rendererModeState}:${backendState}:${contextRestoreToken}`}
 				ref={canvasRef}
 				className={`block h-full w-full bg-black ${
 					interactive ? "cursor-crosshair touch-none" : "pointer-events-none"
 				}`}
-				aria-label="Interactive black hole shader"
 			/>
 			{showControls ? (
 				<Suspense fallback={null}>
