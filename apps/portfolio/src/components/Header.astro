@@ -2,12 +2,14 @@
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 const { navbarActiveItemID, disableClock = false } = Astro.props;
 
-// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
-import { SquareArrowOutUpRight } from "lucide-react";
+import { Home } from "pixelarticons/react/Home.js";
+import { FileText } from "pixelarticons/react/FileText.js";
+import { Users } from "pixelarticons/react/Users.js";
 
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const links: Array<{
 	title: string;
+	icon: typeof Home;
 	id?: string;
 	url?: string;
 	new?: boolean;
@@ -15,21 +17,24 @@ const links: Array<{
 }> = [
 	{
 		title: "home",
+		icon: Home,
 		id: "home",
 		url: "/",
 	},
 	{
 		title: "blog",
+		icon: FileText,
 		id: "blog",
 		url: "/blog",
 	},
 	{
 		title: "socials",
+		icon: Users,
 		id: "socials",
 		url: "/socials",
 	},
 
-	{ title: "resume", id: "resume", url: "/resume.pdf" },
+	{ title: "resume", icon: FileText, id: "resume", url: "/resume.pdf" },
 ];
 ---
 
@@ -49,6 +54,7 @@ const links: Array<{
     <span class="navigation-links">
       {
         links.map((link) => {
+          const Icon = link.icon;
           const isActive = link.id === navbarActiveItemID;
 
           return (
@@ -59,13 +65,8 @@ const links: Array<{
               aria-current={isActive ? "page" : undefined}
               class="nav-link inline-flex items-center gap-1"
             >
+              <Icon className="ui-icon" aria-hidden="true" />
               {link.title}
-              {!isActive && (
-                <SquareArrowOutUpRight
-                  className="h-[1em] w-[1em] shrink-0"
-                  aria-hidden="true"
-                />
-              )}
             </a>
           );
         })
