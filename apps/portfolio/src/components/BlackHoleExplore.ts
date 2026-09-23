@@ -13,7 +13,9 @@ export function bindBlackHoleExplore(getRuntime: () => Runtime | undefined) {
 	if (!trigger || !overlay || !foreground) return () => {};
 	const abort = new AbortController();
 	const options = { signal: abort.signal };
-	const eligible = matchMedia("(min-width: 768px) and (pointer: fine)");
+	const eligible = matchMedia(
+		"(width > 768px) and (height > 768px) and (pointer: fine)",
+	);
 	const toggle = overlay.querySelector<HTMLButtonElement>(
 		"[data-explore-settings]",
 	);

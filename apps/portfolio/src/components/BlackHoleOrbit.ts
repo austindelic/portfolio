@@ -131,6 +131,31 @@ export function createOrbitFrame(
 	return frame;
 }
 
+/** Preserve the authored flight while landing on the responsive orbit heading. */
+export function frameIntroSequence(
+	sequence: BlackHoleAnimationKeyframe[],
+	orbit: BlackHoleOrbit,
+	aspect: number,
+): BlackHoleAnimationKeyframe[] {
+	return sequence.map((frame, index) =>
+		index === sequence.length - 1 && index > 0
+			? {
+					...frame,
+					forward: createOrbitFrame(
+						{
+							...orbit,
+							anchor: frame.position,
+							driftRadius: 0,
+							yawAmplitude: 0,
+							pitchAmplitude: 0,
+						},
+						aspect,
+					).forward,
+				}
+			: frame,
+	);
+}
+
 const before = new Float64Array(5),
 	after = new Float64Array(5);
 export function sampleOrbit(

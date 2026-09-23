@@ -89,7 +89,7 @@ const routes = {
 			yawAmplitude: 0.6,
 			pitchAmplitude: 0.2,
 			period: 140,
-			framingTarget: [0, 0],
+			framingTarget: [-0.18, 0],
 		},
 		intro: [
 			{
@@ -170,7 +170,7 @@ const routes = {
 			yawAmplitude: 0.6,
 			pitchAmplitude: 0.2,
 			period: 150,
-			framingTarget: [0, 0],
+			framingTarget: [0, -0.06],
 		},
 		intro: [
 			{
@@ -365,7 +365,7 @@ const routes = {
 			yawAmplitude: 0.25,
 			pitchAmplitude: 0.1,
 			period: 150,
-			framingTarget: [0, 0],
+			framingTarget: [-0.08, 0],
 			approach: [1.15, 0.3, 0.7],
 		},
 		intro: [

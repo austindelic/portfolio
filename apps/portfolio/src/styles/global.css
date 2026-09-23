@@ -116,6 +116,29 @@
 	backdrop-filter: none;
 }
 
+/* The mobile background is a still: no promoted canvas layers or glass blur. */
+@media (pointer: coarse), (max-width: 768px), (max-height: 768px) {
+	.bh-background-layer,
+	.bh-background-canvas,
+	.bh-layout-shader,
+	.bh-foreground-layer {
+		transform: none;
+		will-change: auto;
+	}
+
+	.bh-content-shell::before,
+	.bh-home-card::before,
+	.bh-home-inset::before {
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+
+	.portfolio-theme .portfolio-section {
+		background: rgb(20 20 20 / 65%);
+		text-shadow: 0 1px 2px #000;
+	}
+}
+
 @-moz-document url-prefix() {
 	.bh-content-shell::before {
 		background: rgb(0 0 0 / 0.22);
@@ -535,18 +558,6 @@ pre {
 	grid-template-columns: 1.05fr 1fr;
 	gap: 16px;
 }
-.identity-heading {
-	display: flex;
-	gap: 10px;
-	align-items: center;
-}
-.pixel-mark {
-	width: 32px;
-	height: 18px;
-	flex-shrink: 0;
-	color: var(--primary);
-	shape-rendering: crispEdges;
-}
 .intro-title {
 	font-size: 28px;
 	line-height: 1.15;
@@ -598,10 +609,12 @@ pre {
 .copy-email {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
-	border: 1px solid var(--line);
-	padding: 2px 5px;
-	margin: 5px 0 0 6px;
+	justify-content: center;
+	vertical-align: middle;
+	border: 0;
+	background: transparent;
+	padding: 4px;
+	margin: 0 0 0 4px;
 	font: inherit;
 	cursor: pointer;
 	color: var(--foreground);
@@ -958,7 +971,7 @@ pre {
 
 /* Desktop-only exploration uses the existing background canvas. */
 .explore-trigger { display: none; cursor: pointer; }
-@media (min-width: 768px) and (pointer: fine) {
+@media (width > 768px) and (height > 768px) and (pointer: fine) {
  .explore-trigger { display: inline-flex; align-items: center; gap: 4px; }
 }
 body.bh-exploring { overflow: hidden; }
