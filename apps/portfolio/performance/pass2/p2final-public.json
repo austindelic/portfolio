@@ -1,0 +1,4932 @@
+{
+  "label": "p2final",
+  "results": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 0,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 133,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.19999998807907104,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 33.399999999999636,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 45,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 133,
+        "uniform1i": 133,
+        "uniform3fv": 399,
+        "bindTexture": 798,
+        "drawArrays": 399
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 356.59999999403954,
+      "firstGpuCompletedFrame": 360.59999999403954,
+      "firstPresentationOpportunity": 382.19999998807907,
+      "compilationBlockingMs": 42.99999997019768,
+      "startupLongTasks": [
+        147
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.134800000000027
+        ],
+        "iFrame": [
+          389
+        ],
+        "uCameraPosition": [
+          [
+            9.016596255956328,
+            2.698644199361126,
+            20.909940622529724
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8695060161944614,
+            0.4347530080972307,
+            -0.23441226450859237
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37120404990223427,
+            0.8882704633239139,
+            0.27052382024971316
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 0,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 125,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 16.700000000000728,
+      "wallP95": 33.400000000000546,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 54,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 125,
+        "uniform1i": 125,
+        "uniform3fv": 375,
+        "bindTexture": 750,
+        "drawArrays": 375
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 257,
+      "firstGpuCompletedFrame": 280,
+      "firstPresentationOpportunity": 288.80000001192093,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [
+        79,
+        61
+      ],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.134600000000024
+        ],
+        "iFrame": [
+          362
+        ],
+        "uCameraPosition": [
+          [
+            9.016546956114304,
+            2.6986974548457923,
+            20.909981548296976
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8695068723191722,
+            0.4347534361595861,
+            -0.23440829494103574
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37120495581376356,
+            0.8882699319646312,
+            0.27052432191366965
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 1,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 137,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 33.400000000000546,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 42,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 137,
+        "uniform1i": 137,
+        "uniform3fv": 411,
+        "bindTexture": 822,
+        "drawArrays": 411
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 166.19999998807907,
+      "firstGpuCompletedFrame": 181.59999999403954,
+      "firstPresentationOpportunity": 190.09999999403954,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.03460000000005
+        ],
+        "iFrame": [
+          402
+        ],
+        "uCameraPosition": [
+          [
+            8.992254372787214,
+            2.72511401899599,
+            20.930095687219996
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8699310460604458,
+            0.4349655230302229,
+            -0.23243271902901871
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3716562112056708,
+            0.8880054589517457,
+            0.2707729040065592
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 1,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 134,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 33.399999999999636,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 42,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 134,
+        "uniform1i": 134,
+        "uniform3fv": 402,
+        "bindTexture": 804,
+        "drawArrays": 402
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 137.80000001192093,
+      "firstGpuCompletedFrame": 150.5,
+      "firstPresentationOpportunity": 166.40000000596046,
+      "compilationBlockingMs": 34.099999994039536,
+      "startupLongTasks": [],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.068000000000048
+        ],
+        "iFrame": [
+          389
+        ],
+        "uCameraPosition": [
+          [
+            9.000288175294063,
+            2.716338294899786,
+            20.92345522704161
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.869790237959198,
+            0.434895118979599,
+            -0.23309049195237966
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3715058758786372,
+            0.8880935215689794,
+            0.27069037872605534
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 2,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 124,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 16.700000000000728,
+      "wallP95": 33.400000000000546,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 56,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 124,
+        "uniform1i": 124,
+        "uniform3fv": 372,
+        "bindTexture": 744,
+        "drawArrays": 372
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 123.40000000596046,
+      "firstGpuCompletedFrame": 130.5,
+      "firstPresentationOpportunity": 140,
+      "compilationBlockingMs": 31.69999998807907,
+      "startupLongTasks": [
+        58
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.134600000000045
+        ],
+        "iFrame": [
+          390
+        ],
+        "uCameraPosition": [
+          [
+            9.016546956114306,
+            2.698697454845788,
+            20.909981548296976
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.869506872319172,
+            0.434753436159586,
+            -0.23440829494103596
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3712049558137636,
+            0.8882699319646317,
+            0.27052432191366965
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 2,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 139,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 33.399999999999636,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 41,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 139,
+        "uniform1i": 139,
+        "uniform3fv": 417,
+        "bindTexture": 834,
+        "drawArrays": 417
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 172,
+      "firstGpuCompletedFrame": 194.90000000596046,
+      "firstPresentationOpportunity": 197.2000000178814,
+      "compilationBlockingMs": 0.29999998211860657,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.03460000000004
+        ],
+        "iFrame": [
+          377
+        ],
+        "uCameraPosition": [
+          [
+            8.992254372787208,
+            2.7251140189959937,
+            20.93009568722
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.869931046060446,
+            0.434965523030223,
+            -0.2324327190290185
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37165621120567083,
+            0.8880054589517455,
+            0.27077290400655923
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 3,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 104,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 33.29999999999927,
+      "wallP95": 49.899999999999636,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 69,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 104,
+        "uniform1i": 104,
+        "uniform3fv": 312,
+        "bindTexture": 624,
+        "drawArrays": 312
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 125.59999999403954,
+      "firstGpuCompletedFrame": 134.90000000596046,
+      "firstPresentationOpportunity": 157.7000000178814,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.03460000000003
+        ],
+        "iFrame": [
+          339
+        ],
+        "uCameraPosition": [
+          [
+            9.000288175294086,
+            2.716338294899759,
+            20.92345522704159
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8697902379591975,
+            0.43489511897959876,
+            -0.2330904919523816
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3715058758786368,
+            0.8880935215689797,
+            0.2706903787260551
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 3,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 105,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.19999998807907104,
+      "wallMedian": 33.30000000000018,
+      "wallP95": 50,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 62,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 105,
+        "uniform1i": 105,
+        "uniform3fv": 315,
+        "bindTexture": 630,
+        "drawArrays": 315
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 238.39999997615814,
+      "firstGpuCompletedFrame": 250.5,
+      "firstPresentationOpportunity": 254.19999998807907,
+      "compilationBlockingMs": 75.40000000596046,
+      "startupLongTasks": [
+        150
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.168200000000034
+        ],
+        "iFrame": [
+          333
+        ],
+        "uCameraPosition": [
+          [
+            9.024868739057347,
+            2.6897274207840036,
+            20.903067214592593
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8693626105846192,
+            0.4346813052923096,
+            -0.23507618796226432
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.371052578799977,
+            0.8883593319238579,
+            0.2704397920973977
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 4,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 122,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 16.800000000000182,
+      "wallP95": 33.400000000000546,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 55,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 122,
+        "uniform1i": 122,
+        "uniform3fv": 366,
+        "bindTexture": 732,
+        "drawArrays": 366
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 158.5,
+      "firstGpuCompletedFrame": 165.19999998807907,
+      "firstPresentationOpportunity": 180.7999999821186,
+      "compilationBlockingMs": 35.5,
+      "startupLongTasks": [
+        85
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.13440000000003
+        ],
+        "iFrame": [
+          375
+        ],
+        "uCameraPosition": [
+          [
+            9.024769205712012,
+            2.6898344788000847,
+            20.903149986495855
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8693643330992951,
+            0.43468216654964753,
+            -0.2350682250295061
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37105439496870035,
+            0.888358266091753,
+            0.27044080136115894
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 4,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 131,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 33.399999999999636,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 49,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 131,
+        "uniform1i": 131,
+        "uniform3fv": 393,
+        "bindTexture": 786,
+        "drawArrays": 393
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 168.7000000178814,
+      "firstGpuCompletedFrame": 181.5,
+      "firstPresentationOpportunity": 198.59999999403954,
+      "compilationBlockingMs": 0.09999999403953552,
+      "startupLongTasks": [
+        50
+      ],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          1224,
+          765,
+          1
+        ],
+        "iTime": [
+          17.10120000000004
+        ],
+        "iFrame": [
+          386
+        ],
+        "uCameraPosition": [
+          [
+            9.0165469561143,
+            2.6986974548457963,
+            20.909981548296983
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8695068723191721,
+            0.43475343615958606,
+            -0.23440829494103532
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37120495581376367,
+            0.8882699319646313,
+            0.27052432191366965
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4400,
+      "run": 0,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 83,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 33.30000000000018,
+      "wallP95": 50,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 78,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 83,
+        "uniform1i": 83,
+        "uniform3fv": 249,
+        "bindTexture": 498,
+        "drawArrays": 249
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 165.69999998807907,
+      "firstGpuCompletedFrame": 188.5,
+      "firstPresentationOpportunity": 190.09999999403954,
+      "compilationBlockingMs": 49.30000001192093,
+      "startupLongTasks": [
+        111
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.13480000000002
+        ],
+        "iFrame": [
+          232
+        ],
+        "uCameraPosition": [
+          [
+            9.024818970991253,
+            2.6897809506061043,
+            20.90310860192254
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8693634718573328,
+            0.4346817359286664,
+            -0.23507220646049506
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37105348689077616,
+            0.8883587990031778,
+            0.27044029673816755
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4401,
+      "run": 0,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 85,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 33.30000000000109,
+      "wallP95": 50.099999999999454,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 76,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 85,
+        "uniform1i": 85,
+        "uniform3fv": 255,
+        "bindTexture": 510,
+        "drawArrays": 255
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 223.89999997615814,
+      "firstGpuCompletedFrame": 241.69999998807907,
+      "firstPresentationOpportunity": 254.2999999821186,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.034600000000015
+        ],
+        "iFrame": [
+          244
+        ],
+        "uCameraPosition": [
+          [
+            8.992254372787208,
+            2.7251140189959937,
+            20.93009568722
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.869931046060446,
+            0.434965523030223,
+            -0.2324327190290185
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37165621120567083,
+            0.8880054589517455,
+            0.27077290400655923
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4401,
+      "run": 1,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 70,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 49.899999999999636,
+      "wallP95": 66.59999999999945,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 64,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 70,
+        "uniform1i": 70,
+        "uniform3fv": 210,
+        "bindTexture": 420,
+        "drawArrays": 210
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 206.5,
+      "firstGpuCompletedFrame": 231.09999999403954,
+      "firstPresentationOpportunity": 241.69999998807907,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.001200000000008
+        ],
+        "iFrame": [
+          211
+        ],
+        "uCameraPosition": [
+          [
+            8.97643149580271,
+            2.742518955363152,
+            20.94314125491456
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8702100374835711,
+            0.43510501874178553,
+            -0.23112358886221973
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.371955677909489,
+            0.8878301763757206,
+            0.2709364345885387
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4400,
+      "run": 1,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 66,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.19999998807907104,
+      "wallMedian": 49.900000000000546,
+      "wallP95": 66.69999999999982,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 64,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 66,
+        "uniform1i": 66,
+        "uniform3fv": 198,
+        "bindTexture": 396,
+        "drawArrays": 198
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 198.30000001192093,
+      "firstGpuCompletedFrame": 223.30000001192093,
+      "firstPresentationOpportunity": 227,
+      "compilationBlockingMs": 37.900000005960464,
+      "startupLongTasks": [
+        62
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.06800000000001
+        ],
+        "iFrame": [
+          189
+        ],
+        "uCameraPosition": [
+          [
+            8.992350106642869,
+            2.7250092064205127,
+            20.930016623634867
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.869929364897328,
+            0.434964682448664,
+            -0.23244058404604065
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3716544131184155,
+            0.8880065119527175,
+            0.2707719186680441
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4400,
+      "run": 2,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 65,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 50,
+      "wallP95": 66.60000000000036,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 65,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 65,
+        "uniform1i": 65,
+        "uniform3fv": 195,
+        "bindTexture": 390,
+        "drawArrays": 195
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 284.90000000596046,
+      "firstGpuCompletedFrame": 302.90000000596046,
+      "firstPresentationOpportunity": 319,
+      "compilationBlockingMs": 28.80000004172325,
+      "startupLongTasks": [
+        147
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.10140000000001
+        ],
+        "iFrame": [
+          188
+        ],
+        "uCameraPosition": [
+          [
+            9.000288175294086,
+            2.716338294899759,
+            20.92345522704159
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8697902379591975,
+            0.43489511897959876,
+            -0.2330904919523816
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3715058758786368,
+            0.8880935215689797,
+            0.2706903787260551
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4401,
+      "run": 2,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 64,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.19999998807907104,
+      "wallMedian": 50,
+      "wallP95": 66.60000000000036,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 63,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 64,
+        "uniform1i": 64,
+        "uniform3fv": 192,
+        "bindTexture": 384,
+        "drawArrays": 192
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 264.7000000178814,
+      "firstGpuCompletedFrame": 270.90000000596046,
+      "firstPresentationOpportunity": 296.90000000596046,
+      "compilationBlockingMs": 0.09999999403953552,
+      "startupLongTasks": [
+        91
+      ],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          16.968000000000007
+        ],
+        "iFrame": [
+          188
+        ],
+        "uCameraPosition": [
+          [
+            8.9764783778374,
+            2.74246714082524,
+            20.943102666504657
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8702092074252987,
+            0.43510460371264936,
+            -0.2311274954225298
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3719547837561873,
+            0.8878306994659988,
+            0.27093594801466175
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4401,
+      "run": 3,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 85,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 33.30000000000018,
+      "wallP95": 50.100000000000364,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 80,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 85,
+        "uniform1i": 85,
+        "uniform3fv": 255,
+        "bindTexture": 510,
+        "drawArrays": 255
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 366.5,
+      "firstGpuCompletedFrame": 397.2999999821186,
+      "firstPresentationOpportunity": 402.09999999403954,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [
+        142,
+        79
+      ],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.101068000000023
+        ],
+        "iFrame": [
+          212
+        ],
+        "uCameraPosition": [
+          [
+            8.992254372787215,
+            2.7251140189959866,
+            20.930095687219996
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8699310460604459,
+            0.43496552303022296,
+            -0.23243271902901905
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3716562112056707,
+            0.8880054589517458,
+            0.2707729040065592
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4400,
+      "run": 3,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 83,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 33.30000000000109,
+      "wallP95": 50,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 74,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 83,
+        "uniform1i": 83,
+        "uniform3fv": 249,
+        "bindTexture": 498,
+        "drawArrays": 249
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 226.90000000596046,
+      "firstGpuCompletedFrame": 239.80000001192093,
+      "firstPresentationOpportunity": 252.09999999403954,
+      "compilationBlockingMs": 45.499999940395355,
+      "startupLongTasks": [
+        91
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.168000000000013
+        ],
+        "iFrame": [
+          240
+        ],
+        "uCameraPosition": [
+          [
+            9.033168705054697,
+            2.6808190418536997,
+            20.89615877839055
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8692192137923772,
+            0.4346096068961886,
+            -0.23573809188949973
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3709016589144095,
+            0.8884479241523497,
+            0.27035577575468944
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4400,
+      "run": 4,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 87,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.19999998807907104,
+      "wallMedian": 33.30000000000018,
+      "wallP95": 50,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 75,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 87,
+        "uniform1i": 87,
+        "uniform3fv": 261,
+        "bindTexture": 522,
+        "drawArrays": 261
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 156.19999998807907,
+      "firstGpuCompletedFrame": 168.59999999403954,
+      "firstPresentationOpportunity": 170.59999999403954,
+      "compilationBlockingMs": 31.299999982118607,
+      "startupLongTasks": [],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.03460000000001
+        ],
+        "iFrame": [
+          248
+        ],
+        "uCameraPosition": [
+          [
+            9.000288175294077,
+            2.7163382948997707,
+            20.923455227041597
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8697902379591976,
+            0.4348951189795988,
+            -0.23309049195238074
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.371505875878637,
+            0.8880935215689796,
+            0.2706903787260552
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "port": 4401,
+      "run": 4,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 82,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.20000001788139343,
+      "wallMedian": 33.30000000000109,
+      "wallP95": 50.099999999999454,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 75,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 82,
+        "uniform1i": 82,
+        "uniform3fv": 246,
+        "bindTexture": 492,
+        "drawArrays": 246
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 224.40000000596046,
+      "firstGpuCompletedFrame": 234.90000000596046,
+      "firstPresentationOpportunity": 256.09999999403954,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [
+        71
+      ],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          2176,
+          1224,
+          1
+        ],
+        "iTime": [
+          17.001400000000004
+        ],
+        "iFrame": [
+          241
+        ],
+        "uCameraPosition": [
+          [
+            8.98434924948763,
+            2.7337890459417213,
+            20.93661873976599
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8700701451527644,
+            0.4350350725763822,
+            -0.23178099176228764
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3718052518228382,
+            0.8879182002959167,
+            0.27085443378356633
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4400,
+      "run": 0,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.799999999999272,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 186.5,
+      "firstGpuCompletedFrame": 203,
+      "firstPresentationOpportunity": 208.09999999403954,
+      "compilationBlockingMs": 33.80000001192093,
+      "startupLongTasks": [
+        52
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.16800000000006
+        ],
+        "iFrame": [
+          512
+        ],
+        "uCameraPosition": [
+          [
+            9.03316870505469,
+            2.680819041853707,
+            20.896158778390554
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8692192137923773,
+            0.43460960689618866,
+            -0.23573809188949915
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3709016589144097,
+            0.8884479241523494,
+            0.27035577575468944
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4401,
+      "run": 0,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.800000000000182,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 82,
+      "firstGpuCompletedFrame": 97.40000000596046,
+      "firstPresentationOpportunity": 106.09999999403954,
+      "compilationBlockingMs": 0.09999999403953552,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.03460000000006
+        ],
+        "iFrame": [
+          506
+        ],
+        "uCameraPosition": [
+          [
+            9.000239828394292,
+            2.7163909872176064,
+            20.923495222795786
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8697910837141014,
+            0.4348955418570507,
+            -0.23308654693978267
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3715067772556911,
+            0.8880929934274626,
+            0.2706908743902151
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4401,
+      "run": 1,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.700000000000728,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 73.09999999403954,
+      "firstGpuCompletedFrame": 80.30000001192093,
+      "firstPresentationOpportunity": 84.7000000178814,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.068000000000065
+        ],
+        "iFrame": [
+          512
+        ],
+        "uCameraPosition": [
+          [
+            9.008402430330156,
+            2.7075147588025343,
+            20.916736753237096
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8696485600153789,
+            0.43482428000768947,
+            -0.23375035310983452
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.3713551521914553,
+            0.8881818581114924,
+            0.270607349978669
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4400,
+      "run": 1,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 179,
+      "cpuMedian": 0,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.700000000000728,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 1,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 179,
+        "uniform1i": 179,
+        "uniform3fv": 537,
+        "bindTexture": 1074,
+        "drawArrays": 537
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 80.80000001192093,
+      "firstGpuCompletedFrame": 93.59999999403954,
+      "firstPresentationOpportunity": 102.90000000596046,
+      "compilationBlockingMs": 37.10000002384186,
+      "startupLongTasks": [
+        57
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.167800000000067
+        ],
+        "iFrame": [
+          512
+        ],
+        "uCameraPosition": [
+          [
+            9.0331184772608,
+            2.6808728394620576,
+            20.896200622063404
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8692200801569123,
+            0.43461004007845616,
+            -0.23573409875326426
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37090256911307795,
+            0.8884473897112017,
+            0.27035628333861633
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4400,
+      "run": 2,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.799999999999272,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 87.09999999403954,
+      "firstGpuCompletedFrame": 89.19999998807907,
+      "firstPresentationOpportunity": 95.90000000596046,
+      "compilationBlockingMs": 58.39999997615814,
+      "startupLongTasks": [
+        64
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.103400000000057
+        ],
+        "iFrame": [
+          514
+        ],
+        "uCameraPosition": [
+          [
+            9.024818970991243,
+            2.6897809506061154,
+            20.903108601922547
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.869363471857333,
+            0.4346817359286665,
+            -0.23507220646049418
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37105348689077633,
+            0.8883587990031776,
+            0.2704402967381676
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4401,
+      "run": 2,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.700000000000728,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 61.60000002384186,
+      "firstGpuCompletedFrame": 68.40000000596046,
+      "firstPresentationOpportunity": 85.2000000178814,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.06800000000006
+        ],
+        "iFrame": [
+          512
+        ],
+        "uCameraPosition": [
+          [
+            9.00840243033014,
+            2.70751475880255,
+            20.916736753237107
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8696485600153793,
+            0.43482428000768963,
+            -0.23375035310983344
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37135515219145565,
+            0.8881818581114922,
+            0.27060734997866914
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4401,
+      "run": 3,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 181,
+      "cpuMedian": 0,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.700000000000728,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 181,
+        "uniform1i": 181,
+        "uniform3fv": 543,
+        "bindTexture": 1086,
+        "drawArrays": 543
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 66,
+      "firstGpuCompletedFrame": 75.80000001192093,
+      "firstPresentationOpportunity": 92.59999999403954,
+      "compilationBlockingMs": 0.09999999403953552,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.06800000000007
+        ],
+        "iFrame": [
+          512
+        ],
+        "uCameraPosition": [
+          [
+            9.00840243033014,
+            2.70751475880255,
+            20.916736753237107
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8696485600153793,
+            0.43482428000768963,
+            -0.23375035310983344
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37135515219145565,
+            0.8881818581114922,
+            0.27060734997866914
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4400,
+      "run": 3,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.799999999999272,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 73.2999999821186,
+      "firstGpuCompletedFrame": 78.59999999403954,
+      "firstPresentationOpportunity": 92,
+      "compilationBlockingMs": 35.80000001192093,
+      "startupLongTasks": [
+        51
+      ],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.101200000000055
+        ],
+        "iFrame": [
+          511
+        ],
+        "uCameraPosition": [
+          [
+            9.016546956114281,
+            2.6986974548458154,
+            20.909981548296997
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8695068723191725,
+            0.4347534361595862,
+            -0.23440829494103405
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37120495581376406,
+            0.8882699319646314,
+            0.27052432191367
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4400,
+      "run": 4,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0.09999999403953552,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.700000000000728,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 69.89999997615814,
+      "firstGpuCompletedFrame": 74.7999999821186,
+      "firstPresentationOpportunity": 86.5,
+      "compilationBlockingMs": 33.20000001788139,
+      "startupLongTasks": [],
+      "jsBytes": 383334,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4400/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.e2VTEODx.js",
+          "bytes": 100
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/client.9unXo8s5.js",
+          "bytes": 186619
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/index.WFquGv8Z.js",
+          "bytes": 7848
+        },
+        {
+          "url": "http://127.0.0.1:4400/_astro/BlackHoleShader.DwxxmTLZ.js",
+          "bytes": 173437
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.068000000000062
+        ],
+        "iFrame": [
+          511
+        ],
+        "uCameraPosition": [
+          [
+            9.00835360427219,
+            2.7075677350882743,
+            20.91677721510004
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8696494109672412,
+            0.4348247054836206,
+            -0.23374639570571537
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37135605586500975,
+            0.8881813283453174,
+            0.27060784865027665
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "port": 4401,
+      "run": 4,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+      "dpr": 1,
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "frames": 180,
+      "cpuMedian": 0,
+      "cpuP95": 0.10000002384185791,
+      "wallMedian": 16.699999999999818,
+      "wallP95": 16.700000000000728,
+      "gpuMedian": null,
+      "gpuP95": null,
+      "droppedFrames": 0,
+      "drawsPerFrame": 3,
+      "calls": {
+        "uniform1f": 180,
+        "uniform1i": 180,
+        "uniform3fv": 540,
+        "bindTexture": 1080,
+        "drawArrays": 540
+      },
+      "resources": {
+        "Texture": 7,
+        "Buffer": 1,
+        "Program": 3,
+        "Framebuffer": 3,
+        "VertexArray": 3
+      },
+      "firstFrame": 66.40000000596046,
+      "firstGpuCompletedFrame": 71,
+      "firstPresentationOpportunity": 84,
+      "compilationBlockingMs": 0,
+      "startupLongTasks": [],
+      "jsBytes": 185382,
+      "js": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "bytes": 15330
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "bytes": 765
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "bytes": 169287
+        }
+      ],
+      "uniforms": {
+        "iChannel3": [
+          3
+        ],
+        "iChannel0": [
+          0
+        ],
+        "iChannel1": [
+          1
+        ],
+        "iChannel2": [
+          2
+        ],
+        "iResolution": [
+          331,
+          717,
+          1
+        ],
+        "iTime": [
+          17.06800000000007
+        ],
+        "iFrame": [
+          512
+        ],
+        "uCameraPosition": [
+          [
+            9.008402430330161,
+            2.7075147588025272,
+            20.916736753237092
+          ]
+        ],
+        "uCameraRight": [
+          [
+            0.8696485600153789,
+            0.43482428000768947,
+            -0.23375035310983508
+          ]
+        ],
+        "uCameraUp": [
+          [
+            -0.37135515219145526,
+            0.8881818581114924,
+            0.2706073499786689
+          ]
+        ],
+        "uUniverseSign": [
+          1
+        ],
+        "uQuality": [
+          0.65
+        ],
+        "uTemporalJitter": [
+          0
+        ],
+        "uBlendWeight": [
+          0.5
+        ],
+        "uExposure": [
+          2
+        ],
+        "uBloomStrength": [
+          0
+        ],
+        "uAsciiCellSize": [
+          6,
+          9
+        ],
+        "uAsciiMix": [
+          1
+        ],
+        "uGlyphCount": [
+          10
+        ],
+        "uAsciiBrightness": [
+          0
+        ],
+        "uAsciiContrast": [
+          1
+        ],
+        "uPaletteMode": [
+          0
+        ],
+        "uShadowColor": [
+          [
+            0.03137254901960784,
+            0.08627450980392157,
+            0.17647058823529413
+          ]
+        ],
+        "uMidColor": [
+          [
+            0.20784313725490197,
+            0.7803921568627451,
+            1
+          ]
+        ],
+        "uHighlightColor": [
+          [
+            1,
+            0.9803921568627451,
+            0.9490196078431372
+          ]
+        ]
+      },
+      "longTasks": []
+    }
+  ],
+  "errors": []
+}

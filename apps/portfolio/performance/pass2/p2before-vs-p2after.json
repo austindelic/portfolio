@@ -1,0 +1,690 @@
+[
+  {
+    "file": "p2before-route-blog-canvas.png",
+    "counterpart": "p2after-route-blog-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-1440-1500.png",
+    "counterpart": "p2after-1440-1500.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-full.png",
+    "counterpart": "p2after-settings-full.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-390-420.png",
+    "counterpart": "p2after-390-420.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-2100-canvas.png",
+    "counterpart": "p2after-1440-2100-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-2400.png",
+    "counterpart": "p2after-390-2400.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-900-canvas.png",
+    "counterpart": "p2after-390-900-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-1500-canvas.png",
+    "counterpart": "p2after-390-1500-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-30.png",
+    "counterpart": "p2after-390-30.png",
+    "changedChannels": 180,
+    "maxDifference": 68,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-120-canvas.png",
+    "counterpart": "p2after-2560-120-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-route-home-canvas.png",
+    "counterpart": "p2after-route-home-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-1440-420-canvas.png",
+    "counterpart": "p2after-1440-420-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-2400-canvas.png",
+    "counterpart": "p2after-390-2400-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-120-canvas.png",
+    "counterpart": "p2after-390-120-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-mix-zero.png",
+    "counterpart": "p2after-settings-mix-zero.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-1440-60.png",
+    "counterpart": "p2after-1440-60.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-30-canvas.png",
+    "counterpart": "p2after-2560-30-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 73,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-30.png",
+    "counterpart": "p2after-2560-30.png",
+    "changedChannels": 180,
+    "maxDifference": 73,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-60-canvas.png",
+    "counterpart": "p2after-390-60-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 74,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-1500.png",
+    "counterpart": "p2after-2560-1500.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-route-socials.png",
+    "counterpart": "p2after-route-socials.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-route-blog.png",
+    "counterpart": "p2after-route-blog.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-2560-900-canvas.png",
+    "counterpart": "p2after-2560-900-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-30-canvas.png",
+    "counterpart": "p2after-390-30-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 68,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-120.png",
+    "counterpart": "p2after-390-120.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-2400-canvas.png",
+    "counterpart": "p2after-2560-2400-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-900.png",
+    "counterpart": "p2after-390-900.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-1500-canvas.png",
+    "counterpart": "p2after-2560-1500-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-60-canvas.png",
+    "counterpart": "p2after-2560-60-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-2100.png",
+    "counterpart": "p2after-390-2100.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-font.png",
+    "counterpart": "p2after-settings-font.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-route-post-canvas.png",
+    "counterpart": "p2after-route-post-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-1440-900-canvas.png",
+    "counterpart": "p2after-1440-900-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-60.png",
+    "counterpart": "p2after-390-60.png",
+    "changedChannels": 180,
+    "maxDifference": 74,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-2100-canvas.png",
+    "counterpart": "p2after-2560-2100-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-glyphs.png",
+    "counterpart": "p2after-settings-glyphs.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-1440-30-canvas.png",
+    "counterpart": "p2after-1440-30-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 72,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-2100.png",
+    "counterpart": "p2after-1440-2100.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-palette.png",
+    "counterpart": "p2after-settings-palette.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-route-socials-canvas.png",
+    "counterpart": "p2after-route-socials-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-route-home.png",
+    "counterpart": "p2after-route-home.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-390-420-canvas.png",
+    "counterpart": "p2after-390-420-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-420.png",
+    "counterpart": "p2after-2560-420.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-2400.png",
+    "counterpart": "p2after-2560-2400.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-60-canvas.png",
+    "counterpart": "p2after-1440-60-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-420.png",
+    "counterpart": "p2after-1440-420.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-900.png",
+    "counterpart": "p2after-2560-900.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-route-post.png",
+    "counterpart": "p2after-route-post.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-2560-2100.png",
+    "counterpart": "p2after-2560-2100.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-120.png",
+    "counterpart": "p2after-2560-120.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-120.png",
+    "counterpart": "p2after-1440-120.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-mixed.png",
+    "counterpart": "p2after-settings-mixed.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-1440-900.png",
+    "counterpart": "p2after-1440-900.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-plain.png",
+    "counterpart": "p2after-settings-plain.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-2560-420-canvas.png",
+    "counterpart": "p2after-2560-420-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-120-canvas.png",
+    "counterpart": "p2after-1440-120-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-2100-canvas.png",
+    "counterpart": "p2after-390-2100-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-settings-bloom.png",
+    "counterpart": "p2after-settings-bloom.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-1440-30.png",
+    "counterpart": "p2after-1440-30.png",
+    "changedChannels": 180,
+    "maxDifference": 72,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-2400-canvas.png",
+    "counterpart": "p2after-1440-2400-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-390-1500.png",
+    "counterpart": "p2after-390-1500.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2before-2560-60.png",
+    "counterpart": "p2after-2560-60.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-1500-canvas.png",
+    "counterpart": "p2after-1440-1500-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  },
+  {
+    "file": "p2before-1440-2400.png",
+    "counterpart": "p2after-1440-2400.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      602,
+      52,
+      683,
+      52
+    ]
+  }
+]

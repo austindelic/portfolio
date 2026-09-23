@@ -1,0 +1,210 @@
+[
+  {
+    "file": "p2fontbefore-2560-60-canvas.png",
+    "counterpart": "p2fontafter-2560-60-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-2560-420.png",
+    "counterpart": "p2fontafter-2560-420.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-1440-420.png",
+    "counterpart": "p2fontafter-1440-420.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-390-60.png",
+    "counterpart": "p2fontafter-390-60.png",
+    "changedChannels": 180,
+    "maxDifference": 74,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-2560-30-canvas.png",
+    "counterpart": "p2fontafter-2560-30-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-390-420.png",
+    "counterpart": "p2fontafter-390-420.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-390-120-canvas.png",
+    "counterpart": "p2fontafter-390-120-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-390-120.png",
+    "counterpart": "p2fontafter-390-120.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-390-30-canvas.png",
+    "counterpart": "p2fontafter-390-30-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 68,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-2560-120.png",
+    "counterpart": "p2fontafter-2560-120.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-2560-420-canvas.png",
+    "counterpart": "p2fontafter-2560-420-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-1440-120-canvas.png",
+    "counterpart": "p2fontafter-1440-120-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-390-60-canvas.png",
+    "counterpart": "p2fontafter-390-60-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 74,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-2560-30.png",
+    "counterpart": "p2fontafter-2560-30.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-1440-60.png",
+    "counterpart": "p2fontafter-1440-60.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-1440-120.png",
+    "counterpart": "p2fontafter-1440-120.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-2560-120-canvas.png",
+    "counterpart": "p2fontafter-2560-120-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-1440-420-canvas.png",
+    "counterpart": "p2fontafter-1440-420-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-390-30.png",
+    "counterpart": "p2fontafter-390-30.png",
+    "changedChannels": 180,
+    "maxDifference": 68,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-1440-60-canvas.png",
+    "counterpart": "p2fontafter-1440-60-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-2560-60.png",
+    "counterpart": "p2fontafter-2560-60.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-1440-30.png",
+    "counterpart": "p2fontafter-1440-30.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2fontbefore-390-420-canvas.png",
+    "counterpart": "p2fontafter-390-420-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      26,
+      52,
+      107,
+      52
+    ]
+  },
+  {
+    "file": "p2fontbefore-1440-30-canvas.png",
+    "counterpart": "p2fontafter-1440-30-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  }
+]

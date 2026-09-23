@@ -52,6 +52,7 @@ async (page) => {
 		});
 	}
 	await client.detach();
+	const unexpectedPublicModules = results.filter(r => r.path !== "/black-hole/").flatMap(r => r.resources.filter(asset => /\.js(?:\?|$)/.test(asset.url) && !/\/(?:BlackHoleBackground\.|BlackHoleRuntime\.|ClientRouter\.)/.test(asset.url)).map(asset => ({path:r.path,url:asset.url})));
 	const failures = results.filter(
 		(r) =>
 			!r.fontReady ||
@@ -59,5 +60,5 @@ async (page) => {
 			r.islands.some((i) => i.pending) ||
 			r.resources.some((r) => r.status >= 400),
 	);
-	return { results, errors, failures };
+	return { results, errors, failures, unexpectedPublicModules };
 }

@@ -3,6 +3,17 @@ async (page) => {
 	const origin = page.url().split("/").slice(0, 3).join("/");
 	const label = page.url().split("perfRun=")[1]?.split("&")[0] || "baseline";
 	await page.addInitScript(() => {
+		window.__programsReady = 0;
+		const readyLocation = WebGL2RenderingContext.prototype.getUniformLocation;
+		WebGL2RenderingContext.prototype.getUniformLocation = function (
+			program,
+			name,
+		) {
+			const result = readyLocation.call(this, program, name);
+			if (name === "uBloomStrength") window.__programsReady++;
+			return result;
+		};
+
 		window.__realNow = performance.now.bind(performance);
 		window.__draws = 0;
 		const draw = WebGL2RenderingContext.prototype.drawArrays;
@@ -39,12 +50,17 @@ async (page) => {
 	});
 	// Block client entrypoints until web fonts are loaded, on both builds.
 	await page.route("**/_astro/*.js", async (route) => {
-		await page.evaluate(async () => {
-			await document.fonts.load('12px "Departure Mono"');
-			await document.fonts.load('12px "DSEG14Modern"');
-			await document.fonts.ready;
-		});
-		await route.continue();
+		const response = await route.fetch();
+		// Load fonts inside the module: evaluating the navigating document from
+		// a paused module request can deadlock document readiness.
+		const prelude = `await (globalThis.__captureFonts ??= Promise.all([
+          ["Departure Mono", "/fonts/DepartureMono-Regular.woff2"],
+          ["DSEG14Modern", "/fonts/DSEG14Modern-Regular.woff2"]
+        ].map(async ([family, url]) => {
+          const font = await new FontFace(family, "url(" + url + ")").load();
+          document.fonts.add(font);
+        })));\n`;
+		await route.fulfill({ response, body: prelude + (await response.text()) });
 	});
 
 	const results = [];
@@ -55,8 +71,11 @@ async (page) => {
 	]) {
 		await page.setViewportSize(viewport);
 		for (let run = 0; run < 5; run++) {
-			await page.goto(origin + "/", { waitUntil: "networkidle" });
+			await page.goto(origin + "/", { waitUntil: "domcontentloaded" });
 			await page.waitForSelector("canvas");
+			await page.waitForFunction(() => window.__programsReady >= 3, null, {
+				polling: 50,
+			});
 			results.push(
 				await page.evaluate(
 					({ viewport, run }) => {

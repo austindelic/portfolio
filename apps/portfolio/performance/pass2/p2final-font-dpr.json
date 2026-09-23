@@ -1,0 +1,38 @@
+{
+  "pending": {
+    "contexts": 0,
+    "draws": 0
+  },
+  "released": {
+    "contexts": 1,
+    "draws": 9
+  },
+  "sizes": [
+    {
+      "dpr": 0.5,
+      "width": 450,
+      "height": 350,
+      "contexts": 1
+    },
+    {
+      "dpr": 1,
+      "width": 765,
+      "height": 595,
+      "contexts": 1
+    },
+    {
+      "dpr": 2,
+      "width": 765,
+      "height": 595,
+      "contexts": 1
+    },
+    {
+      "dpr": 1,
+      "width": 765,
+      "height": 595,
+      "contexts": 1
+    }
+  ],
+  "failures": [],
+  "errors": []
+}

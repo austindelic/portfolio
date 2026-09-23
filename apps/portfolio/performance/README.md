@@ -1,5 +1,7 @@
 # Portfolio performance pass — 23 September 2026
 
+For the subsequent React-free loading and compilation pass, measured against `9346a5f`, see [the second-pass report](pass2/README.md). The measurements below describe the first pass only.
+
 The default renderer performs less setup and CPU work while preserving its rendered output. The acceptance targets are **not fully met**: initial external JavaScript is 16.7% smaller (14.7% with the same gzip settings), and synchronous frame completion improved about 5–6% at desktop sizes, below the requested 20% transfer and 25% dominant-rendering-cost targets. No resolution, sampling, precision, frame cap, shader timing, typography, glass styling, or default backend was changed to improve these numbers.
 
 ## Results

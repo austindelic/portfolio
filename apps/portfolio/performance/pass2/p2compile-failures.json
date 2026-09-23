@@ -1,0 +1,55 @@
+{
+  "results": [
+    {
+      "scenario": "allocation",
+      "failed": true,
+      "draws": 69,
+      "programs": 3,
+      "shaders": 0,
+      "textures": 7,
+      "framebuffers": 3,
+      "errorText": null
+    },
+    {
+      "scenario": "compile",
+      "failed": true,
+      "draws": 0,
+      "programs": 0,
+      "shaders": 0,
+      "textures": 0,
+      "framebuffers": 0,
+      "errorText": "Buffer A failed to link:\nERROR: 0:7: 'THIS_IS_AN_INJECTED_COMPILATION_ERROR' : syntax error\n"
+    },
+    {
+      "scenario": "unavailable",
+      "failed": true,
+      "draws": 0,
+      "programs": 0,
+      "shaders": 0,
+      "textures": 0,
+      "framebuffers": 0,
+      "errorText": "WebGL2 is not available in this browser."
+    },
+    {
+      "scenario": "bloom-allocation",
+      "failed": true,
+      "draws": 102,
+      "programs": 6,
+      "shaders": 0,
+      "textures": 10,
+      "framebuffers": 6,
+      "errorText": null
+    },
+    {
+      "scenario": "bloom-compile",
+      "failed": true,
+      "draws": 46,
+      "programs": 0,
+      "shaders": 0,
+      "textures": 0,
+      "framebuffers": 0,
+      "errorText": "Buffer B failed to link:\nERROR: 0:7: 'THIS_IS_AN_INJECTED_COMPILATION_ERROR' : syntax error\n"
+    }
+  ],
+  "failures": []
+}

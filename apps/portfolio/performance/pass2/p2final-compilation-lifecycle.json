@@ -1,0 +1,39 @@
+{
+  "failures": [],
+  "errors": [],
+  "pending": {
+    "programs": 3,
+    "shaders": 6,
+    "draws": 0
+  },
+  "afterExit": {
+    "programs": 3,
+    "shaders": 6,
+    "draws": 0
+  },
+  "editorReady": {
+    "programs": 3,
+    "shaders": 0,
+    "draws": 3
+  },
+  "beforeLoss": {
+    "programs": 3,
+    "shaders": 6,
+    "draws": 6
+  },
+  "lost": {
+    "programs": 0,
+    "shaders": 0,
+    "draws": 6
+  },
+  "restoring": {
+    "programs": 3,
+    "shaders": 6,
+    "draws": 6
+  },
+  "restored": {
+    "programs": 3,
+    "shaders": 0,
+    "draws": 111
+  }
+}
