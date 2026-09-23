@@ -11,7 +11,32 @@ export default defineConfig({
 	compressHTML: true,
 	markdown: {
 		shikiConfig: {
-			theme: "gruvbox-dark-medium",
+			theme: {
+				name: "departure-dark",
+				type: "dark",
+				colors: {
+					"editor.background": "#222222",
+					"editor.foreground": "#C0C0C0",
+				},
+				tokenColors: [
+					{
+						scope: ["comment", "punctuation.definition.comment"],
+						settings: { foreground: "#A0A08B" },
+					},
+					{
+						scope: ["keyword", "storage", "entity.name.function"],
+						settings: { foreground: "#FFA133" },
+					},
+					{
+						scope: ["string", "constant", "entity.name.type"],
+						settings: { foreground: "#D6C79F" },
+					},
+					{
+						scope: ["punctuation", "variable"],
+						settings: { foreground: "#C0C0C0" },
+					},
+				],
+			},
 		},
 	},
 	vite: {

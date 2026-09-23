@@ -24,32 +24,28 @@ const displayDate = dayjs(publishDate).format("ll");
   image={heroImage}
   navbarActiveItemID="blog"
 >
-  <article class="prose prose-invert prose-zinc max-w-none">
+  <article class="portfolio-article portfolio-section">
+    <div class="section-label"><span>Writing</span><a href="/blog">← Back to posts</a></div>
     {
       heroImage && (
         <Picture
           widths={[400, 800]}
           src={heroImage}
           alt={title}
-          class="w-full mb-6 rounded-xl shadow-md hover:shadow-2xl transition duration-300"
+          class="w-full mb-6 rounded-sm"
         />
       )
     }
-    <h1 class="title mt-12 mb-4 text-4xl font-bold text-white">{title}</h1>
-    <p class="text-gray-500">{publishDate && <time>{displayDate}</time>}</p>
-    {
-      updatedDate && (
-        <div class="text-gray-500">
-          Updated: <time>{updatedDate}</time>
-        </div>
-      )
-    }
-    <div class="divider mt-2"></div>
+    <h1 class="page-title">{title}</h1>
+    <dl class="article-meta">
+      <div><dt>Published</dt><dd><time datetime={new Date(publishDate).toISOString()}>{displayDate}</time></dd></div>
+      {updatedDate && <div><dt>Updated</dt><dd><time datetime={new Date(updatedDate).toISOString()}>{dayjs(updatedDate).format("ll")}</time></dd></div>}
+    </dl>
     <slot class="my-12" />
   </article>
 </BaseLayout>
 <style>
   article :global(img) {
-    border-radius: 0.75rem;
+    border-radius: 2px;
   }
 </style>

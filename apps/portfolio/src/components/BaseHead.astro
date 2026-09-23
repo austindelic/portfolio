@@ -26,7 +26,7 @@ const { title, description, image = "/share.jpg" } = Astro.props;
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#15191e" />
 <meta name="msapplication-TileColor" content="#603cba" />
-<meta name="theme-color" content="#ffffff" />
+<meta name="theme-color" content={Astro.url.pathname.replace(/\/$/, "") === "/black-hole" ? "#ffffff" : "#222222"} />
 
 <!-- Primary Meta Tags -->
 <title>{title}</title>

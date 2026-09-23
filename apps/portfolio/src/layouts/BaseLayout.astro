@@ -37,8 +37,8 @@ const noClock = bhPerfFlags.has("no-clock");
 const contentWrapperClass = [
 	"bh-foreground-layer pointer-events-none relative z-10 w-full md:px-4 mx-auto",
 	isRightPlacement
-		? "lg:ml-auto lg:mr-6 lg:w-[48rem] xl:mr-12 xl:w-[52rem] 2xl:mr-20"
-		: "xl:w-220 lg:w-4/5",
+		? "lg:ml-auto lg:mr-4 lg:px-0 lg:w-[38.8rem] xl:w-[42.2rem]"
+		: "xl:w-[46.75rem] lg:w-[68%]",
 	hideContent ? "hidden" : "",
 	opaqueContent ? "bh-perf-opaque-content" : "",
 ]
@@ -46,7 +46,7 @@ const contentWrapperClass = [
 	.join(" ");
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const shellClass =
-	"bh-content-shell pointer-events-auto mt-6 rounded-2xl border border-white/10";
+	"bh-content-shell pointer-events-auto mt-4";
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const backgroundLayerClass =
 	"bh-background-layer pointer-events-none fixed inset-0 z-0 overflow-hidden";
@@ -57,13 +57,13 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
 <!doctype html>
 <html
   lang="en"
-  class="dark h-full text-gray-400 selection:bg-cyan-700 selection:text-white"
+  class="dark portfolio-theme h-full"
 >
   <head >
 
     <BaseHead title={title} description={description} image={image} />
   </head>
-  <body class="relative min-h-screen font-Departure text-gray-400 dark selection:bg-cyan-700 selection:text-white" data-bh-perf={Array.from(bhPerfFlags).join(",")}>
+  <body class="relative min-h-screen font-Departure" data-bh-perf={Array.from(bhPerfFlags).join(",")}>
 
   <!-- Background layer -->
     <div class={backgroundLayerClass}>
@@ -101,7 +101,7 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
   <div class={shellClass}>
     <Header navbarActiveItemID={navbarActiveItemID} disableClock={noClock} />
 
-    <main id="main" class="px-4 md:px-8 pb-12 pt-4">
+    <main id="main" class="portfolio-main">
       <slot />
     </main>
   </div>
