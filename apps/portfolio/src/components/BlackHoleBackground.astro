@@ -3,39 +3,121 @@ import type { Props } from "./BlackHoleCore";
 const props: Props = Astro.props;
 ---
 <div data-black-hole-background data-settings={JSON.stringify(props)} transition:persist="black-hole-background" class={`relative h-full w-full bg-black ${props.className ?? ""}`}>
-  <canvas class="block h-full w-full bg-black pointer-events-none" aria-label="Interactive black hole shader"></canvas>
+  <img src="/images/black-hole-mobile.webp" width="1200" height="1200" alt="" aria-hidden="true" fetchpriority="high" class="bh-background-still absolute inset-0 h-full w-full object-cover pointer-events-none" />
+  <canvas class="bh-background-live block h-full w-full bg-black pointer-events-none" aria-hidden="true"></canvas>
   <div data-black-hole-error hidden class="absolute inset-x-4 bottom-4 border border-red-500/60 bg-black/85 p-3 font-mono text-xs text-red-200"></div>
 </div>
 <script>
-import {createRuntimeState, mountBlackHoleRuntime, runtimeOptions} from "./BlackHoleRuntime";
-import type {Props} from "./BlackHoleCore";
+import type { Props } from "./BlackHoleCore";
+import type { mountBlackHoleRuntime } from "./BlackHoleRuntime";
+// Keep this query in sync with the mobile background styles.
+const staticBackground = window.matchMedia(
+	"(pointer: coarse), (max-width: 768px), (max-height: 768px)",
+);
 let host: HTMLElement | null = null;
 let runtime: ReturnType<typeof mountBlackHoleRuntime> | undefined;
 let previousRoute = "";
-function syncBackground() {
- const next = document.querySelector<HTMLElement>("[data-black-hole-background]");
- if (host !== next) {
-   runtime?.dispose(); runtime = undefined; host = next;
-   if (host) {
-     const props: Props = JSON.parse(host.dataset.settings!);
-     const error = host.querySelector<HTMLElement>("[data-black-hole-error]")!;
-     runtime = mountBlackHoleRuntime(host.querySelector("canvas")!, createRuntimeState(props), runtimeOptions(props, message => {
-       error.textContent = message ?? ""; error.hidden = !message;
-     }));
-     previousRoute = location.pathname;
-   }
- } else if (runtime && previousRoute !== location.pathname) {
-   runtime.updateRoute(location.pathname);
-   previousRoute = location.pathname;
- }
+let generation = 0;
+let loading = false;
+function stopBackground() {
+	generation++;
+	loading = false;
+	runtime?.dispose();
+	runtime = undefined;
+	if (host) {
+		delete host.dataset.bhLive;
+		const error = host.querySelector<HTMLElement>("[data-black-hole-error]")!;
+		error.hidden = true;
+		// A canvas cannot switch context types after disposal. Start fresh if
+		// this viewport later returns to desktop mode.
+		const canvas = host.querySelector("canvas")!;
+		canvas.replaceWith(canvas.cloneNode(false));
+	}
 }
-syncBackground();
+async function syncBackground() {
+	const next = document.querySelector<HTMLElement>(
+		"[data-black-hole-background]",
+	);
+	if (host !== next) {
+		stopBackground();
+		host = next;
+	}
+	if (!host) return;
+	if (staticBackground.matches) {
+		if (runtime || loading) stopBackground();
+		return;
+	}
+	if (runtime) {
+		if (previousRoute !== location.pathname)
+			runtime.updateRoute(location.pathname);
+		previousRoute = location.pathname;
+		return;
+	}
+	if (loading) return;
+	loading = true;
+	const current = ++generation;
+	const target = host;
+	try {
+		const { createRuntimeState, mountBlackHoleRuntime, runtimeOptions } =
+			await import("./BlackHoleRuntime");
+		if (
+			current !== generation ||
+			host !== target ||
+			!target.isConnected ||
+			staticBackground.matches
+		)
+			return;
+		const props: Props = {
+			...JSON.parse(target.dataset.settings!),
+			animationRoute: location.pathname,
+		};
+		const error = target.querySelector<HTMLElement>("[data-black-hole-error]")!;
+		const options = runtimeOptions(props, (message) => {
+			if (current !== generation) return;
+			error.textContent = message ?? "";
+			error.hidden = !message;
+			if (message) delete target.dataset.bhLive;
+		});
+		options.onReady = () => {
+			if (current === generation) target.dataset.bhLive = "true";
+		};
+		runtime = mountBlackHoleRuntime(
+			target.querySelector("canvas")!,
+			createRuntimeState(props),
+			options,
+		);
+		previousRoute = location.pathname;
+	} catch (error) {
+		// The server-rendered still remains visible if the desktop chunk fails.
+		console.error("Could not load black hole background", error);
+	} finally {
+		if (current === generation) loading = false;
+	}
+}
+void syncBackground();
+staticBackground.addEventListener("change", syncBackground);
 document.addEventListener("astro:page-load", syncBackground);
 document.addEventListener("astro:before-swap", (event) => {
- const nextDocument = (event as Event & {newDocument: Document}).newDocument;
- if (!nextDocument.querySelector("[data-black-hole-background]")) {
-   runtime?.dispose(); runtime = undefined; host = null;
- }
+	const nextDocument = (event as Event & { newDocument: Document }).newDocument;
+	if (!nextDocument.querySelector("[data-black-hole-background]")) {
+		stopBackground();
+		host = null;
+	}
 });
-window.addEventListener("pagehide", event => { if (!event.persisted) { runtime?.dispose(); runtime = undefined; host = null; } });
+window.addEventListener("pagehide", () => {
+	stopBackground();
+	host = null;
+});
+window.addEventListener("pageshow", syncBackground);
 </script>
+
+<style>
+ .bh-background-live { visibility: hidden; }
+ [data-bh-live="true"] .bh-background-live { visibility: visible; }
+ [data-bh-live="true"] .bh-background-still { visibility: hidden; }
+ @media (pointer: coarse), (max-width: 768px), (max-height: 768px) {
+   .bh-background-live { display: none; }
+   [data-bh-live="true"] .bh-background-still { visibility: visible; }
+   .bh-background-still { object-position: center; }
+ }
+</style>

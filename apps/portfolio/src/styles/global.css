@@ -116,6 +116,29 @@
 	backdrop-filter: none;
 }
 
+/* The mobile background is a still: no promoted canvas layers or glass blur. */
+@media (pointer: coarse), (max-width: 768px), (max-height: 768px) {
+	.bh-background-layer,
+	.bh-background-canvas,
+	.bh-layout-shader,
+	.bh-foreground-layer {
+		transform: none;
+		will-change: auto;
+	}
+
+	.bh-content-shell::before,
+	.bh-home-card::before,
+	.bh-home-inset::before {
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+
+	.portfolio-theme .portfolio-section {
+		background: rgb(20 20 20 / 65%);
+		text-shadow: 0 1px 2px #000;
+	}
+}
+
 @-moz-document url-prefix() {
 	.bh-content-shell::before {
 		background: rgb(0 0 0 / 0.22);
