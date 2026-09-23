@@ -1,0 +1,57 @@
+{
+  "label": "p2clean-raise",
+  "results": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 0,
+      "draws": 180,
+      "median": 19.5,
+      "p95": 33,
+      "mean": 20.960000000397365,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 0,
+      "draws": 180,
+      "median": 92,
+      "p95": 119.7000000178814,
+      "mean": 90.6433333347241,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 1,
+      "draws": 180,
+      "median": 19.400000005960464,
+      "p95": 30.900000005960464,
+      "mean": 20.27166666885217,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 1,
+      "draws": 180,
+      "median": 21.700000017881393,
+      "p95": 37.400000005960464,
+      "mean": 22.87333333492279,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    }
+  ]
+}

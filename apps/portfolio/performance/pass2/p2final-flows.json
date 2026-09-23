@@ -1,0 +1,265 @@
+{
+  "failures": [],
+  "consoleErrors": [],
+  "badRequests": [],
+  "initial": {
+    "programs": 3,
+    "textures": 7,
+    "contexts": 1,
+    "draws": 81,
+    "canvases": 1,
+    "clock": " 14:42:16 "
+  },
+  "routes": [
+    {
+      "route": "/blog/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 132,
+        "canvases": 1,
+        "clock": " 14:42:16 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/building-tactify/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 198,
+        "canvases": 1,
+        "clock": " 14:42:17 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/production-systems-notes/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 264,
+        "canvases": 1,
+        "clock": " 14:42:17 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/still-and-desired-state/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 330,
+        "canvases": 1,
+        "clock": " 14:42:18 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/socials/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 396,
+        "canvases": 1,
+        "clock": " 14:42:18 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 456,
+        "canvases": 1,
+        "clock": " 14:42:19 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 525,
+        "canvases": 1,
+        "clock": " 14:42:19 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/building-tactify/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 585,
+        "canvases": 1,
+        "clock": " 14:42:20 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/production-systems-notes/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 645,
+        "canvases": 1,
+        "clock": " 14:42:20 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/still-and-desired-state/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 711,
+        "canvases": 1,
+        "clock": " 14:42:20 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/socials/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 777,
+        "canvases": 1,
+        "clock": " 14:42:21 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 843,
+        "canvases": 1,
+        "clock": " 14:42:21 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 906,
+        "canvases": 1,
+        "clock": " 14:42:22 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/building-tactify/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 975,
+        "canvases": 1,
+        "clock": " 14:42:22 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/production-systems-notes/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 1041,
+        "canvases": 1,
+        "clock": " 14:42:23 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/blog/still-and-desired-state/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 1107,
+        "canvases": 1,
+        "clock": " 14:42:23 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/socials/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 1173,
+        "canvases": 1,
+        "clock": " 14:42:23 "
+      },
+      "sameCanvas": true
+    },
+    {
+      "route": "/",
+      "state": {
+        "programs": 3,
+        "textures": 7,
+        "contexts": 1,
+        "draws": 1239,
+        "canvases": 1,
+        "clock": " 14:42:24 "
+      },
+      "sameCanvas": true
+    }
+  ],
+  "mobile": {
+    "width": 331,
+    "expected": 331,
+    "horizontalOverflow": false
+  },
+  "editor": [
+    {
+      "programs": 3,
+      "textures": 7,
+      "contexts": 2,
+      "draws": 1520,
+      "canvases": 1
+    },
+    {
+      "programs": 3,
+      "textures": 7,
+      "contexts": 4,
+      "draws": 1699,
+      "canvases": 1
+    }
+  ],
+  "restored": {
+    "programs": 3,
+    "textures": 7,
+    "contexts": 5,
+    "draws": 1855,
+    "canvases": 1,
+    "clock": " 14:42:29 "
+  },
+  "reduced": {
+    "before": 3,
+    "after": 3
+  },
+  "notFound": "404: Not Found"
+}

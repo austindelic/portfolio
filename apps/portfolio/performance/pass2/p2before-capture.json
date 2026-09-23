@@ -1,0 +1,1350 @@
+{
+  "label": "p2before",
+  "errors": [],
+  "checkpoints": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 30,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 0.9686666666666702,
+        "iFrame": 29,
+        "uCameraPosition": [
+          1.009570845080339,
+          0.035361051241997815,
+          0.7484595867549622
+        ],
+        "uCameraRight": [
+          -0.5010108981414884,
+          -0.2505054490707442,
+          0.8283930829801297
+        ],
+        "uCameraUp": [
+          -0.1636775271856892,
+          0.9673442673540067,
+          0.19353225961507814
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 60,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 1.9686666666666734,
+        "iFrame": 59,
+        "uCameraPosition": [
+          1.3744687739407124,
+          0.19683421798681408,
+          1.7313459432220077
+        ],
+        "uCameraRight": [
+          -0.4716698750123322,
+          -0.2358349375061661,
+          0.8496525238338986
+        ],
+        "uCameraUp": [
+          -0.15891409139371046,
+          0.9705280249798094,
+          0.1811675033920321
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 120,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 3.9686666666666675,
+        "iFrame": 119,
+        "uCameraPosition": [
+          3.3385276939281177,
+          1.0659616873431093,
+          7.021720492022742
+        ],
+        "uCameraRight": [
+          -0.12844491797512717,
+          -0.06422245898756358,
+          0.9896349725065064
+        ],
+        "uCameraUp": [
+          -0.1666154247445041,
+          0.9851140389873299,
+          0.04230402377171736
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 420,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 13.968666666666682,
+        "iFrame": 419,
+        "uCameraPosition": [
+          8.618771979588804,
+          3.2679582382173233,
+          21.225494092353387
+        ],
+        "uCameraRight": [
+          0.8788476452917088,
+          0.4394238226458544,
+          -0.18583196833839807
+        ],
+        "uCameraUp": [
+          -0.38251760836996995,
+          0.8817592048898941,
+          0.27600902861837734
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 900,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 29.968666666665793,
+        "iFrame": 899,
+        "uCameraPosition": [
+          10.381420728364315,
+          1.1881003025032661,
+          19.053117473595858
+        ],
+        "uCameraRight": [
+          0.8307276316899164,
+          0.4153638158449582,
+          -0.37062717444027016
+        ],
+        "uCameraUp": [
+          -0.3437018978438216,
+          0.9064304977865425,
+          0.2454643723659214
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 1500,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 49.968666666668625,
+        "iFrame": 1499,
+        "uCameraPosition": [
+          8.23903936119562,
+          2.8359291329253424,
+          17.30298279076534
+        ],
+        "uCameraRight": [
+          0.7922874074550805,
+          0.39614370372754026,
+          -0.4640590802744127
+        ],
+        "uCameraUp": [
+          -0.37896334819850036,
+          0.9155742250175862,
+          0.13457570065070779
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 2100,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 69.96866666667037,
+        "iFrame": 2099,
+        "uCameraPosition": [
+          8.905407801918681,
+          3.6584107701874786,
+          21.005374027060114
+        ],
+        "uCameraRight": [
+          0.8679088482600426,
+          0.4339544241300213,
+          -0.2416977221446404
+        ],
+        "uCameraUp": [
+          -0.37258204338083006,
+          0.89053733410791,
+          0.26100934372190954
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "target": 2400,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 79.9686666666698,
+        "iFrame": 2399,
+        "uCameraPosition": [
+          8.68999243075078,
+          3.112113267390286,
+          21.17157221841413
+        ],
+        "uCameraRight": [
+          0.8761675736850845,
+          0.43808378684254223,
+          -0.20102979512622027
+        ],
+        "uCameraUp": [
+          -0.3789318164977099,
+          0.8837968793214217,
+          0.2744335157145761
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 30,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 0.9686666666666702,
+        "iFrame": 29,
+        "uCameraPosition": [
+          1.009570845080339,
+          0.035361051241997815,
+          0.7484595867549622
+        ],
+        "uCameraRight": [
+          -0.5010108981414884,
+          -0.2505054490707442,
+          0.8283930829801297
+        ],
+        "uCameraUp": [
+          -0.1636775271856892,
+          0.9673442673540067,
+          0.19353225961507814
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 60,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 1.9686666666666734,
+        "iFrame": 59,
+        "uCameraPosition": [
+          1.3744687739407124,
+          0.19683421798681408,
+          1.7313459432220077
+        ],
+        "uCameraRight": [
+          -0.4716698750123322,
+          -0.2358349375061661,
+          0.8496525238338986
+        ],
+        "uCameraUp": [
+          -0.15891409139371046,
+          0.9705280249798094,
+          0.1811675033920321
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 120,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 3.9686666666666675,
+        "iFrame": 119,
+        "uCameraPosition": [
+          3.3385276939281177,
+          1.0659616873431093,
+          7.021720492022742
+        ],
+        "uCameraRight": [
+          -0.12844491797512717,
+          -0.06422245898756358,
+          0.9896349725065064
+        ],
+        "uCameraUp": [
+          -0.1666154247445041,
+          0.9851140389873299,
+          0.04230402377171736
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 420,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 13.968666666666682,
+        "iFrame": 419,
+        "uCameraPosition": [
+          8.618771979588804,
+          3.2679582382173233,
+          21.225494092353387
+        ],
+        "uCameraRight": [
+          0.8788476452917088,
+          0.4394238226458544,
+          -0.18583196833839807
+        ],
+        "uCameraUp": [
+          -0.38251760836996995,
+          0.8817592048898941,
+          0.27600902861837734
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 900,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 29.968666666665793,
+        "iFrame": 899,
+        "uCameraPosition": [
+          10.381420728364315,
+          1.1881003025032661,
+          19.053117473595858
+        ],
+        "uCameraRight": [
+          0.8307276316899164,
+          0.4153638158449582,
+          -0.37062717444027016
+        ],
+        "uCameraUp": [
+          -0.3437018978438216,
+          0.9064304977865425,
+          0.2454643723659214
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 1500,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 49.968666666668625,
+        "iFrame": 1499,
+        "uCameraPosition": [
+          8.23903936119562,
+          2.8359291329253424,
+          17.30298279076534
+        ],
+        "uCameraRight": [
+          0.7922874074550805,
+          0.39614370372754026,
+          -0.4640590802744127
+        ],
+        "uCameraUp": [
+          -0.37896334819850036,
+          0.9155742250175862,
+          0.13457570065070779
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 2100,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 69.96866666667037,
+        "iFrame": 2099,
+        "uCameraPosition": [
+          8.905407801918681,
+          3.6584107701874786,
+          21.005374027060114
+        ],
+        "uCameraRight": [
+          0.8679088482600426,
+          0.4339544241300213,
+          -0.2416977221446404
+        ],
+        "uCameraUp": [
+          -0.37258204338083006,
+          0.89053733410791,
+          0.26100934372190954
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 2560,
+        "height": 1440
+      },
+      "target": 2400,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 79.9686666666698,
+        "iFrame": 2399,
+        "uCameraPosition": [
+          8.68999243075078,
+          3.112113267390286,
+          21.17157221841413
+        ],
+        "uCameraRight": [
+          0.8761675736850845,
+          0.43808378684254223,
+          -0.20102979512622027
+        ],
+        "uCameraUp": [
+          -0.3789318164977099,
+          0.8837968793214217,
+          0.2744335157145761
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 30,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 0.9686666666666702,
+        "iFrame": 29,
+        "uCameraPosition": [
+          1.009570845080339,
+          0.035361051241997815,
+          0.7484595867549622
+        ],
+        "uCameraRight": [
+          -0.5010108981414884,
+          -0.2505054490707442,
+          0.8283930829801297
+        ],
+        "uCameraUp": [
+          -0.1636775271856892,
+          0.9673442673540067,
+          0.19353225961507814
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 60,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 1.9686666666666734,
+        "iFrame": 59,
+        "uCameraPosition": [
+          1.3744687739407124,
+          0.19683421798681408,
+          1.7313459432220077
+        ],
+        "uCameraRight": [
+          -0.4716698750123322,
+          -0.2358349375061661,
+          0.8496525238338986
+        ],
+        "uCameraUp": [
+          -0.15891409139371046,
+          0.9705280249798094,
+          0.1811675033920321
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 120,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 3.9686666666666675,
+        "iFrame": 119,
+        "uCameraPosition": [
+          3.3385276939281177,
+          1.0659616873431093,
+          7.021720492022742
+        ],
+        "uCameraRight": [
+          -0.12844491797512717,
+          -0.06422245898756358,
+          0.9896349725065064
+        ],
+        "uCameraUp": [
+          -0.1666154247445041,
+          0.9851140389873299,
+          0.04230402377171736
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 420,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 13.968666666666682,
+        "iFrame": 419,
+        "uCameraPosition": [
+          8.618771979588804,
+          3.2679582382173233,
+          21.225494092353387
+        ],
+        "uCameraRight": [
+          0.8788476452917088,
+          0.4394238226458544,
+          -0.18583196833839807
+        ],
+        "uCameraUp": [
+          -0.38251760836996995,
+          0.8817592048898941,
+          0.27600902861837734
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 900,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 29.968666666665793,
+        "iFrame": 899,
+        "uCameraPosition": [
+          10.381420728364315,
+          1.1881003025032661,
+          19.053117473595858
+        ],
+        "uCameraRight": [
+          0.8307276316899164,
+          0.4153638158449582,
+          -0.37062717444027016
+        ],
+        "uCameraUp": [
+          -0.3437018978438216,
+          0.9064304977865425,
+          0.2454643723659214
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 1500,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 49.968666666668625,
+        "iFrame": 1499,
+        "uCameraPosition": [
+          8.23903936119562,
+          2.8359291329253424,
+          17.30298279076534
+        ],
+        "uCameraRight": [
+          0.7922874074550805,
+          0.39614370372754026,
+          -0.4640590802744127
+        ],
+        "uCameraUp": [
+          -0.37896334819850036,
+          0.9155742250175862,
+          0.13457570065070779
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 2100,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 69.96866666667037,
+        "iFrame": 2099,
+        "uCameraPosition": [
+          8.905407801918681,
+          3.6584107701874786,
+          21.005374027060114
+        ],
+        "uCameraRight": [
+          0.8679088482600426,
+          0.4339544241300213,
+          -0.2416977221446404
+        ],
+        "uCameraUp": [
+          -0.37258204338083006,
+          0.89053733410791,
+          0.26100934372190954
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "target": 2400,
+      "uniforms": {
+        "iChannel3": 3,
+        "iChannel0": 0,
+        "iChannel1": 1,
+        "iChannel2": 2,
+        "iTime": 79.9686666666698,
+        "iFrame": 2399,
+        "uCameraPosition": [
+          8.68999243075078,
+          3.112113267390286,
+          21.17157221841413
+        ],
+        "uCameraRight": [
+          0.8761675736850845,
+          0.43808378684254223,
+          -0.20102979512622027
+        ],
+        "uCameraUp": [
+          -0.3789318164977099,
+          0.8837968793214217,
+          0.2744335157145761
+        ],
+        "uUniverseSign": 1,
+        "uQuality": 0.65,
+        "uTemporalJitter": 0,
+        "uBlendWeight": 0.5,
+        "uExposure": 2,
+        "uBloomStrength": 0,
+        "uAsciiMix": 1,
+        "uGlyphCount": 10,
+        "uAsciiBrightness": 0,
+        "uAsciiContrast": 1,
+        "uPaletteMode": 0,
+        "uShadowColor": [
+          0.03137254901960784,
+          0.08627450980392157,
+          0.17647058823529413
+        ],
+        "uMidColor": [
+          0.20784313725490197,
+          0.7803921568627451,
+          1
+        ],
+        "uHighlightColor": [
+          1,
+          0.9803921568627451,
+          0.9490196078431372
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,408 @@
+{
+  "results": [
+    {
+      "path": "/",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "Austin Delic | Portfolio",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "path": "/blog/",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "Blog",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "path": "/blog/building-tactify/",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "Building Tactify",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "path": "/blog/production-systems-notes/",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "Notes From Production Systems",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "path": "/blog/still-and-desired-state/",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "Still and Desired State",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "path": "/socials/",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "Austin Delic | Portfolio",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "path": "/404.html",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "404: Not Found",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "path": "/black-hole/",
+      "layers": 0,
+      "drawingLayers": 0,
+      "title": "Black Hole Shader | Austin Delic",
+      "fonts": "loaded",
+      "fontReady": true,
+      "images": [],
+      "islands": [
+        {
+          "component": "/_astro/BlackHoleShader.I4WQN_Og.js",
+          "pending": false
+        }
+      ],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:4401/fonts/DepartureMono-Regular.woff2",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/_slug_.Czskzk-P.css",
+          "status": 200,
+          "type": "link"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleShader.I4WQN_Og.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/client.9unXo8s5.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/fonts/DSEG14Modern-Regular.woff2",
+          "status": 200,
+          "type": "css"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleShader.CxjrLK-_.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleRuntime.tuF5AvV3.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/index.WFquGv8Z.js",
+          "status": 200,
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:4401/favicon-32x32.png",
+          "status": 200,
+          "type": "other"
+        },
+        {
+          "url": "http://127.0.0.1:4401/_astro/BlackHoleControls.DssLAAjG.js",
+          "status": 200,
+          "type": "script"
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "failures": [],
+  "unexpectedPublicModules": []
+}

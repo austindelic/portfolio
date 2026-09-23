@@ -11,7 +11,8 @@
 		"preview": "astro preview",
 		"astro": "astro",
 		"lint": "biome lint",
-		"check": "biome check"
+		"check": "biome check",
+		"test:performance": "node --test scripts/perf/*.test.mjs"
 	},
 	"dependencies": {
 		"@astrojs/react": "^4.4.2",

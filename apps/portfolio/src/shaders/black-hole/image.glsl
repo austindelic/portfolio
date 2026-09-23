@@ -113,6 +113,7 @@ vec3 DisplayColor(vec3 color)
 
 vec3 CompositeGlow(vec3 base, vec2 uv, vec3 sourceColor)
 {
+    if (uBloomStrength <= 0.0) return base;
     // Restrict spill to a soft halo. Source color comes from the blurred emission.
     vec3 glow = DisplayColor(GetBloom(uv) * 0.018 * uBloomStrength * uExposure);
     float sourcePeak = max(max(sourceColor.r, sourceColor.g), sourceColor.b);

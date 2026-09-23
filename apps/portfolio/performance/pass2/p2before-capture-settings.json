@@ -1,0 +1,14 @@
+{
+  "label": "p2before",
+  "errors": [],
+  "scenarios": [
+    "full",
+    "bloom",
+    "plain",
+    "mixed",
+    "mix-zero",
+    "palette",
+    "font",
+    "glyphs"
+  ]
+}

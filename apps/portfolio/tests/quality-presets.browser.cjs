@@ -31,6 +31,7 @@ async function testQualityPresets(page) {
 	await page.goto("http://127.0.0.1:4321/black-hole");
 	await waitPreset("cinematic-ascii");
 	const preset = page.getByRole("combobox", { name: "Preset", exact: true });
+	await preset.waitFor();
 	const choices = await preset
 		.locator("option:not([disabled])")
 		.allTextContents();

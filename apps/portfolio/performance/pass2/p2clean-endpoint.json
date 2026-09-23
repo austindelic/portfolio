@@ -1,0 +1,135 @@
+{
+  "label": "p2clean-endpoint",
+  "results": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 0,
+      "draws": 180,
+      "median": 11.800000011920929,
+      "p95": 14.300000011920929,
+      "mean": 11.703333336114884,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 0,
+      "draws": 180,
+      "median": 80.90000000596046,
+      "p95": 94.39999997615814,
+      "mean": 79.7483333359162,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 1,
+      "draws": 180,
+      "median": 11.199999988079071,
+      "p95": 13.599999994039536,
+      "mean": 11.106666665275892,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 1,
+      "draws": 180,
+      "median": 11.800000011920929,
+      "p95": 15.300000011920929,
+      "mean": 11.988333334525427,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 2,
+      "draws": 180,
+      "median": 11.900000005960464,
+      "p95": 14.900000005960464,
+      "mean": 11.948333334426085,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 2,
+      "draws": 180,
+      "median": 11.900000005960464,
+      "p95": 14.800000011920929,
+      "mean": 11.981666665772597,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 3,
+      "draws": 180,
+      "median": 11.699999988079071,
+      "p95": 14.799999982118607,
+      "mean": 11.963333335022131,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 3,
+      "draws": 180,
+      "median": 11.300000011920929,
+      "p95": 13.700000017881393,
+      "mean": 11.481666667759418,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4400,
+      "run": 4,
+      "draws": 180,
+      "median": 11.5,
+      "p95": 14.299999982118607,
+      "mean": 11.57333333392938,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "port": 4401,
+      "run": 4,
+      "draws": 180,
+      "median": 11.400000005960464,
+      "p95": 13.799999982118607,
+      "mean": 11.516666663686435,
+      "method": "synchronous frame plus 1-pixel readback, includes driver overhead"
+    }
+  ]
+}
