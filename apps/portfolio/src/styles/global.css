@@ -535,18 +535,6 @@ pre {
 	grid-template-columns: 1.05fr 1fr;
 	gap: 16px;
 }
-.identity-heading {
-	display: flex;
-	gap: 10px;
-	align-items: center;
-}
-.pixel-mark {
-	width: 32px;
-	height: 18px;
-	flex-shrink: 0;
-	color: var(--primary);
-	shape-rendering: crispEdges;
-}
 .intro-title {
 	font-size: 28px;
 	line-height: 1.15;
