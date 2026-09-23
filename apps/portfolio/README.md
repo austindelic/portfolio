@@ -7,7 +7,7 @@
 ## ✨ Features
 
 - 🚀 **Astro 5.x** - Fast, content-focused web framework
-- 🎨 **Tailwind CSS** - Utility-first CSS framework with typography plugin
+- 🎨 **Tailwind CSS** - Utility-first CSS framework
 - 📱 **Responsive Design** - Mobile-first approach
 - 📝 **Blog Ready** - Built-in blog functionality with markdown support
 - 🚀 **GitHub Pages Deployment** - Automated deployment via GitHub Actions
@@ -47,7 +47,6 @@
 terminus/
 ├── public/              # Static assets (favicon, images, etc.)
 ├── src/
-│   ├── assets/         # Images, fonts, and other assets
 │   ├── components/     # Reusable Astro components
 │   │   ├── BaseHead.astro
 │   │   ├── Header.astro
@@ -67,7 +66,6 @@ terminus/
 │   ├── utils/          # Utility functions
 │   └── config.ts       # Site configuration
 ├── astro.config.mjs    # Astro configuration
-├── tailwind.config.cjs # Tailwind CSS configuration
 └── package.json        # Dependencies and scripts
 ```
 
