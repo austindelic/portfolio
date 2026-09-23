@@ -598,10 +598,12 @@ pre {
 .copy-email {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
-	border: 1px solid var(--line);
-	padding: 2px 5px;
-	margin: 5px 0 0 6px;
+	justify-content: center;
+	vertical-align: middle;
+	border: 0;
+	background: transparent;
+	padding: 4px;
+	margin: 0 0 0 4px;
 	font: inherit;
 	cursor: pointer;
 	color: var(--foreground);
