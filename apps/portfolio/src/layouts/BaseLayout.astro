@@ -101,7 +101,7 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
   <div class={shellClass}>
     <Header navbarActiveItemID={navbarActiveItemID} disableClock={noClock} />
 
-    <main id="main" class="portfolio-main">
+    <main transition:name="portfolio-content" id="main" class="portfolio-main">
       <slot />
     </main>
   </div>
