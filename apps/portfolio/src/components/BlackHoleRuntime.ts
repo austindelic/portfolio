@@ -60,6 +60,7 @@ import {
 import {
 	BlackHoleOrbitController,
 	createOrbitFrame,
+	frameIntroSequence,
 	motionFromFrame,
 	varyOrbit,
 } from "./BlackHoleOrbit";
@@ -473,6 +474,7 @@ function startRendererSession(
 	let animationSequenceLoops = resume?.loops ?? false;
 	let animationFrameIndex = resume?.index ?? 0;
 	let animationSequenceJustStarted = false;
+	let introAspect = Number.NaN;
 	if (resume) {
 		activeAnimationRoute = resume.route;
 		state.animationPlaying = resume.playing;
@@ -545,6 +547,7 @@ function startRendererSession(
 		animationSequenceLoops = loop;
 		animationFrameIndex = 0;
 		animationSequenceJustStarted = true;
+		introAspect = Number.NaN;
 		setAnimationPlaying(playing && animationSequence.length > 0);
 
 		const firstFrame = animationSequence[0] ?? null;
@@ -750,6 +753,18 @@ function startRendererSession(
 			};
 		}
 
+		if (activeAnimationMode() === "route" && animationPhase === "intro") {
+			const aspect = viewportAspect();
+			if (aspect !== introAspect) {
+				const config = getBlackHoleRouteAnimation(activeAnimationRoute);
+				animationSequence = frameIntroSequence(
+					config.intro,
+					config.orbit,
+					aspect,
+				);
+				introAspect = aspect;
+			}
+		}
 		syncAnimationRoute();
 
 		if (activeAnimationMode() === "route" && orbitController) {
