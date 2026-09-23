@@ -10,6 +10,7 @@ const props: Props = Astro.props;
 <script>
 import type { Props } from "./BlackHoleCore";
 import type { mountBlackHoleRuntime } from "./BlackHoleRuntime";
+import { bindBlackHoleExplore } from "./BlackHoleExplore";
 // Keep this query in sync with the mobile background styles.
 const staticBackground = window.matchMedia(
 	"(pointer: coarse), (max-width: 768px), (max-height: 768px)",
@@ -19,7 +20,10 @@ let runtime: ReturnType<typeof mountBlackHoleRuntime> | undefined;
 let previousRoute = "";
 let generation = 0;
 let loading = false;
+let unbindExplore: (() => void) | undefined;
 function stopBackground() {
+	unbindExplore?.();
+	unbindExplore = undefined;
 	generation++;
 	loading = false;
 	runtime?.dispose();
@@ -35,6 +39,8 @@ function stopBackground() {
 	}
 }
 async function syncBackground() {
+	unbindExplore?.();
+	unbindExplore = undefined;
 	const next = document.querySelector<HTMLElement>(
 		"[data-black-hole-background]",
 	);
@@ -47,6 +53,8 @@ async function syncBackground() {
 		if (runtime || loading) stopBackground();
 		return;
 	}
+	// Rebind page controls even when the persisted runtime is already mounted.
+	unbindExplore = bindBlackHoleExplore(() => runtime);
 	if (runtime) {
 		if (previousRoute !== location.pathname)
 			runtime.updateRoute(location.pathname);
@@ -98,6 +106,8 @@ void syncBackground();
 staticBackground.addEventListener("change", syncBackground);
 document.addEventListener("astro:page-load", syncBackground);
 document.addEventListener("astro:before-swap", (event) => {
+	unbindExplore?.();
+	unbindExplore = undefined;
 	const nextDocument = (event as Event & { newDocument: Document }).newDocument;
 	if (!nextDocument.querySelector("[data-black-hole-background]")) {
 		stopBackground();

@@ -13,6 +13,7 @@ const script = ts
 		module: ts.ModuleKind.ESNext,
 	})
 	.replace('import("./BlackHoleRuntime")', "load()")
+	.replace('import { bindBlackHoleExplore } from "./BlackHoleExplore";', "")
 	.replace("export {};", "");
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -43,6 +44,7 @@ function fixture(mobile = true) {
 	const document = { ...events(), querySelector: () => host };
 	const window = { ...events(), matchMedia: () => media };
 	const location = { pathname: "/" };
+	const bindings = [];
 	const sessions = [],
 		loads = [];
 	const module = {
@@ -55,6 +57,10 @@ function fixture(mobile = true) {
 				disposals: 0,
 				routes: [],
 				dispose() {
+					assert.ok(
+						bindings.every((binding) => !binding.active),
+						"Explore must exit before disposal",
+					);
 					this.disposals++;
 				},
 				updateRoute(route) {
@@ -65,11 +71,29 @@ function fixture(mobile = true) {
 			return session;
 		},
 	};
-	new Function("window", "document", "location", "load", script)(
+	new Function(
+		"window",
+		"document",
+		"location",
+		"load",
+		"bindBlackHoleExplore",
+		script,
+	)(
 		window,
 		document,
 		location,
 		() => new Promise((resolve) => loads.push(() => resolve(module))),
+		(getRuntime) => {
+			assert.ok(
+				bindings.every((binding) => !binding.active),
+				"Only one Explore binding may be active",
+			);
+			const binding = { active: true, getRuntime };
+			bindings.push(binding);
+			return () => {
+				binding.active = false;
+			};
+		},
 	);
 	return {
 		media,
@@ -79,6 +103,7 @@ function fixture(mobile = true) {
 		location,
 		sessions,
 		loads,
+		bindings,
 		replacements: () => replacements,
 	};
 }
@@ -152,4 +177,24 @@ test("bfcache pagehide disposes desktop and pageshow starts a fresh session", as
 	f.loads[1]();
 	await flush();
 	assert.equal(f.sessions.length, 2);
+});
+
+test("Explore resolves the lazy runtime and rebinds after a persisted page swap", async () => {
+	const f = fixture(false);
+	assert.equal(f.bindings[0].getRuntime(), undefined);
+	f.loads[0]();
+	await flush();
+	assert.equal(f.bindings[0].getRuntime(), f.sessions[0]);
+	f.document.emit("astro:before-swap", {
+		newDocument: { querySelector: () => f.host },
+	});
+	assert.equal(f.bindings[0].active, false);
+	assert.equal(f.sessions[0].disposals, 0);
+	await f.document.emit("astro:page-load");
+	assert.equal(f.bindings.length, 2);
+	assert.equal(f.bindings[1].active, true);
+	assert.equal(f.bindings[1].getRuntime(), f.sessions[0]);
+	f.window.emit("pagehide", { persisted: true });
+	assert.equal(f.bindings[1].active, false);
+	assert.equal(f.sessions[0].disposals, 1);
 });

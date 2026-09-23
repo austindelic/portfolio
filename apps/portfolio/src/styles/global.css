@@ -968,3 +968,30 @@ pre {
 .profile-details dt {
 	gap: 4px;
 }
+
+/* Desktop-only exploration uses the existing background canvas. */
+.explore-trigger { display: none; cursor: pointer; }
+@media (width > 768px) and (height > 768px) and (pointer: fine) {
+ .explore-trigger { display: inline-flex; align-items: center; gap: 4px; }
+}
+body.bh-exploring { overflow: hidden; }
+.bh-exploring .bh-foreground-layer { visibility: hidden; }
+.bh-exploring .bh-background-layer,
+.bh-exploring [data-black-hole-background] canvas { pointer-events: auto; }
+.bh-exploring [data-black-hole-background] canvas { cursor: grab; touch-action: none; }
+.bh-exploring [data-black-hole-background] canvas:active { cursor: grabbing; }
+.bh-explore[hidden], #explore-settings-content[hidden] { display: none; }
+.bh-explore { position: fixed; inset: 0; z-index: 30; pointer-events: none; font-size: 12px; color: var(--foreground); outline: none; }
+.bh-explore button { cursor: pointer; min-height: 40px; padding: 8px 14px; }
+.explore-exit, .explore-settings { position: absolute; right: 24px; pointer-events: auto; background: rgb(24 24 24 / 94%); border: 1px solid var(--border); box-shadow: 0 8px 28px #0006; }
+.explore-exit { top: 24px; display: flex; gap: 24px; align-items: center; }
+.explore-help { position: absolute; left: 24px; bottom: 24px; margin: 0; line-height: 1.9; color: #ddd; background: rgb(24 24 24 / 94%); border: 1px solid var(--border); padding: 10px 14px; }
+.explore-settings { bottom: 24px; width: 260px; }
+[data-explore-settings] { width: 100%; display: flex; justify-content: space-between; }
+[data-explore-settings][aria-expanded="true"] span { transform: rotate(180deg); }
+#explore-settings-content { padding: 16px; border-top: 1px solid var(--border); display: grid; gap: 12px; }
+#explore-settings-content label { display: flex; justify-content: space-between; }
+#explore-settings-content output { color: var(--primary); font-variant-numeric: tabular-nums; }
+#explore-settings-content input { width: 100%; accent-color: var(--primary); }
+[data-explore-reset] { border: 1px solid var(--border); }
+.bh-explore button:hover { background: #ffffff0d; }

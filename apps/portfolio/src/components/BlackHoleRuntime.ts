@@ -66,6 +66,7 @@ import {
 } from "./BlackHoleOrbit";
 
 export type RuntimeState = {
+	exploration?: { enter: () => boolean; exit: () => void; reset: () => void };
 	resumeAnimation?: {
 		phase: AnimationPhase;
 		sequence: BlackHoleAnimationKeyframe[];
@@ -210,6 +211,8 @@ function startRendererSession(
 		backendState,
 	} = options;
 
+	let exploring = false;
+	const acceptsInput = () => interactive || exploring;
 	const settings = resolveRenderSettings(renderSettings);
 	const runtimeProfile = detectRuntimeProfile();
 	const resolvedRendererMode = resolveRendererMode(rendererModeState);
@@ -327,6 +330,7 @@ function startRendererSession(
 	let lastPersistentSnapshotUpdate = 0;
 
 	let pointerActive = false;
+	let activePointerId: number | null = null;
 	let lastPointerX = 0;
 	let lastPointerY = 0;
 	let lastCameraReadoutUpdate = 0;
@@ -374,7 +378,7 @@ function startRendererSession(
 		snapshot.shaderTime = shaderTime;
 		snapshot.movementSpeed = movementSpeed;
 
-		if (activeAnimationMode() !== "route") return;
+		if (exploring || activeAnimationMode() !== "route") return;
 		if (
 			!forcePersistent &&
 			window.__blackHoleAnimationSnapshot &&
@@ -704,6 +708,7 @@ function startRendererSession(
 	};
 
 	const syncAnimationRoute = () => {
+		if (exploring) return;
 		if (!animationIsEnabled()) return;
 		if (activeAnimationMode() === "route") {
 			syncOrbitRoute();
@@ -743,6 +748,12 @@ function startRendererSession(
 	};
 
 	const evaluateAnimationFrame = (delta: number) => {
+		if (exploring)
+			return {
+				controls: state.controls,
+				asciiEnabled: settings.asciiEnabled,
+				active: false,
+			};
 		if (!animationIsEnabled()) {
 			animationPhase = "off";
 			animationSequenceJustStarted = false;
@@ -996,7 +1007,7 @@ function startRendererSession(
 		if (!showControls && now - lastStatsPublish < 250) return;
 		lastStatsPublish = now;
 
-		const activeControls = lastAnimatedControls;
+		const activeControls = exploring ? state.controls : lastAnimatedControls;
 		const activeAtlas = glyphAtlasConfig;
 		const stats: BlackHoleStats = {
 			mode,
@@ -1200,8 +1211,9 @@ function startRendererSession(
 	state.requestRender = requestRender;
 
 	const setKey = (event: KeyboardEvent, pressed: boolean) => {
-		if (!interactive) return;
-		if (isControlKeyboardTarget(event.target)) return;
+		if (!acceptsInput()) return;
+		if (pressed && isControlKeyboardTarget(event.target)) return;
+		if (pressed && (event.metaKey || event.ctrlKey || event.altKey)) return;
 		if (event.keyCode < 0 || event.keyCode > 255) return;
 		if (pressed) stopEditorAnimationForManualInput();
 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
@@ -1231,9 +1243,11 @@ function startRendererSession(
 	};
 
 	const handlePointerDown = (event: PointerEvent) => {
-		if (!interactive) return;
+		if (!acceptsInput()) return;
 		stopEditorAnimationForManualInput();
+		if (event.button !== 0) return;
 		canvas.setPointerCapture(event.pointerId);
+		activePointerId = event.pointerId;
 		pointerActive = true;
 		lastPointerX = event.clientX;
 		lastPointerY = event.clientY;
@@ -1244,7 +1258,7 @@ function startRendererSession(
 	};
 
 	const handlePointerMove = (event: PointerEvent) => {
-		if (!interactive) return;
+		if (!acceptsInput()) return;
 		pointerPosition(event);
 		if (pointerActive) {
 			const dx = event.clientX - lastPointerX;
@@ -1259,14 +1273,73 @@ function startRendererSession(
 	};
 
 	const handlePointerUp = (event: PointerEvent) => {
-		if (!interactive) return;
+		if (!acceptsInput()) return;
 		if (canvas.hasPointerCapture(event.pointerId))
 			canvas.releasePointerCapture(event.pointerId);
 		pointerActive = false;
+		activePointerId = null;
 		pointerPosition(event);
 		mouse[2] = -1;
 		mouse[3] = -1;
 		requestRender();
+	};
+
+	const clearInput = () => {
+		keyboardData.fill(0);
+		pointerActive = false;
+		if (activePointerId !== null && canvas.hasPointerCapture(activePointerId))
+			canvas.releasePointerCapture(activePointerId);
+		activePointerId = null;
+		mouse[2] = mouse[3] = -1;
+		camera.pendingYaw = camera.pendingPitch = 0;
+	};
+	let explorationEntry: {
+		camera: typeof camera;
+		movementSpeed: number;
+		controls: ShaderControls;
+	} | null = null;
+	const resetExploration = () => {
+		if (!explorationEntry) return;
+		clearInput();
+		const history = camera.asciiHistoryVersion ?? 0;
+		Object.assign(camera, structuredClone(explorationEntry.camera));
+		camera.asciiHistoryVersion = history + 1;
+		movementSpeed = explorationEntry.movementSpeed;
+		snapshotRuntime(true);
+		requestRender();
+	};
+	state.exploration = {
+		enter() {
+			if (disposed || contextLost || exploring) return false;
+			clearInput();
+			explorationEntry = {
+				camera: structuredClone(camera),
+				movementSpeed,
+				controls: { ...state.controls },
+			};
+			exploring = true;
+			Object.assign(state.controls, {
+				timeScale: 2,
+				exposure: 2,
+				bloomStrength: 0.65,
+			});
+			requestRender();
+			return true;
+		},
+		reset: resetExploration,
+		exit() {
+			if (!explorationEntry) return;
+			resetExploration();
+			Object.assign(state.controls, explorationEntry.controls);
+			exploring = false;
+			explorationEntry = null;
+			canvas.dispatchEvent(
+				new Event("black-hole-explore-end", { bubbles: true }),
+			);
+			lastTime = performance.now();
+			snapshotRuntime(true);
+			requestRender();
+		},
 	};
 
 	const handleMotionPreferenceChange = () => {
@@ -1276,6 +1349,7 @@ function startRendererSession(
 
 	const handleVisibilityChange = () => {
 		if (document.hidden) {
+			clearInput();
 			if (animationFrame) cancelAnimationFrame(animationFrame);
 			animationFrame = 0;
 			return;
@@ -1319,15 +1393,14 @@ function startRendererSession(
 
 	const handleKeyDown = (event: KeyboardEvent) => setKey(event, true);
 	const handleKeyUp = (event: KeyboardEvent) => setKey(event, false);
-
-	if (interactive) {
-		window.addEventListener("keydown", handleKeyDown);
-		window.addEventListener("keyup", handleKeyUp);
-		canvas.addEventListener("pointerdown", handlePointerDown);
-		canvas.addEventListener("pointermove", handlePointerMove);
-		canvas.addEventListener("pointerup", handlePointerUp);
-		canvas.addEventListener("pointercancel", handlePointerUp);
-	}
+	window.addEventListener("keydown", handleKeyDown);
+	window.addEventListener("keyup", handleKeyUp);
+	canvas.addEventListener("pointerdown", handlePointerDown);
+	canvas.addEventListener("pointermove", handlePointerMove);
+	canvas.addEventListener("pointerup", handlePointerUp);
+	canvas.addEventListener("pointercancel", handlePointerUp);
+	window.addEventListener("blur", clearInput);
+	canvas.addEventListener("lostpointercapture", clearInput);
 	document.addEventListener("visibilitychange", handleVisibilityChange);
 	reducedMotion.addEventListener("change", handleMotionPreferenceChange);
 	canvas.addEventListener("webglcontextlost", handleContextLost);
@@ -1341,6 +1414,9 @@ function startRendererSession(
 	return () => {
 		if (cleaned) return;
 		cleaned = true;
+		state.exploration?.exit();
+		state.exploration = undefined;
+		clearInput();
 		snapshotRuntime(true);
 		state.resumeAnimation = {
 			phase: animationPhase,
@@ -1354,14 +1430,14 @@ function startRendererSession(
 		disposed = true;
 		if (animationFrame) cancelAnimationFrame(animationFrame);
 		resizeObserver.disconnect();
-		if (interactive) {
-			window.removeEventListener("keydown", handleKeyDown);
-			window.removeEventListener("keyup", handleKeyUp);
-			canvas.removeEventListener("pointerdown", handlePointerDown);
-			canvas.removeEventListener("pointermove", handlePointerMove);
-			canvas.removeEventListener("pointerup", handlePointerUp);
-			canvas.removeEventListener("pointercancel", handlePointerUp);
-		}
+		window.removeEventListener("keydown", handleKeyDown);
+		window.removeEventListener("keyup", handleKeyUp);
+		canvas.removeEventListener("pointerdown", handlePointerDown);
+		canvas.removeEventListener("pointermove", handlePointerMove);
+		canvas.removeEventListener("pointerup", handlePointerUp);
+		canvas.removeEventListener("pointercancel", handlePointerUp);
+		window.removeEventListener("blur", clearInput);
+		canvas.removeEventListener("lostpointercapture", clearInput);
 		document.removeEventListener("visibilitychange", handleVisibilityChange);
 		reducedMotion.removeEventListener("change", handleMotionPreferenceChange);
 		canvas.removeEventListener("webglcontextlost", handleContextLost);
@@ -1503,6 +1579,9 @@ export function mountBlackHoleRuntime(
 	start();
 	return {
 		ready,
+		enterExploration: () => state.exploration?.enter() ?? false,
+		exitExploration: () => state.exploration?.exit(),
+		resetExploration: () => state.exploration?.reset(),
 		updateSettings(next: Partial<RuntimeOptions>) {
 			if (!disposed) {
 				options = { ...options, ...next };

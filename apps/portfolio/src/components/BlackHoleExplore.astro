@@ -1,0 +1,16 @@
+<section id="black-hole-explore" class="bh-explore" hidden tabindex="-1" aria-label="Explore the black hole" aria-describedby="explore-help">
+  <button type="button" class="explore-exit" data-explore-exit>Exit Explore <span aria-hidden="true">×</span></button>
+  <p id="explore-help" class="explore-help">Drag to look · WASD move · R/F up/down<br />Q/E roll · ↑/↓ movement speed · Esc exit</p>
+  <div class="explore-settings" data-black-hole-control>
+    <button type="button" data-explore-settings aria-expanded="false" aria-controls="explore-settings-content">Settings <span aria-hidden="true">⌃</span></button>
+    <div id="explore-settings-content" hidden>
+      <label for="explore-time">Time speed <output for="explore-time">2×</output></label>
+      <input id="explore-time" data-setting="timeScale" type="range" min="0" max="4" step="0.05" value="2" />
+      <label for="explore-exposure">Exposure <output for="explore-exposure">2</output></label>
+      <input id="explore-exposure" data-setting="exposure" type="range" min="0" max="4" step="0.05" value="2" />
+      <label for="explore-bloom">Bloom <output for="explore-bloom">0.65</output></label>
+      <input id="explore-bloom" data-setting="bloomStrength" type="range" min="0" max="1" step="0.01" value="0.65" />
+      <button type="button" data-explore-reset>Reset view</button>
+    </div>
+  </div>
+</section>

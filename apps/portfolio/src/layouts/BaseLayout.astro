@@ -2,6 +2,7 @@
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import BaseHead from "../components/BaseHead.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
+import BlackHoleExplore from "../components/BlackHoleExplore.astro";
 import Header from "../components/Header.astro";
 import "../styles/global.css";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
@@ -106,6 +107,8 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
     </main>
   </div>
 </div>
+
+<BlackHoleExplore />
 
 <script>
   function applyBlackHolePerfFlags() {
