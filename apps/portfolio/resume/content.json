@@ -1,0 +1,84 @@
+{
+  "name": "Austin Delic",
+  "headline": "Founding Engineer | Software, Backend & Systems",
+  "location": "Perth, Western Australia",
+  "contacts": [
+    { "label": "austin@austindelic.com", "url": "mailto:austin@austindelic.com" },
+    { "label": "+61 402 919 111", "url": "tel:+61402919111" },
+    { "label": "austindelic.com", "url": "https://austindelic.com" },
+    { "label": "linkedin.com/in/austindelic", "url": "https://www.linkedin.com/in/austindelic" },
+    { "label": "github.com/austindelic", "url": "https://github.com/austindelic" }
+  ],
+  "experience": [
+    {
+      "organisation": "The Next Something",
+      "role": "Founding Engineer",
+      "dates": "Sep 2026 - Present",
+      "bullets": []
+    },
+    {
+      "organisation": "Scrypt Ventures",
+      "role": "Junior Software Engineer",
+      "dates": "Feb 2026 - Sep 2026",
+      "bullets": [
+        "Contributed across a production healthcare payments platform: Angular web apps, NativeScript mobile, .NET APIs, SQL Server and Azure services.",
+        "Worked on authentication, payments, REST/OpenAPI contracts, EF Core data access and background jobs; supported Azure DevOps pipelines, Docker publishing and AKS deployments."
+      ]
+    },
+    {
+      "organisation": "Independent Contracting",
+      "role": "Software Engineer",
+      "dates": "Dec 2025 - Mar 2026",
+      "bullets": [
+        "Designed, built and maintained full-stack client applications serving hundreds of active users across Australia's eastern states.",
+        "Owned requirements, implementation, deployment and support, working directly with clients to deliver updates."
+      ]
+    },
+    {
+      "organisation": "Lightbulb Skills",
+      "role": "Software Engineer - Fullstack and Infrastructure",
+      "dates": "Oct 2024 - Dec 2025",
+      "bullets": [
+        "Built and maintained a production CRM with Next.js, React and PostgreSQL, owning schema design, UI development and iterative feature delivery."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Tactify",
+      "description": "AI accessibility platform",
+      "url": "https://tactify.org",
+      "bullets": [
+        "Built at Perth Hackerhouse: converts visual learning materials into tactile-ready SVG graphics and guided audio narration for blind and low-vision users.",
+        "Implemented a Next.js/React interface, Go backend, protobuf APIs and Gemini, ImageMagick, vtracer and text-to-speech pipeline."
+      ]
+    },
+    {
+      "name": "Still",
+      "description": "Rust developer tooling",
+      "url": "https://github.com/austindelic/still",
+      "bullets": [
+        "Built a Rust project environment manager with typed configuration, lockfiles and CLI/TUI frontends over a shared async engine; implemented install planning, rollback-aware state recording and SHA-256 trust checks."
+      ]
+    }
+  ],
+  "education": {
+    "institution": "Curtin University",
+    "degree": "Bachelor of Computing, Computer Science",
+    "dates": "Feb 2026 - Oct 2028 (expected)",
+    "details": [
+      "Results: Unix and C 97; Fundamentals of Programming 95; Programming Design and Implementation 94; Data Structures and Algorithms 93.",
+      "Letter of Commendation; transferred from Mechatronic Engineering and Computer Science (2025)."
+    ]
+  },
+  "recognition": [
+    "VisagioX Hackathon - 3rd place, 2026, for a team-built child-safety prototype.",
+    "LaunchLAB AI, AITAI / Bloom - selected for Semester 1, 2026 (Mar - May).",
+    "Technical Resources Scholarship - Curtin University, 2025."
+  ],
+  "skills": [
+    { "label": "Languages", "text": "TypeScript/JavaScript, Go, Rust, Python, C/C++, C#, SQL, Bash" },
+    { "label": "Frameworks & APIs", "text": "React, Next.js, Angular, SvelteKit, NativeScript, .NET, REST/OpenAPI, protobuf" },
+    { "label": "Data & Infrastructure", "text": "PostgreSQL, SQL Server, EF Core, Docker, Kubernetes/AKS, Azure DevOps, Linux" }
+  ]
+}
