@@ -12,11 +12,10 @@ import type {Props} from "./BlackHoleCore";
 let host: HTMLElement | null = null;
 let runtime: ReturnType<typeof mountBlackHoleRuntime> | undefined;
 let previousRoute = "";
-let navigations = 0;
 function syncBackground() {
  const next = document.querySelector<HTMLElement>("[data-black-hole-background]");
  if (host !== next) {
-   runtime?.dispose(); runtime = undefined; host = next; navigations = 0;
+   runtime?.dispose(); runtime = undefined; host = next;
    if (host) {
      const props: Props = JSON.parse(host.dataset.settings!);
      const error = host.querySelector<HTMLElement>("[data-black-hole-error]")!;
@@ -26,9 +25,7 @@ function syncBackground() {
      previousRoute = location.pathname;
    }
  } else if (runtime && previousRoute !== location.pathname) {
-   // The persisted baseline island kept its first route's history, then reset
-   // shader time on subsequent route prop updates. Keep that visible behaviour.
-   runtime.updateRoute(location.pathname, navigations++ > 0);
+   runtime.updateRoute(location.pathname);
    previousRoute = location.pathname;
  }
 }
