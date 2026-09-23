@@ -295,7 +295,7 @@ const routes = {
 	"/socials": {
 		orbit: {
 			anchor: [1.155, 0.105, 0.63],
-			lookTarget: [5.28426, 0.18127, 9.73732],
+			lookTarget: [0.28344, 0.18127, 10.59195],
 			driftRadius: 0.0015,
 			yawAmplitude: 0.25,
 			pitchAmplitude: 0.1,
