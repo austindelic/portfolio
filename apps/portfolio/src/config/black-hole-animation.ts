@@ -36,7 +36,23 @@ export type BlackHoleAnimationKeyframe = {
 	highlightColor?: string;
 };
 
+export type BlackHoleOrbit = {
+	anchor: BlackHoleVec3;
+	lookTarget: BlackHoleVec3;
+	driftRadius: number;
+	period: number;
+	/** Maximum settled heading offsets in degrees; zero when omitted. */
+	yawAmplitude?: number;
+	pitchAmplitude?: number;
+	framingTarget: [number, number];
+	/** Session variation affects phase only, never the page composition. */
+	phaseOffset?: number;
+	/** Inner-gap waypoint for entering or leaving below-disk views. */
+	approach?: BlackHoleVec3;
+};
+
 export type BlackHoleRouteAnimation = {
+	orbit: BlackHoleOrbit;
 	intro: BlackHoleAnimationKeyframe[];
 	idle: BlackHoleAnimationKeyframe[];
 	transition: BlackHoleAnimationKeyframe[];
@@ -66,6 +82,15 @@ const baseVisual = {
 
 const routes = {
 	"/": {
+		orbit: {
+			anchor: [8.613, 3.1586, 21.229],
+			lookTarget: [5.861, 2.2396, 11.659],
+			driftRadius: 0.035,
+			yawAmplitude: 0.6,
+			pitchAmplitude: 0.2,
+			period: 140,
+			framingTarget: [0, 0],
+		},
 		intro: [
 			{
 				duration: 0,
@@ -138,6 +163,15 @@ const routes = {
 		],
 	},
 	"/blog": {
+		orbit: {
+			anchor: [3.45, 3.45, 4.6],
+			lookTarget: [-4.0791, -0.92803, -0.3138],
+			driftRadius: 0.012,
+			yawAmplitude: 0.6,
+			pitchAmplitude: 0.2,
+			period: 150,
+			framingTarget: [0, 0],
+		},
 		intro: [
 			{
 				duration: 0,
@@ -194,6 +228,15 @@ const routes = {
 		],
 	},
 	"/blog/*": {
+		orbit: {
+			anchor: [4.4, 0.44, 2.2],
+			lookTarget: [6.56683, -0.45087, -7.52169],
+			driftRadius: 0.006,
+			yawAmplitude: 0.25,
+			pitchAmplitude: 0.1,
+			period: 160,
+			framingTarget: [0, 0],
+		},
 		intro: [
 			{
 				duration: 0,
@@ -250,6 +293,15 @@ const routes = {
 		],
 	},
 	"/socials": {
+		orbit: {
+			anchor: [1.155, 0.105, 0.63],
+			lookTarget: [5.28426, 0.18127, 9.73732],
+			driftRadius: 0.0015,
+			yawAmplitude: 0.25,
+			pitchAmplitude: 0.1,
+			period: 160,
+			framingTarget: [0, 0],
+		},
 		intro: [
 			{
 				duration: 0,
@@ -306,6 +358,16 @@ const routes = {
 		],
 	},
 	"/404": {
+		orbit: {
+			anchor: [-1.1, -0.22, 1.1],
+			lookTarget: [-5.12729, 1.18028, -7.94545],
+			driftRadius: 0.002,
+			yawAmplitude: 0.25,
+			pitchAmplitude: 0.1,
+			period: 150,
+			framingTarget: [0, 0],
+			approach: [1.15, 0.3, 0.7],
+		},
 		intro: [
 			{
 				duration: 0,
@@ -354,6 +416,15 @@ const routes = {
 		],
 	},
 	fallback: {
+		orbit: {
+			anchor: [8.613, 3.1586, 21.229],
+			lookTarget: [5.861, 2.2396, 11.659],
+			driftRadius: 0.035,
+			yawAmplitude: 0.6,
+			pitchAmplitude: 0.2,
+			period: 140,
+			framingTarget: [0, 0],
+		},
 		intro: [
 			{
 				duration: 0,

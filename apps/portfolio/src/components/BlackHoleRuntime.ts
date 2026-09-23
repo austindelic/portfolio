@@ -1,5 +1,3 @@
-import { asciiSourceDimension } from "../lib/ascii-analysis";
-import { disposeProgramPass } from "./BlackHoleCore";
 import {
 	BLACK_HOLE_ANIMATION_ROUTES,
 	type BlackHoleAnimationKeyframe,
@@ -7,6 +5,7 @@ import {
 	getBlackHoleRouteAnimation,
 	normalizeBlackHoleAnimationRoute,
 } from "../config/black-hole-animation";
+import { asciiSourceDimension } from "../lib/ascii-analysis";
 import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
 import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
 import bufferBSource from "../shaders/black-hole/buffer-b.glsl?raw";
@@ -21,7 +20,6 @@ import {
 	animationKeyframeFromCamera,
 	applyAnimationCamera,
 	type BlackHoleStats,
-	buildRouteTransitionSequence,
 	type CameraEditorApi,
 	type CameraState,
 	CONTROL_KEY_CODES,
@@ -42,6 +40,7 @@ import {
 	DEFAULT_ASCII_CELL_SIZE,
 	DIRECT_FALLBACK_DPR,
 	detectRuntimeProfile,
+	disposeProgramPass,
 	disposeRenderTarget,
 	estimateTextureMemoryBytes,
 	evaluateAnimationSequenceInto,
@@ -80,6 +79,12 @@ import {
 	writeAnimationControlsFromFrame,
 	writeRenderUniforms,
 } from "./BlackHoleCore";
+import {
+	BlackHoleOrbitController,
+	createOrbitFrame,
+	motionFromFrame,
+	varyOrbit,
+} from "./BlackHoleOrbit";
 
 export type RuntimeState = {
 	animationAutoplay: boolean;
@@ -232,16 +237,36 @@ function startBlackHoleSession(
 		activeAnimationMode() === "route"
 			? window.__blackHoleAnimationSnapshot
 			: undefined;
+	let orbitSeed = Math.random();
+	try {
+		const saved = sessionStorage.getItem("black-hole-orbit-seed");
+		if (saved !== null && Number.isFinite(Number(saved)))
+			orbitSeed = Number(saved);
+		else sessionStorage.setItem("black-hole-orbit-seed", String(orbitSeed));
+	} catch {
+		/* Storage can be unavailable in privacy mode. */
+	}
 	const initialAnimationRoute = currentAnimationRoute();
-	let shouldStartWithRouteTransition =
-		Boolean(persistedAnimationSnapshot) &&
-		persistedAnimationSnapshot?.route !== initialAnimationRoute;
-	const routeIntroStartFrame =
+	const freshRouteEntry =
 		activeAnimationMode() === "route" &&
+		!persistedAnimationSnapshot &&
+		!state.runtimeSnapshot.cameraPosition;
+	let routeIntroPending =
+		freshRouteEntry &&
+		initialAnimationRoute === "/" &&
 		activeAnimationAutoplay() &&
-		!shouldStartWithRouteTransition
-			? (getBlackHoleRouteAnimation(initialAnimationRoute).intro[0] ?? null)
-			: null;
+		!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	const routeIntroStartFrame = freshRouteEntry
+		? routeIntroPending
+			? getBlackHoleRouteAnimation("/").intro[0]
+			: createOrbitFrame(
+					varyOrbit(
+						getBlackHoleRouteAnimation(initialAnimationRoute).orbit,
+						orbitSeed,
+					),
+					Math.max(0.2, canvas.clientWidth / Math.max(1, canvas.clientHeight)),
+				)
+		: null;
 	let activeAnimationRoute = initialAnimationRoute;
 
 	let disposed = false;
@@ -632,22 +657,6 @@ function startBlackHoleSession(
 		});
 	};
 
-	const startTransition = (
-		route: BlackHoleAnimationRouteKey,
-		playing = activeAnimationAutoplay(),
-	) => {
-		setAnimationSequence({
-			phase: "transition",
-			route,
-			sequence: buildRouteTransitionSequence(
-				currentAnimationKeyframe(0),
-				route,
-			),
-			loop: false,
-			playing,
-		});
-	};
-
 	const stopEditorAnimationForManualInput = () => {
 		if (activeAnimationMode() !== "editor") return;
 		animationPhase = "off";
@@ -679,8 +688,88 @@ function startBlackHoleSession(
 		publishAnimationStatus(`${route} reduced motion`);
 	};
 
+	let orbitController: BlackHoleOrbitController | null = null;
+	const viewportAspect = () =>
+		Math.max(0.2, canvas.clientWidth / Math.max(1, canvas.clientHeight));
+	// Sample the existing keyframe evaluator only when an intro is interrupted.
+	// The spherical controller inherits the displayed pose and its derivatives.
+	const inheritIntroMotion = (controller: BlackHoleOrbitController) => {
+		const sample = (time: number) => {
+			const frame = currentAnimationKeyframe();
+			const result = {
+				frame: null as BlackHoleAnimationKeyframe | null,
+				frameIndex: 0,
+				done: false,
+				sequenceTime: 0,
+			};
+			evaluateAnimationSequenceInto(result, frame, {
+				sequence: animationSequence,
+				time,
+				loop: false,
+				baseControls: state.controls,
+				baseAsciiEnabled: settings.asciiEnabled,
+			});
+			return motionFromFrame(result.frame ?? frame);
+		};
+		const h = 0.001,
+			before = sample(Math.max(0, animationSequenceTime - h)),
+			after = sample(animationSequenceTime + h);
+		for (let i = 0; i < 5; i++) {
+			const center = controller.motion.pose[i];
+			const unwrap = (value: number) =>
+				i === 1 || i === 3
+					? center +
+						Math.atan2(Math.sin(value - center), Math.cos(value - center))
+					: value;
+			const a = unwrap(before.pose[i]),
+				b = unwrap(after.pose[i]);
+			controller.motion.velocity[i] = (b - a) / (2 * h);
+			controller.motion.acceleration[i] = (b - 2 * center + a) / (h * h);
+		}
+	};
+	const syncOrbitRoute = () => {
+		const route = currentAnimationRoute();
+		if (routeIntroPending) {
+			routeIntroPending = false;
+			if (route === "/" && !reducedMotion.matches) {
+				startIntro("/", true);
+				return;
+			}
+		}
+		const inIntro = animationPhase === "intro" && !orbitController;
+		if (inIntro && route === activeAnimationRoute && !reducedMotion.matches)
+			return;
+		if (orbitController && route === activeAnimationRoute) return;
+		const config = getBlackHoleRouteAnimation(route),
+			orbit = varyOrbit(config.orbit, orbitSeed);
+		if (!orbitController) {
+			orbitController = new BlackHoleOrbitController(
+				currentAnimationKeyframe(),
+				orbit,
+				viewportAspect(),
+			);
+			if (inIntro) inheritIntroMotion(orbitController);
+			if (inIntro || persistedAnimationSnapshot)
+				orbitController.join(orbit, viewportAspect());
+		} else orbitController.join(orbit, viewportAspect());
+		activeAnimationRoute = route;
+		animationPhase = orbitController.transitioning ? "transition" : "idle";
+		setAnimationPlaying(activeAnimationAutoplay());
+		const visual = config.intro.at(-1);
+		writeAnimationControlsFromFrame(
+			lastAnimatedControls,
+			state.controls,
+			visual ?? null,
+		);
+		lastAnimatedAsciiEnabled = visual?.asciiEnabled ?? settings.asciiEnabled;
+	};
+
 	const syncAnimationRoute = () => {
 		if (!animationIsEnabled()) return;
+		if (activeAnimationMode() === "route") {
+			syncOrbitRoute();
+			return;
+		}
 		const nextRoute = currentAnimationRoute();
 		if (activeAnimationMode() === "editor") {
 			if (nextRoute !== activeAnimationRoute && animationPhase !== "off") {
@@ -688,23 +777,23 @@ function startBlackHoleSession(
 			}
 			return;
 		}
-
-		if (animationPhase === "off" && activeAnimationAutoplay()) {
-			if (shouldStartWithRouteTransition) {
-				shouldStartWithRouteTransition = false;
-				startTransition(nextRoute, true);
-				return;
-			}
-			startIntro(nextRoute, true);
-			return;
-		}
-
-		if (nextRoute !== activeAnimationRoute) {
-			startTransition(nextRoute, activeAnimationAutoplay());
-		}
 	};
 
 	const finishAnimationPhase = () => {
+		if (activeAnimationMode() === "route" && animationPhase === "intro") {
+			const orbit = varyOrbit(
+				getBlackHoleRouteAnimation(activeAnimationRoute).orbit,
+				orbitSeed,
+			);
+			orbitController = new BlackHoleOrbitController(
+				currentAnimationKeyframe(),
+				orbit,
+				viewportAspect(),
+			);
+			orbitController.join(orbit, viewportAspect(), 2);
+			animationPhase = "idle";
+			return;
+		}
 		if (animationPhase === "transition") {
 			startIntro(activeAnimationRoute, activeAnimationAutoplay());
 			return;
@@ -726,6 +815,23 @@ function startBlackHoleSession(
 		}
 
 		syncAnimationRoute();
+
+		if (activeAnimationMode() === "route" && orbitController) {
+			orbitController.update(
+				state.animationPlaying ? delta : 0,
+				viewportAspect(),
+				reducedMotion.matches,
+				scratchAnimationFrame,
+			);
+			scratchAnimationFrame.universeSign = camera.universeSign;
+			applyAnimationCamera(camera, scratchAnimationFrame);
+			animationPhase = orbitController.transitioning ? "transition" : "idle";
+			return {
+				controls: lastAnimatedControls,
+				asciiEnabled: lastAnimatedAsciiEnabled,
+				active: true,
+			};
+		}
 
 		if (reducedMotion.matches) {
 			applyReducedMotionAnimation();
@@ -959,7 +1065,7 @@ function startBlackHoleSession(
 		frame = 0;
 		startTime = performance.now();
 		lastTime = startTime;
-		shaderTime = 0;
+		// Reallocate render history without restarting the visible shader clock.
 	};
 
 	const publishStats = (frameTimeMs: number, now: number) => {
@@ -1346,7 +1452,7 @@ function startBlackHoleSession(
 			if (!animationFrameState.active) {
 				updateCamera(camera, keyboardData, delta, movementSpeed);
 			}
-			snapshotRuntime(false, now);
+			snapshotRuntime(reducedMotion.matches, now);
 
 			renderFallback(
 				shaderTime,
@@ -1459,6 +1565,11 @@ function startBlackHoleSession(
 		requestRender();
 	};
 
+	const handleMotionPreferenceChange = () => {
+		lastTime = performance.now();
+		requestRender();
+	};
+
 	const handleVisibilityChange = () => {
 		if (document.hidden) {
 			if (animationFrame) cancelAnimationFrame(animationFrame);
@@ -1525,6 +1636,7 @@ function startBlackHoleSession(
 		canvas.addEventListener("pointercancel", handlePointerUp);
 	}
 	document.addEventListener("visibilitychange", handleVisibilityChange);
+	reducedMotion.addEventListener("change", handleMotionPreferenceChange);
 	canvas.addEventListener("webglcontextlost", handleContextLost);
 	canvas.addEventListener("webglcontextrestored", handleContextRestored);
 
@@ -1575,6 +1687,7 @@ function startBlackHoleSession(
 			canvas.removeEventListener("pointercancel", handlePointerUp);
 		}
 		document.removeEventListener("visibilitychange", handleVisibilityChange);
+		reducedMotion.removeEventListener("change", handleMotionPreferenceChange);
 		canvas.removeEventListener("webglcontextlost", handleContextLost);
 		canvas.removeEventListener("webglcontextrestored", handleContextRestored);
 		disposeGpuResources();
