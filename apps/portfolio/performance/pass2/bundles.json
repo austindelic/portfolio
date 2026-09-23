@@ -1,0 +1,64 @@
+{
+  "baseline": {
+    "files": [
+      {
+        "name": "_astro/client.9unXo8s5.js",
+        "bytes": 186619,
+        "gzip": 59177,
+        "brotli": 50453
+      },
+      {
+        "name": "_astro/index.WFquGv8Z.js",
+        "bytes": 7848,
+        "gzip": 3057,
+        "brotli": 2682
+      },
+      {
+        "name": "_astro/BlackHoleShader.e2VTEODx.js",
+        "bytes": 100,
+        "gzip": 108,
+        "brotli": 88
+      },
+      {
+        "name": "_astro/BlackHoleShader.DwxxmTLZ.js",
+        "bytes": 173437,
+        "gzip": 46456,
+        "brotli": 39856
+      },
+      {
+        "name": "_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+        "bytes": 15330,
+        "gzip": 5290,
+        "brotli": 4731
+      }
+    ],
+    "bytes": 383334,
+    "gzip": 114088,
+    "brotli": 97810
+  },
+  "candidate": {
+    "files": [
+      {
+        "name": "_astro/BlackHoleBackground.astro_astro_type_script_index_0_lang.C2Z5UWu4.js",
+        "bytes": 765,
+        "gzip": 407,
+        "brotli": 348
+      },
+      {
+        "name": "_astro/BlackHoleRuntime.tuF5AvV3.js",
+        "bytes": 169287,
+        "gzip": 45247,
+        "brotli": 38666
+      },
+      {
+        "name": "_astro/ClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js",
+        "bytes": 15330,
+        "gzip": 5290,
+        "brotli": 4731
+      }
+    ],
+    "bytes": 185382,
+    "gzip": 50944,
+    "brotli": 43745
+  }
+}

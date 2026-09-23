@@ -1,0 +1,210 @@
+[
+  {
+    "file": "p2baseline-2560-420.png",
+    "counterpart": "p2baseline-clean-2560-420.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-1440-120-canvas.png",
+    "counterpart": "p2baseline-clean-1440-120-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-2560-420-canvas.png",
+    "counterpart": "p2baseline-clean-2560-420-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-1440-420.png",
+    "counterpart": "p2baseline-clean-1440-420.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-2560-60.png",
+    "counterpart": "p2baseline-clean-2560-60.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-1440-30.png",
+    "counterpart": "p2baseline-clean-1440-30.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-390-30.png",
+    "counterpart": "p2baseline-clean-390-30.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-2560-30-canvas.png",
+    "counterpart": "p2baseline-clean-2560-30-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 73,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-390-120-canvas.png",
+    "counterpart": "p2baseline-clean-390-120-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-2560-60-canvas.png",
+    "counterpart": "p2baseline-clean-2560-60-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-2560-120.png",
+    "counterpart": "p2baseline-clean-2560-120.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-1440-120.png",
+    "counterpart": "p2baseline-clean-1440-120.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-2560-30.png",
+    "counterpart": "p2baseline-clean-2560-30.png",
+    "changedChannels": 180,
+    "maxDifference": 73,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-1440-60.png",
+    "counterpart": "p2baseline-clean-1440-60.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-1440-30-canvas.png",
+    "counterpart": "p2baseline-clean-1440-30-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-390-60.png",
+    "counterpart": "p2baseline-clean-390-60.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-1440-60-canvas.png",
+    "counterpart": "p2baseline-clean-1440-60-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-390-120.png",
+    "counterpart": "p2baseline-clean-390-120.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-390-420-canvas.png",
+    "counterpart": "p2baseline-clean-390-420-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-390-60-canvas.png",
+    "counterpart": "p2baseline-clean-390-60-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-390-420.png",
+    "counterpart": "p2baseline-clean-390-420.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-1440-420-canvas.png",
+    "counterpart": "p2baseline-clean-1440-420-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2baseline-2560-120-canvas.png",
+    "counterpart": "p2baseline-clean-2560-120-canvas.png",
+    "changedChannels": 180,
+    "maxDifference": 75,
+    "bounds": [
+      1690,
+      52,
+      1771,
+      52
+    ]
+  },
+  {
+    "file": "p2baseline-390-30-canvas.png",
+    "counterpart": "p2baseline-clean-390-30-canvas.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  }
+]

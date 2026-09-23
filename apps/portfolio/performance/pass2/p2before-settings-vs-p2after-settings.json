@@ -1,0 +1,58 @@
+[
+  {
+    "file": "p2before-settings-full.png",
+    "counterpart": "p2after-settings-full.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-settings-mix-zero.png",
+    "counterpart": "p2after-settings-mix-zero.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-settings-font.png",
+    "counterpart": "p2after-settings-font.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-settings-glyphs.png",
+    "counterpart": "p2after-settings-glyphs.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-settings-palette.png",
+    "counterpart": "p2after-settings-palette.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-settings-mixed.png",
+    "counterpart": "p2after-settings-mixed.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-settings-plain.png",
+    "counterpart": "p2after-settings-plain.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  },
+  {
+    "file": "p2before-settings-bloom.png",
+    "counterpart": "p2after-settings-bloom.png",
+    "changedChannels": 0,
+    "maxDifference": 0,
+    "bounds": null
+  }
+]
