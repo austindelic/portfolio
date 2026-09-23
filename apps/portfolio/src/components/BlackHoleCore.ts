@@ -1,3 +1,5 @@
+import { glyphDirection, rankGlyphs } from "../lib/ascii-analysis";
+import asciiAnalysisSource from "../shaders/black-hole/ascii-analysis.glsl?raw";
 import {
 	type BlackHoleAnimationKeyframe,
 	type BlackHoleAnimationRouteKey,
@@ -15,6 +17,7 @@ export type AsciiCellSize = {
 export type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
 export type PaletteMode = "source" | "custom";
 export type QualityPreset =
+	| "cinematic-ascii"
 	| "mobile-safe"
 	| "ascii-balanced"
 	| "ascii-sharp"
@@ -139,7 +142,16 @@ export type TextureFormat = {
 	canFilterLinear: boolean;
 };
 
+type AsciiAnalysisTargets = {
+	pass: ProgramPass;
+	read: MultiRenderTarget;
+	write: MultiRenderTarget;
+	key: string;
+	atlas: WebGLTexture;
+	frame: number;
+};
 export type ProgramPass = {
+	analysis?: AsciiAnalysisTargets;
 	channels: TextureLike[];
 	vao: WebGLVertexArrayObject | null;
 	uniformCache: Map<WebGLUniformLocation, Array<number | undefined>>;
@@ -174,6 +186,8 @@ export type ProgramPass = {
 		uHighlightColor: WebGLUniformLocation | null;
 		uExposure: WebGLUniformLocation | null;
 		uBloomStrength: WebGLUniformLocation | null;
+		uAsciiAnalysisColor: WebGLUniformLocation | null;
+		uAsciiAnalysisState: WebGLUniformLocation | null;
 	};
 };
 
@@ -195,6 +209,7 @@ export type FallbackTargets = {
 };
 
 export type CameraState = {
+	asciiHistoryVersion?: number;
 	position: Vec3;
 	right: Vec3;
 	up: Vec3;
@@ -399,6 +414,8 @@ uniform sampler2D iChannel0;
 uniform sampler2D iChannel1;
 uniform sampler2D iChannel2;
 uniform sampler2D iChannel3;
+uniform sampler2D uAsciiAnalysisColor;
+uniform sampler2D uAsciiAnalysisState;
 
 uniform vec3 uCameraPosition;
 uniform vec3 uCameraRight;
@@ -491,7 +508,7 @@ export const DEFAULT_ASCII_CELL_SIZE: AsciiCellSize = { x: 6, y: 9 };
 export const DEFAULT_ASCII_CELL_FRAME_INTERVAL_MS = 33;
 export const MAX_GLYPHS = 96;
 export const GLYPH_PRESETS: Record<Exclude<GlyphPreset, "custom">, string> = {
-	gargantua: " CGO08@",
+	gargantua: " .voidCG08A/\\-|",
 	classic: " .:-=+*#%@",
 	dense:
 		" .'`,^\":;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
@@ -506,14 +523,14 @@ export const FONT_OPTIONS: FontFamily[] = [
 export const DEFAULT_SHADER_CONTROLS: ShaderControls = {
 	timeScale: 2,
 	exposure: 2,
-	bloomStrength: 0,
+	bloomStrength: 0.65,
 	temporalJitter: 0,
 	invertControls: false,
 	paletteMode: "source",
 	shadowColor: "#08162d",
 	midColor: "#35c7ff",
 	highlightColor: "#fffaf2",
-	glyphPreset: "custom",
+	glyphPreset: "gargantua",
 	customGlyphs: "voidCG08AA",
 	fontFamily: "Departure Mono",
 	textSize: 9,
@@ -526,7 +543,7 @@ export const DEFAULT_RENDER_UNIFORMS: RenderUniforms = {
 	glyphCount: 10,
 	temporalJitter: 0,
 	exposure: 2,
-	bloomStrength: 0,
+	bloomStrength: 0.65,
 	asciiBrightness: 0,
 	asciiContrast: 1,
 	paletteMode: 0,
@@ -1254,14 +1271,14 @@ export function floorNumber(
 	return nextValue < floor ? floor : nextValue;
 }
 
-export function sanitizeGlyphs(value: string): string {
+export function sanitizeGlyphs(value: string, addBlank = true): string {
 	const glyphs = Array.from(
 		value.trim().length > 0 ? value : GLYPH_PRESETS.gargantua,
 	);
 	const unique: string[] = [];
 	const seen = new Set<string>();
 
-	if (!seen.has(" ")) {
+	if (addBlank && !seen.has(" ")) {
 		seen.add(" ");
 		unique.push(" ");
 	}
@@ -1278,7 +1295,7 @@ export function sanitizeGlyphs(value: string): string {
 
 export function glyphsForControls(controls: ShaderControls): string {
 	if (controls.glyphPreset === "custom") {
-		return sanitizeGlyphs(controls.customGlyphs);
+		return sanitizeGlyphs(controls.customGlyphs, false);
 	}
 
 	return sanitizeGlyphs(GLYPH_PRESETS[controls.glyphPreset]);
@@ -1371,24 +1388,36 @@ export function createGlyphAtlasRaster(
 	const metricsData = metricsContext.createImageData(glyphCount, 1);
 	const cellArea = Math.max(1, config.cellSize.x * config.cellSize.y);
 
-	for (let glyphIndex = 0; glyphIndex < glyphCount; glyphIndex++) {
-		let alphaSum = 0;
-		const minX = glyphIndex * config.cellSize.x;
-		const maxX = Math.min(width, minX + config.cellSize.x);
-
-		for (let y = 0; y < height; y++) {
-			for (let x = minX; x < maxX; x++) {
-				alphaSum += imageData.data[(y * width + x) * 4 + 3] ?? 0;
+	const coverages = glyphs.map((_, glyphIndex) => {
+		let alpha = 0;
+		for (let y = 0; y < height; y++)
+			for (let x = 0; x < config.cellSize.x; x++) {
+				alpha +=
+					imageData.data[
+						(y * width + glyphIndex * config.cellSize.x + x) * 4 + 3
+					];
 			}
-		}
-
-		const coverage = clamp(alphaSum / (255 * cellArea), 0, 1);
-		const offset = glyphIndex * 4;
-		metricsData.data[offset] = Math.round(coverage * 255);
-		metricsData.data[offset + 1] = 255;
-		metricsData.data[offset + 2] = 255;
-		metricsData.data[offset + 3] = 255;
+		return alpha / (255 * cellArea);
+	});
+	const sorted = context.createImageData(width, height);
+	for (const [rank, entry] of rankGlyphs(coverages).entries()) {
+		for (let y = 0; y < height; y++)
+			for (let x = 0; x < config.cellSize.x; x++) {
+				const from = (y * width + entry.index * config.cellSize.x + x) * 4;
+				const to = (y * width + rank * config.cellSize.x + x) * 4;
+				sorted.data.set(imageData.data.subarray(from, from + 4), to);
+			}
+		metricsData.data.set(
+			[
+				Math.round(entry.coverage * 255),
+				Math.round(entry.density * 255),
+				glyphDirection(glyphs[entry.index]),
+				255,
+			],
+			rank * 4,
+		);
 	}
+	context.putImageData(sorted, 0, 0);
 
 	metricsContext.putImageData(metricsData, 0, 0);
 
@@ -1641,7 +1670,7 @@ export function resolveQualitySettings({
 
 	if (quality === "mobile-safe") {
 		return {
-			qualityValue: 0.48,
+			qualityValue: 0.72,
 			initialPrepassScale: floorNumber(prepassScale ?? 0.18, MIN_PREPASS_SCALE),
 			bloomScale: floorNumber(bloomScale ?? 0.12, MIN_RENDER_SCALE),
 			sceneScale: floorNumber(sceneScale ?? 0.22, MIN_RENDER_SCALE),
@@ -1651,15 +1680,19 @@ export function resolveQualitySettings({
 			cellWidth: floorNumber(cellWidth ?? 7, 2),
 			cellHeight: floorNumber(cellHeight ?? 11, 2),
 			frameIntervalMs: floorNumber(frameIntervalMs ?? 50, 0),
-			enableBloomPass: enableBloomPass ?? false,
+			enableBloomPass: enableBloomPass ?? true,
 		};
 	}
 
-	if (quality === "ascii-balanced") {
+	if (quality === "ascii-balanced" || quality === "cinematic-ascii") {
+		const cinematic = quality === "cinematic-ascii";
 		return {
-			qualityValue: 0.58,
+			qualityValue: cinematic ? 0.72 : 0.58,
 			initialPrepassScale: floorNumber(prepassScale ?? 0.22, MIN_PREPASS_SCALE),
-			bloomScale: floorNumber(bloomScale ?? 0.18, MIN_RENDER_SCALE),
+			bloomScale: floorNumber(
+				bloomScale ?? (cinematic ? 0.3 : 0.18),
+				MIN_RENDER_SCALE,
+			),
 			sceneScale: floorNumber(sceneScale ?? 0.28, MIN_RENDER_SCALE),
 			maxDevicePixelRatio: floorNumber(maxDevicePixelRatio ?? 0.85, MIN_DPR),
 			resolutionScale: floorNumber(resolutionScale, MIN_RENDER_SCALE, 1),
@@ -1667,7 +1700,7 @@ export function resolveQualitySettings({
 			cellWidth: floorNumber(cellWidth ?? 6, 2),
 			cellHeight: floorNumber(cellHeight ?? 9, 2),
 			frameIntervalMs: floorNumber(frameIntervalMs ?? 33, 0),
-			enableBloomPass: enableBloomPass ?? false,
+			enableBloomPass: enableBloomPass ?? cinematic,
 		};
 	}
 
@@ -1786,10 +1819,10 @@ export function defaultQualityPresetForRuntime(): Exclude<
 	QualityPreset,
 	"custom"
 > {
-	if (typeof window === "undefined") return "ascii-balanced";
+	if (typeof window === "undefined") return "cinematic-ascii";
 	const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
 	const narrowViewport = Math.min(window.innerWidth, window.innerHeight) <= 768;
-	return coarsePointer || narrowViewport ? "mobile-safe" : "ascii-balanced";
+	return coarsePointer || narrowViewport ? "mobile-safe" : "cinematic-ascii";
 }
 
 export function createRenderSettingsFromQuality({
@@ -1906,7 +1939,7 @@ export function detectRuntimeProfile(): RuntimeProfile {
 }
 
 export function resolveRendererMode(mode: RendererMode): ResolvedRendererMode {
-	if (mode === "full" || mode === "fallback-full") return "full";
+	if (mode === "ascii-cell") return "ascii-cell";
 	return "full";
 }
 
@@ -2049,6 +2082,14 @@ export function initializePass(
 			uHighlightColor: gl.getUniformLocation(program, "uHighlightColor"),
 			uExposure: gl.getUniformLocation(program, "uExposure"),
 			uBloomStrength: gl.getUniformLocation(program, "uBloomStrength"),
+			uAsciiAnalysisColor: gl.getUniformLocation(
+				program,
+				"uAsciiAnalysisColor",
+			),
+			uAsciiAnalysisState: gl.getUniformLocation(
+				program,
+				"uAsciiAnalysisState",
+			),
 		},
 	};
 	// Sampler indices are program state and never change during its lifetime.
@@ -2057,6 +2098,20 @@ export function initializePass(
 		if (location) gl.uniform1i(location, unit);
 	});
 	return pass;
+}
+
+function chooseFloatTextureFormat(
+	gl: WebGL2RenderingContext,
+): TextureFormat | null {
+	const canRenderFloat = gl.getExtension("EXT_color_buffer_float");
+	if (!canRenderFloat) return null;
+
+	return {
+		internalFormat: gl.RGBA16F,
+		format: gl.RGBA,
+		type: gl.HALF_FLOAT,
+		canFilterLinear: Boolean(gl.getExtension("OES_texture_float_linear")),
+	};
 }
 
 export function chooseByteTextureFormat(
@@ -2073,6 +2128,17 @@ export function chooseByteTextureFormat(
 export function chooseFallbackTextureFormat(
 	gl: WebGL2RenderingContext,
 ): TextureFormat {
+	const floatFormat = chooseFloatTextureFormat(gl);
+	if (floatFormat) {
+		try {
+			const probe = createRenderTarget(gl, 1, 1, floatFormat, "linear");
+			gl.deleteTexture(probe.texture);
+			gl.deleteFramebuffer(probe.framebuffer);
+			return floatFormat;
+		} catch {
+			// Devices without a complete float framebuffer retain the byte fallback.
+		}
+	}
 	return chooseByteTextureFormat(gl);
 }
 
@@ -2176,6 +2242,101 @@ export function createRenderTarget(
 	gl.bindTexture(gl.TEXTURE_2D, null);
 
 	return { texture, framebuffer, width, height };
+}
+
+export function createMultiRenderTarget(
+	gl: WebGL2RenderingContext,
+	width: number,
+	height: number,
+	format: TextureFormat,
+	count: number,
+): MultiRenderTarget {
+	const framebuffer = gl.createFramebuffer();
+	if (!framebuffer)
+		throw new Error("Could not create multi render target framebuffer.");
+
+	const textures: TextureLike[] = [];
+	const attachments: number[] = [];
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+	clearGlErrors(gl);
+
+	try {
+		for (let i = 0; i < count; i++) {
+			const texture = gl.createTexture();
+			if (!texture)
+				throw new Error(
+					`Could not create multi render target texture ${i + 1}/${count} (${width}x${height}).`,
+				);
+			textures.push({ texture, width, height });
+
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				format.internalFormat,
+				width,
+				height,
+				0,
+				format.format,
+				format.type,
+				null,
+			);
+			const textureError = gl.getError();
+			if (textureError !== gl.NO_ERROR) {
+				throw new Error(
+					`Could not allocate multi render target texture ${i + 1}/${count} (${width}x${height}, ${formatGlError(
+						gl,
+						textureError,
+					)}).`,
+				);
+			}
+
+			const attachment = gl.COLOR_ATTACHMENT0 + i;
+			gl.framebufferTexture2D(
+				gl.FRAMEBUFFER,
+				attachment,
+				gl.TEXTURE_2D,
+				texture,
+				0,
+			);
+			attachments.push(attachment);
+		}
+
+		gl.drawBuffers(attachments);
+
+		if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+			throw new Error("Prepass MRT framebuffer is incomplete.");
+		}
+	} catch (error) {
+		textures.forEach((item) => {
+			gl.deleteTexture(item.texture);
+		});
+		gl.deleteFramebuffer(framebuffer);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		throw error;
+	}
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	gl.bindTexture(gl.TEXTURE_2D, null);
+
+	return {
+		framebuffer,
+		textures,
+		width,
+		height,
+		dispose: () => {
+			textures.forEach((item) => {
+				gl.deleteTexture(item.texture);
+			});
+			gl.deleteFramebuffer(framebuffer);
+		},
+	};
 }
 
 export function createPingPongTarget(
@@ -2413,6 +2574,19 @@ export function uniformArrayChanged(
 	return changed;
 }
 
+export function disposeProgramPass(
+	gl: WebGL2RenderingContext,
+	pass: ProgramPass,
+) {
+	if (pass.analysis) {
+		pass.analysis.read.dispose();
+		pass.analysis.write.dispose();
+		disposeProgramPass(gl, pass.analysis.pass);
+	}
+	gl.deleteVertexArray(pass.vao);
+	gl.deleteProgram(pass.program);
+}
+
 export function renderPass(
 	gl: WebGL2RenderingContext,
 	pass: ProgramPass,
@@ -2441,7 +2615,80 @@ export function renderPass(
 	channels[1] = channel1;
 	channels[2] = channel2;
 	channels[3] = channel3;
+	if (pass.locations.uAsciiAnalysisColor) {
+		const cellsX = Math.ceil(
+			width / Math.max(2, renderUniforms.asciiCellSize.x),
+		);
+		const cellsY = Math.ceil(
+			height / Math.max(2, renderUniforms.asciiCellSize.y),
+		);
+		const key = `${width}/${height}/${renderUniforms.asciiCellSize.x}/${renderUniforms.asciiCellSize.y}/${camera.asciiHistoryVersion ?? 0}`;
+		if (!pass.analysis || pass.analysis.key !== key) {
+			if (pass.analysis) {
+				pass.analysis.read.dispose();
+				pass.analysis.write.dispose();
+				disposeProgramPass(gl, pass.analysis.pass);
+			}
+			pass.analysis = {
+				pass: createPass(
+					gl,
+					"ASCII Analysis",
+					FRAGMENT_HEADER + asciiAnalysisSource,
+				),
+				read: createMultiRenderTarget(
+					gl,
+					cellsX,
+					cellsY,
+					chooseByteTextureFormat(gl),
+					2,
+				),
+				write: createMultiRenderTarget(
+					gl,
+					cellsX,
+					cellsY,
+					chooseByteTextureFormat(gl),
+					2,
+				),
+				key,
+				atlas: channels[1].texture,
+				frame: -2,
+			};
+		}
+		const analysis = pass.analysis;
+		const valid =
+			analysis.frame === frame - 1 && analysis.atlas === channels[1].texture;
+		renderPass(
+			gl,
+			analysis.pass,
+			vertexBuffer,
+			analysis.write,
+			cellsX,
+			cellsY,
+			time,
+			delta,
+			valid ? 1 : 0,
+			mouse,
+			channels[0],
+			analysis.read.textures[1],
+			channels[2],
+			analysis.read.textures[0],
+			camera,
+			qualityValue,
+			blendWeight,
+			0,
+			channelResolutionScratch,
+			renderUniforms,
+			{ x: width, y: height },
+		);
+		[analysis.read, analysis.write] = [analysis.write, analysis.read];
+		analysis.frame = frame;
+		analysis.atlas = channels[1].texture;
+	}
+
 	gl.bindFramebuffer(gl.FRAMEBUFFER, target?.framebuffer ?? null);
+	if (target && "textures" in target)
+		gl.drawBuffers(target.textures.map((_, i) => gl.COLOR_ATTACHMENT0 + i));
+	else gl.drawBuffers([target ? gl.COLOR_ATTACHMENT0 : gl.BACK]);
 
 	gl.viewport(0, 0, width, height);
 	gl.useProgram(pass.program);
@@ -2652,6 +2899,17 @@ export function renderPass(
 		if (!pass.locations.iChannels[i]) continue;
 		gl.activeTexture(gl.TEXTURE0 + i);
 		gl.bindTexture(gl.TEXTURE_2D, channels[i].texture);
+	}
+
+	if (pass.analysis) {
+		for (const [index, location] of [
+			pass.locations.uAsciiAnalysisColor,
+			pass.locations.uAsciiAnalysisState,
+		].entries()) {
+			gl.activeTexture(gl.TEXTURE4 + index);
+			gl.bindTexture(gl.TEXTURE_2D, pass.analysis.read.textures[index].texture);
+			gl.uniform1i(location, 4 + index);
+		}
 	}
 
 	gl.drawArrays(gl.TRIANGLES, 0, 3);

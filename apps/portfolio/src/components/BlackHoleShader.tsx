@@ -35,7 +35,7 @@ function useBlackHoleController({
 	interactive = true,
 	rendererMode = "auto",
 	backend = "auto",
-	quality = "balanced",
+	quality = "cinematic-ascii",
 	resolutionScale = 1,
 	prepassScale,
 	bloomScale,

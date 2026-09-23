@@ -1,40 +1,27 @@
-// Colored ASCII post-process based on Three.js AsciiEffect brightness and ramp behavior.
-// Reference: https://github.com/mrdoob/three.js/blob/r167/examples/jsm/effects/AsciiEffect.js
-
-vec3 PaletteColor(float brightness)
-{
-	if (brightness < 0.5)
-	{
-		return mix(uShadowColor, uMidColor, brightness * 2.0);
-	}
-
-	return mix(uMidColor, uHighlightColor, (brightness - 0.5) * 2.0);
+vec3 PaletteColor(float brightness) {
+    return brightness < 0.5 ? mix(uShadowColor, uMidColor, brightness * 2.0)
+        : mix(uMidColor, uHighlightColor, (brightness - 0.5) * 2.0);
 }
-
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
-	vec2 uv = fragCoord.xy / iResolution.xy;
-	vec3 originalColor = texture(iChannel0, uv).rgb;
-
-	vec2 cellSize = max(uAsciiCellSize, vec2(2.0));
-	vec2 cellOrigin = floor(fragCoord.xy / cellSize) * cellSize;
-	vec2 cellUv = (fragCoord.xy - cellOrigin) / cellSize;
-	vec2 sampleUv = (cellOrigin + cellSize * 0.5) / iResolution.xy;
-	vec3 cellColor = texture(iChannel0, sampleUv).rgb;
-
-	float brightness = clamp(dot(cellColor, vec3(0.3, 0.59, 0.11)), 0.0, 1.0);
-	brightness = clamp((brightness - 0.5) * max(uAsciiContrast, 0.01) + 0.5 + uAsciiBrightness, 0.0, 1.0);
-
-	float glyphCount = max(float(uGlyphCount), 1.0);
-	int glyphIndex = int(clamp(floor(brightness * (glyphCount - 1.0) + 0.5), 0.0, glyphCount - 1.0));
-	vec2 atlasUv = vec2((float(glyphIndex) + cellUv.x) / glyphCount, cellUv.y);
-	float glyph = texture(iChannel1, atlasUv).a;
-	float glyphCoverage = max(texelFetch(iChannel2, ivec2(glyphIndex, 0), 0).r, 0.035);
-	float normalizedGlyph = clamp(glyph / glyphCoverage, 0.0, 2.5);
-	float brightCellGlow = (1.0 - glyph) * smoothstep(0.45, 0.95, brightness) * brightness * 0.32;
-
-	vec3 baseColor = uPaletteMode == 1 ? PaletteColor(brightness) : cellColor;
-	vec3 asciiColor = clamp(baseColor * (0.035 + normalizedGlyph * 0.82 + brightCellGlow), 0.0, 1.0);
-
-	fragColor = vec4(mix(originalColor, asciiColor, clamp(uAsciiMix, 0.0, 1.0)), 1.0);
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy;
+    vec3 originalColor = texture(iChannel0, uv).rgb;
+    vec2 size = max(uAsciiCellSize, vec2(2.0));
+    ivec2 cell = ivec2(floor(fragCoord / size));
+    vec2 cellUv = fract(fragCoord / size);
+    vec4 analysis = texelFetch(uAsciiAnalysisColor, cell, 0);
+    vec4 state = texelFetch(uAsciiAnalysisState, cell, 0);
+    int index = int(round(state.r * 255.0));
+    float count = max(float(uGlyphCount), 1.0);
+    float glyph = texture(iChannel1, vec2((float(index) + cellUv.x) / count, cellUv.y)).a;
+    float coverage = max(texelFetch(iChannel2, ivec2(index, 0), 0).r, 0.035);
+    float ink = min(glyph / coverage, 2.0);
+    float mean = dot(analysis.rgb, vec3(0.3, 0.59, 0.11));
+    float local = dot(originalColor, vec3(0.3, 0.59, 0.11));
+    // Restrict ink only at measured transitions, following source occupancy.
+    // No shadow-distance mask or synthetic outline is involved.
+    float occupied = smoothstep(mean * 0.15, max(0.015, mean * 0.65), local);
+    float boundary = mix(1.0, occupied, state.g * smoothstep(0.0, 0.25, 1.0 - state.b));
+    vec3 base = uPaletteMode == 1 ? PaletteColor(analysis.a) : analysis.rgb;
+    vec3 ascii = clamp(base * ink * boundary * state.a, 0.0, 1.0);
+    fragColor = vec4(CompositeGlow(mix(originalColor, ascii, clamp(uAsciiMix, 0.0, 1.0)), uv, originalColor), 1.0);
 }

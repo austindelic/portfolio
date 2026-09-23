@@ -178,6 +178,11 @@ function SelectControl<Value extends string>({
 				onChange={(event) => onChange(event.currentTarget.value as Value)}
 				className="h-8 border border-white/15 bg-black/80 px-2 text-white outline-none focus:border-cyan-300"
 			>
+				{!options.some((option) => option.value === value) && (
+					<option value={value} disabled hidden>
+						Custom
+					</option>
+				)}
 				{options.map((option) => (
 					<option key={option.value} value={option.value}>
 						{option.label}
@@ -262,15 +267,9 @@ export default function BlackHoleControls({
 		{ label: "Custom", value: "custom" },
 	];
 	const qualityPresetOptions: Array<{ label: string; value: QualityPreset }> = [
-		{ label: "Mobile Safe", value: "mobile-safe" },
-		{ label: "ASCII Balanced", value: "ascii-balanced" },
-		{ label: "ASCII Sharp", value: "ascii-sharp" },
-		{ label: "Performance", value: "performance" },
 		{ label: "Balanced", value: "balanced" },
-		{ label: "Visual", value: "visual" },
-		{ label: "Desktop Full", value: "desktop-full" },
-		{ label: "Stress Test", value: "stress-test" },
-		{ label: "Custom", value: "custom" },
+		{ label: "Cinematic ASCII", value: "cinematic-ascii" },
+		{ label: "Mobile", value: "mobile-safe" },
 	];
 	const rendererModeOptions: Array<{ label: string; value: RendererMode }> = [
 		{ label: "Auto", value: "auto" },

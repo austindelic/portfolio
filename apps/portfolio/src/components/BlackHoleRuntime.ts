@@ -1,3 +1,5 @@
+import { asciiSourceDimension } from "../lib/ascii-analysis";
+import { disposeProgramPass } from "./BlackHoleCore";
 import {
 	BLACK_HOLE_ANIMATION_ROUTES,
 	type BlackHoleAnimationKeyframe,
@@ -402,7 +404,11 @@ function startBlackHoleSession(
 			[
 				["Buffer A", bufferASource],
 				["Image", imageSource],
-				["ASCII", asciiSource],
+				[
+					"ASCII",
+					imageSource.slice(0, imageSource.indexOf("void mainImage")) +
+						asciiSource,
+				],
 			].map(([name, source]) => ({
 				name,
 				vertex: VERTEX_SOURCE,
@@ -430,6 +436,7 @@ function startBlackHoleSession(
 				return false;
 			}
 			camera.position = nextPosition;
+			camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 			snapshotRuntime();
 			writeCameraReadout(true);
 			requestRender();
@@ -442,6 +449,7 @@ function startBlackHoleSession(
 				return false;
 			}
 			setCameraForward(camera, nextForward);
+			camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 			snapshotRuntime();
 			writeCameraReadout(true);
 			requestRender();
@@ -454,6 +462,7 @@ function startBlackHoleSession(
 				return false;
 			}
 			camera.universeSign = nextUniverseSign;
+			camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 			snapshotRuntime();
 			writeCameraReadout(true);
 			requestRender();
@@ -841,8 +850,22 @@ function startBlackHoleSession(
 	};
 
 	const createFallbackTargets = () => {
-		sceneWidth = allocatedTargetDimension(renderWidth * settings.sceneScale);
-		sceneHeight = allocatedTargetDimension(renderHeight * settings.sceneScale);
+		sceneWidth = allocatedTargetDimension(
+			asciiSourceDimension(
+				renderWidth,
+				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
+				settings.qualityValue,
+				settings.sceneScale,
+			),
+		);
+		sceneHeight = allocatedTargetDimension(
+			asciiSourceDimension(
+				renderHeight,
+				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
+				settings.qualityValue,
+				settings.sceneScale,
+			),
+		);
 		prepassWidth = sceneWidth;
 		prepassHeight = sceneHeight;
 		bloomWidth = sceneWidth;
@@ -891,10 +914,20 @@ function startBlackHoleSession(
 			Math.max(1, Math.floor(rect.height * dpr * settings.resolutionScale)),
 		);
 		const nextSceneWidth = allocatedTargetDimension(
-			nextWidth * settings.sceneScale,
+			asciiSourceDimension(
+				nextWidth,
+				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
+				settings.qualityValue,
+				settings.sceneScale,
+			),
 		);
 		const nextSceneHeight = allocatedTargetDimension(
-			nextHeight * settings.sceneScale,
+			asciiSourceDimension(
+				nextHeight,
+				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
+				settings.qualityValue,
+				settings.sceneScale,
+			),
 		);
 		const nextPrepassWidth = nextSceneWidth;
 		const nextPrepassHeight = nextSceneHeight;
@@ -991,17 +1024,25 @@ function startBlackHoleSession(
 			enableBloomPass: settings.enableBloomPass,
 			passCount:
 				2 +
-				Number(lastAnimatedAsciiEnabled) +
+				2 * Number(lastAnimatedAsciiEnabled) +
 				(activeControls.bloomStrength !== 0 ? 3 : 0),
-			estimatedTextureMemoryBytes: estimateTextureMemoryBytes(
-				sceneWidth,
-				sceneHeight,
-				4,
-				3 +
-					Number(Boolean(fallbackTargets?.b)) +
-					Number(Boolean(fallbackTargets?.c)) +
-					Number(Boolean(fallbackTargets?.d)),
-			),
+			estimatedTextureMemoryBytes:
+				(lastAnimatedAsciiEnabled
+					? estimateTextureMemoryBytes(
+							Math.ceil(renderWidth / activeAtlas.cellSize.x),
+							Math.ceil(renderHeight / activeAtlas.cellSize.y),
+							16,
+						)
+					: 0) +
+				estimateTextureMemoryBytes(
+					sceneWidth,
+					sceneHeight,
+					fallbackFormat.type === gl.HALF_FLOAT ? 8 : 4,
+					3 +
+						Number(Boolean(fallbackTargets?.b)) +
+						Number(Boolean(fallbackTargets?.c)) +
+						Number(Boolean(fallbackTargets?.d)),
+				),
 			initTimeMs,
 			gpuFrameTimeMs: null,
 			gpuTimingSupported: false,
@@ -1222,7 +1263,9 @@ function startBlackHoleSession(
 				fallbackTargets.scene,
 				glyphTextures.atlas,
 				glyphTextures.metrics,
-				fallbackTexture,
+				settings.enableBloomPass
+					? (fallbackTargets.d ?? fallbackTexture)
+					: fallbackTexture,
 				camera,
 				settings.qualityValue,
 				0.5,
@@ -1440,8 +1483,7 @@ function startBlackHoleSession(
 		gl.deleteTexture(keyboardTexture.texture);
 		Object.values(fallbackPasses ?? {}).forEach((pass) => {
 			if (!pass) return;
-			gl.deleteVertexArray(pass.vao);
-			gl.deleteProgram(pass.program);
+			disposeProgramPass(gl, pass);
 		});
 		glyphTextures.dispose();
 	};
@@ -1594,7 +1636,7 @@ export function runtimeOptions(
 ): RuntimeOptions {
 	return {
 		renderSettings: createRenderSettingsFromQuality({
-			quality: "balanced",
+			quality: "cinematic-ascii",
 			resolutionScale: 1,
 			...props,
 		}),

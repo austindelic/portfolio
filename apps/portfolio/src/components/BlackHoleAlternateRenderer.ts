@@ -1,3 +1,11 @@
+import bloomSource from "../shaders/black-hole/bloom.glsl?raw";
+import { asciiSampleSide } from "../lib/ascii-analysis";
+import asciiAnalysisWgsl from "../shaders/black-hole/ascii-analysis.wgsl?raw";
+import imageSource from "../shaders/black-hole/image.glsl?raw";
+import {
+	chooseFallbackTextureFormat,
+	disposeProgramPass,
+} from "./BlackHoleCore";
 import { normalizeBlackHoleAnimationRoute } from "../config/black-hole-animation";
 import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
 import {
@@ -50,12 +58,7 @@ out vec4 shadertoyFragColor;
 void main()
 {
 	vec2 canvasResolution = max(uCanvasResolution, vec2(1.0));
-	vec2 cellSize = max(uAsciiCellSize, vec2(2.0));
-	vec2 fullFragCoord = min(
-		(gl_FragCoord.xy + vec2(0.5)) * cellSize,
-		canvasResolution - vec2(0.5)
-	);
-	vec2 uv = fullFragCoord / canvasResolution;
+	vec2 uv = gl_FragCoord.xy / iResolution.xy;
 	mat4 inverseCamRot;
 	vec3 mapCamDir;
 	TraceResult res = TraceFromCamera(uv, canvasResolution, 0.5, inverseCamRot, mapCamDir);
@@ -79,21 +82,11 @@ struct Params {
 	camera_forward: vec4<f32>,
 };
 
-@group(0) @binding(0) var cell_texture: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(0) var cell_texture: texture_storage_2d<rgba16float, write>;
 @group(0) @binding(1) var<uniform> params: Params;
 
 fn hash3(p: vec3<f32>) -> f32 {
 	return fract(sin(dot(p, vec3<f32>(127.1, 311.7, 74.7))) * 43758.5453123);
-}
-
-fn saturate_color(color: vec3<f32>) -> vec3<f32> {
-	return clamp(color, vec3<f32>(0.0), vec3<f32>(1.0));
-}
-
-fn tone_map(color: vec3<f32>) -> vec3<f32> {
-	var mapped = color / (vec3<f32>(1.0) + color);
-	mapped = pow(saturate_color(mapped), vec3<f32>(0.72));
-	return mapped;
 }
 
 fn star_field(dir: vec3<f32>) -> vec3<f32> {
@@ -103,6 +96,13 @@ fn star_field(dir: vec3<f32>) -> vec3<f32> {
 	let cold = vec3<f32>(0.45, 0.62, 1.0);
 	let warm = vec3<f32>(1.0, 0.86, 0.62);
 	return mix(cold, warm, hash3(cell + vec3<f32>(17.0, 3.0, 91.0))) * star * (0.25 + 1.6 * hash3(cell + vec3<f32>(9.0)));
+}
+
+// Match the per-sample GLSL emission ramp, not a post-process palette.
+fn gargantua_emission(heat: f32) -> vec3<f32> {
+	var color = mix(vec3<f32>(0.75, 0.12, 0.012), vec3<f32>(0.95, 0.32, 0.055), smoothstep(0.0, 0.45, heat));
+	color = mix(color, vec3<f32>(1.0, 0.65, 0.36), smoothstep(0.35, 0.80, heat));
+	return 0.72 * mix(color, vec3<f32>(1.0, 0.87, 0.60), smoothstep(0.86, 0.99, heat));
 }
 
 fn black_hole_color(uv: vec2<f32>) -> vec3<f32> {
@@ -139,20 +139,21 @@ fn black_hole_color(uv: vec2<f32>) -> vec3<f32> {
 	let disk_radial = smoothstep(2.0, 3.0, disk_radius) * (1.0 - smoothstep(14.0, 19.0, disk_radius));
 	let disk_visible = select(0.0, 1.0, disk_t > 0.0);
 	let disk_grazing = clamp(0.15 / max(abs(denom), 0.04), 0.0, 1.0);
-	let orbital = 0.62 + 0.38 * sin(disk_angle * 18.0 - time * 5.0 + disk_radius * 0.9);
-	let tangent = normalize(vec3<f32>(-disk_pos.z, 0.0, disk_pos.x));
-	let doppler = clamp(0.72 + 0.52 * dot(tangent, -ray_dir), 0.25, 1.75);
-	let disk = disk_visible * disk_radial * disk_grazing * orbital;
-	let lensed_disk = center_facing * exp(-abs(impact - 2.35) * 1.35) * (0.25 + 0.75 * smoothstep(-0.2, 0.8, closest.y)) * (0.5 + 0.5 * sin(atan2(closest.z, closest.x) * 14.0 - time * 4.0));
+	// Sheared, nested phases break up regular bands into flowing filaments.
+	let flow = disk_angle * 5.0 - time * 2.0;
+	let filament = 0.5 + 0.5 * sin(disk_radius * 9.0 + flow + 2.0 * sin(disk_radius * 2.3 + disk_angle * 3.0 - time));
+	let orbital = (0.22 + 0.78 * pow(filament, 3.0)) * (0.65 + 0.35 * sin(disk_radius * 4.7 - flow));
+	let disk = disk_visible * disk_radial * disk_grazing * orbital * exp(-0.18 * max(disk_radius - 3.0, 0.0));
+	let lensed_disk = center_facing * exp(-abs(impact - 2.35) * 3.8) * (0.25 + 0.75 * smoothstep(-0.2, 0.8, closest.y)) * (0.5 + 0.5 * sin(atan2(closest.z, closest.x) * 5.0 - time * 2.0 + impact * 18.0));
 
-	let heat = clamp(disk * doppler + lensed_disk * 0.45, 0.0, 2.5);
-	let disk_color = mix(vec3<f32>(0.95, 0.24, 0.05), vec3<f32>(1.0, 0.92, 0.72), clamp(heat * 0.85 + photon_ring * 0.35, 0.0, 1.0));
+	let heat = clamp(disk + lensed_disk * 0.30, 0.0, 2.5);
+	let disk_color = gargantua_emission(clamp(0.30 * (1.0 - smoothstep(2.0, 19.0, disk_radius)) + 0.70 * heat, 0.0, 1.0));
 	color += disk_color * heat * 1.75;
-	color += vec3<f32>(0.6, 0.82, 1.0) * photon_ring * 1.4;
-	color += vec3<f32>(0.95, 0.62, 0.32) * inner_ring * 0.35;
+	color += gargantua_emission(0.94) * photon_ring * 0.65;
+	color += gargantua_emission(0.65) * inner_ring * 0.15;
 	color *= 1.0 - horizon * 0.98;
 
-	return tone_map(color * exposure);
+	return max(color * exposure, vec3<f32>(0.0));
 }
 
 @compute @workgroup_size(8, 8, 1)
@@ -164,12 +165,43 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
 	let canvas_resolution = max(params.canvas_dims.xy, vec2<f32>(1.0));
 	let source_coord = vec2<f32>(f32(id.x), f32(id.y)) + vec2<f32>(0.5);
-	let full_coord = select(source_coord, source_coord * max(params.cell_size.xy, vec2<f32>(1.0)), params.source_dims.w > 0.5);
-	let uv = min(full_coord / canvas_resolution, vec2<f32>(0.99999));
+	let uv = source_coord / params.source_dims.xy;
 	let color = black_hole_color(uv);
 
-	textureStore(cell_texture, vec2<i32>(i32(id.x), i32(id.y)), vec4<f32>(saturate_color(color), 1.0));
+	textureStore(cell_texture, vec2<i32>(i32(id.x), i32(id.y)), vec4<f32>(color, 1.0));
 }
+`;
+
+// Two reduced-resolution passes; separate source/destination textures avoid read/write hazards.
+const WEBGPU_BLOOM_SOURCE = `
+@group(0) @binding(0) var source: texture_2d<f32>;
+@group(0) @binding(1) var output: texture_storage_2d<rgba16float, write>;
+
+fn blur(id: vec2<u32>, horizontal: bool) {
+	let size = textureDimensions(output);
+	if (any(id >= size)) { return; }
+	let source_size = vec2<i32>(textureDimensions(source));
+	let uv = (vec2<f32>(id) + 0.5) / vec2<f32>(size);
+	var color = vec3<f32>(0.0);
+	var weight_sum = 0.0;
+	for (var i = -4; i <= 4; i += 1) {
+		let weight = exp(-0.5 * f32(i * i) / 4.0);
+		let offset = select(vec2<f32>(0.0, f32(i)), vec2<f32>(f32(i), 0.0), horizontal) / vec2<f32>(size);
+		let coord = clamp(vec2<i32>((uv + offset) * vec2<f32>(source_size)), vec2<i32>(0), source_size - 1);
+		var sample_color = textureLoad(source, coord, 0).rgb;
+		if (horizontal) {
+			let peak = max(max(sample_color.r, sample_color.g), sample_color.b);
+			sample_color *= smoothstep(0.6, 1.4, peak);
+		}
+		color += sample_color * weight;
+		weight_sum += weight;
+	}
+	textureStore(output, vec2<i32>(id), vec4<f32>(color / weight_sum, 1.0));
+}
+@compute @workgroup_size(8, 8)
+fn horizontal(@builtin(global_invocation_id) id: vec3<u32>) { blur(id.xy, true); }
+@compute @workgroup_size(8, 8)
+fn vertical(@builtin(global_invocation_id) id: vec3<u32>) { blur(id.xy, false); }
 `;
 
 const WEBGPU_RENDER_SOURCE = `
@@ -197,6 +229,18 @@ struct VertexOut {
 @group(0) @binding(2) var glyph_metrics: texture_2d<f32>;
 @group(0) @binding(3) var glyph_sampler: sampler;
 @group(0) @binding(4) var<uniform> params: Params;
+@group(0) @binding(5) var bloom_texture: texture_2d<f32>;
+@group(0) @binding(6) var bloom_sampler: sampler;
+@group(0) @binding(7) var analysis_color: texture_2d<f32>;
+@group(0) @binding(8) var analysis_state: texture_2d<f32>;
+
+fn tone_map(color: vec3<f32>) -> vec3<f32> {
+	return pow(color / (vec3<f32>(1.0) + color), vec3<f32>(0.72));
+}
+fn composite_glow(base: vec3<f32>, uv: vec2<f32>) -> vec3<f32> {
+	let glow = tone_map(textureSampleLevel(bloom_texture, bloom_sampler, uv, 0.0).rgb * params.cell_size.w * 0.16);
+	return base + (vec3<f32>(1.0) - base) * glow;
+}
 
 @vertex
 fn vertex_main(@builtin(vertex_index) vertex_index: u32) -> VertexOut {
@@ -226,26 +270,30 @@ fn fragment_main(input: VertexOut) -> @location(0) vec4<f32> {
 	let cell_origin = floor(frag_coord / cell_size) * cell_size;
 	let cell_uv = (frag_coord - cell_origin) / cell_size;
 	let sample_uv = (cell_origin + cell_size * 0.5) / max(params.canvas_dims.xy, vec2<f32>(1.0));
-	let cell_color = textureSample(cell_texture, glyph_sampler, sample_uv).rgb;
-	let original_color = textureSample(cell_texture, glyph_sampler, input.uv).rgb;
+	let cell_color = tone_map(textureSample(cell_texture, glyph_sampler, sample_uv).rgb);
+	let original_color = tone_map(textureSample(cell_texture, glyph_sampler, input.uv).rgb);
 	let ascii_mix = clamp(params.source_dims.z, 0.0, 1.0);
 
 	if (ascii_mix <= 0.001) {
-		return vec4<f32>(original_color, 1.0);
+		return vec4<f32>(composite_glow(original_color, input.uv), 1.0);
 	}
 
-	var brightness = clamp(dot(cell_color, vec3<f32>(0.3, 0.59, 0.11)), 0.0, 1.0);
-	brightness = clamp((brightness - 0.5) * max(params.canvas_dims.w, 0.01) + 0.5 + params.canvas_dims.z, 0.0, 1.0);
+	let cell = vec2<i32>(floor(frag_coord / cell_size));
+	let analysis = textureLoad(analysis_color, cell, 0);
+	let state = textureLoad(analysis_state, cell, 0);
+	let glyph_index = round(state.r * 255.0);
 	let glyph_count = max(params.time_exposure_quality_glyph.w, 1.0);
-	let glyph_index = clamp(floor(brightness * (glyph_count - 1.0) + 0.5), 0.0, glyph_count - 1.0);
-	let atlas_uv = vec2<f32>((glyph_index + cell_uv.x) / glyph_count, cell_uv.y);
+	let atlas_uv = vec2<f32>((glyph_index + cell_uv.x) / glyph_count, 1.0 - cell_uv.y);
 	let glyph = textureSample(glyph_texture, glyph_sampler, atlas_uv).a;
-	let glyph_coverage = max(textureLoad(glyph_metrics, vec2<i32>(i32(glyph_index), 0), 0).r, 0.035);
-	let normalized_glyph = clamp(glyph / glyph_coverage, 0.0, 2.5);
-	let bright_cell_glow = (1.0 - glyph) * smoothstep(0.45, 0.95, brightness) * brightness * 0.32;
-	let base_color = select(cell_color, palette_color(brightness), params.cell_size.z > 0.5);
-	let ascii_color = clamp(base_color * (0.035 + normalized_glyph * 0.82 + bright_cell_glow), vec3<f32>(0.0), vec3<f32>(1.0));
-	return vec4<f32>(mix(original_color, ascii_color, ascii_mix), 1.0);
+	let coverage = max(textureLoad(glyph_metrics, vec2<i32>(i32(glyph_index), 0), 0).r, 0.035);
+	let ink = min(glyph / coverage, 2.0);
+	let mean = dot(analysis.rgb, vec3<f32>(0.3, 0.59, 0.11));
+	let local = dot(original_color, vec3<f32>(0.3, 0.59, 0.11));
+	let occupied = smoothstep(mean * 0.15, max(0.015, mean * 0.65), local);
+	let boundary = mix(1.0, occupied, state.g * smoothstep(0.0, 0.25, 1.0 - state.b));
+	let base_color = select(analysis.rgb, palette_color(analysis.a), params.cell_size.z > 0.5);
+	let ascii_color = clamp(base_color * ink * boundary * state.a, vec3<f32>(0.0), vec3<f32>(1.0));
+	return vec4<f32>(composite_glow(mix(original_color, ascii_color, ascii_mix), input.uv), 1.0);
 }
 `;
 
@@ -321,6 +369,8 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 		let renderHeight = 1;
 		let cellTextureWidth = 1;
 		let cellTextureHeight = 1;
+		let gpuBloomWidth = 0,
+			gpuBloomHeight = 0;
 		let lastTime = performance.now();
 		let lastRenderNow = 0;
 		let shaderTime = state.runtimeSnapshot.shaderTime ?? 0;
@@ -413,8 +463,8 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				sceneHeight: cellTextureHeight,
 				prepassWidth: cellTextureWidth,
 				prepassHeight: cellTextureHeight,
-				bloomWidth: 0,
-				bloomHeight: 0,
+				bloomWidth: gpuBloomWidth,
+				bloomHeight: gpuBloomHeight,
 				cameraPosition: [...camera.position],
 				cameraForward: [...camera.forward],
 				universeSign: camera.universeSign,
@@ -441,7 +491,8 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				computeWorkgroups,
 				computeInvocations: computeWorkgroups * 64,
 				frameIntervalMs: settings.frameIntervalMs,
-				enableBloomPass: false,
+				enableBloomPass:
+					activeAsciiBackend === "webgpu" && settings.enableBloomPass,
 				passCount,
 				estimatedTextureMemoryBytes,
 				initTimeMs,
@@ -474,6 +525,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					return false;
 				}
 				camera.position = nextPosition;
+				camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 				snapshotRuntime();
 				writeCameraReadout(true);
 				state.requestRender();
@@ -486,6 +538,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					return false;
 				}
 				setCameraForward(camera, nextForward);
+				camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 				snapshotRuntime();
 				writeCameraReadout(true);
 				state.requestRender();
@@ -498,6 +551,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					return false;
 				}
 				camera.universeSign = nextUniverseSign;
+				camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
 				snapshotRuntime();
 				writeCameraReadout(true);
 				state.requestRender();
@@ -565,7 +619,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				return;
 			}
 
-			const byteFormat = chooseByteTextureFormat(gl);
+			const byteFormat = chooseFallbackTextureFormat(gl);
 			const maxTextureSize = Math.max(
 				2,
 				Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) ||
@@ -595,8 +649,24 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			const asciiPass = createPass(
 				gl,
 				"ASCII Cell Composite",
-				createStandardFragmentSource("ASCII", asciiSource),
+				createStandardFragmentSource(
+					"ASCII",
+					imageSource.slice(0, imageSource.indexOf("void mainImage")) +
+						asciiSource,
+				),
 			);
+			const displayPass = createPass(
+				gl,
+				"Cell Display",
+				createStandardFragmentSource("Image", imageSource),
+			);
+			const cellBloomPass = createPass(
+				gl,
+				"Cell Bloom",
+				createStandardFragmentSource("Bloom", bloomSource),
+			);
+			let displayTarget: RenderTarget | null = null;
+			let cellBloomTargets: RenderTarget[] = [];
 			let cellTarget: RenderTarget | null = null;
 			const channelResolutionScratch = new Float32Array(12);
 			const activeRenderUniforms = createRenderUniforms(
@@ -608,6 +678,9 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 
 			const disposeCellTarget = () => {
 				disposeRenderTarget(gl, cellTarget);
+				disposeRenderTarget(gl, displayTarget);
+				for (const target of cellBloomTargets) disposeRenderTarget(gl, target);
+				cellBloomTargets = [];
 				cellTarget = null;
 			};
 
@@ -627,11 +700,25 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				);
 				const nextCellWidth = Math.min(
 					maxTextureSize,
-					Math.max(1, Math.ceil(nextWidth / Math.max(2, settings.cellWidth))),
+					Math.max(
+						1,
+						Math.min(
+							nextWidth,
+							Math.ceil(nextWidth / Math.max(2, settings.cellWidth)) *
+								asciiSampleSide(settings.qualityValue),
+						),
+					),
 				);
 				const nextCellHeight = Math.min(
 					maxTextureSize,
-					Math.max(1, Math.ceil(nextHeight / Math.max(2, settings.cellHeight))),
+					Math.max(
+						1,
+						Math.min(
+							nextHeight,
+							Math.ceil(nextHeight / Math.max(2, settings.cellHeight)) *
+								asciiSampleSide(settings.qualityValue),
+						),
+					),
 				);
 				if (
 					nextWidth === renderWidth &&
@@ -653,6 +740,26 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					cellTextureHeight,
 					byteFormat,
 					"nearest",
+				);
+				displayTarget = createRenderTarget(
+					gl,
+					cellTextureWidth,
+					cellTextureHeight,
+					chooseByteTextureFormat(gl),
+					"linear",
+				);
+				cellBloomTargets = [0, 1, 2].map(() =>
+					createRenderTarget(
+						gl,
+						settings.enableBloomPass
+							? Math.max(2, Math.ceil(cellTextureWidth * settings.bloomScale))
+							: 2,
+						settings.enableBloomPass
+							? Math.max(2, Math.ceil(cellTextureHeight * settings.bloomScale))
+							: 2,
+						byteFormat,
+						"linear",
+					),
 				);
 				frame = 0;
 				lastRenderNow = 0;
@@ -700,7 +807,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					shaderTime += delta * liveControls.timeScale;
 					updateCamera(camera, keyboardData, delta, movementSpeed);
 					snapshotRuntime(now);
-					if (!cellTarget) return;
+					if (!cellTarget || !displayTarget) return;
 					gl.disable(gl.DEPTH_TEST);
 					gl.disable(gl.BLEND);
 					gl.clearColor(0, 0, 0, 1);
@@ -727,6 +834,54 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 						activeRenderUniforms,
 						{ x: renderWidth, y: renderHeight },
 					);
+					if (settings.enableBloomPass)
+						for (let stage = 0; stage < 3; stage++) {
+							const target = cellBloomTargets[stage];
+							renderPass(
+								gl,
+								cellBloomPass,
+								vertexBuffer,
+								target,
+								target.width,
+								target.height,
+								shaderTime,
+								delta,
+								frame,
+								mouse,
+								stage === 0 ? cellTarget : cellBloomTargets[stage - 1],
+								fallbackTexture,
+								fallbackTexture,
+								fallbackTexture,
+								camera,
+								settings.qualityValue,
+								1,
+								stage,
+								channelResolutionScratch,
+								activeRenderUniforms,
+							);
+						}
+					renderPass(
+						gl,
+						displayPass,
+						vertexBuffer,
+						displayTarget,
+						cellTextureWidth,
+						cellTextureHeight,
+						shaderTime,
+						delta,
+						frame,
+						mouse,
+						cellTarget,
+						fallbackTexture,
+						fallbackTexture,
+						fallbackTexture,
+						camera,
+						settings.qualityValue,
+						1,
+						0,
+						channelResolutionScratch,
+						{ ...activeRenderUniforms, asciiMix: 1 },
+					);
 					renderPass(
 						gl,
 						asciiPass,
@@ -738,10 +893,10 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 						delta,
 						frame,
 						mouse,
-						cellTarget,
+						displayTarget,
 						glyphTextures.atlas,
 						glyphTextures.metrics,
-						fallbackTexture,
+						settings.enableBloomPass ? cellBloomTargets[2] : fallbackTexture,
 						camera,
 						settings.qualityValue,
 						1,
@@ -821,8 +976,9 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				disposeCellTarget();
 				gl.deleteVertexArray(cellPass.vao);
 				gl.deleteProgram(cellPass.program);
-				gl.deleteVertexArray(asciiPass.vao);
-				gl.deleteProgram(asciiPass.program);
+				disposeProgramPass(gl, displayPass);
+				disposeProgramPass(gl, cellBloomPass);
+				disposeProgramPass(gl, asciiPass);
 				gl.deleteBuffer(vertexBuffer);
 				gl.deleteTexture(fallbackTexture.texture);
 				glyphTextures.dispose();
@@ -855,6 +1011,43 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				magFilter: "nearest",
 				minFilter: "nearest",
 			});
+			const bloomSampler = device.createSampler({
+				magFilter: "linear",
+				minFilter: "linear",
+			});
+			const bloomModule = device.createShaderModule({
+				label: "Gargantua Bloom",
+				code: WEBGPU_BLOOM_SOURCE,
+			});
+			const bloomHorizontalPipeline = await device.createComputePipelineAsync({
+				layout: "auto",
+				compute: { module: bloomModule, entryPoint: "horizontal" },
+			});
+			const bloomVerticalPipeline = await device.createComputePipelineAsync({
+				layout: "auto",
+				compute: { module: bloomModule, entryPoint: "vertical" },
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+			let bloomHorizontal: any = null;
+			// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+			let bloomVertical: any = null;
+			// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+			let bloomHorizontalGroup: any = null;
+			// biome-ignore lint/suspicious/noExplicitAny: Experimental WebGPU resource types.
+			let bloomVerticalGroup: any = null;
+			// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+			let analysisColors: any[] = [];
+			// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+			let analysisStates: any[] = [];
+			// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+			const analysisGroups: any[] = [];
+			// biome-ignore lint/suspicious/noExplicitAny: Native experimental GPU resources.
+			const renderGroups: any[] = [];
+			let analysisWidth = 1,
+				analysisHeight = 1,
+				analysisIndex = 0;
+			let historyValid = false,
+				historyCameraVersion = -1;
 			const uniformBuffer = device.createBuffer({
 				size: 44 * 4,
 				usage: 0x0040 | 0x0008,
@@ -871,6 +1064,20 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				label: "ASCII Cell Compute Pipeline",
 				layout: "auto",
 				compute: { module: computeModule, entryPoint: "main" },
+			});
+			const analysisPipeline = await device.createComputePipelineAsync({
+				label: "ASCII contour analysis",
+				layout: "auto",
+				compute: {
+					module: device.createShaderModule({
+						code:
+							WEBGPU_COMPUTE_SOURCE.slice(
+								0,
+								WEBGPU_COMPUTE_SOURCE.indexOf("@group"),
+							) + asciiAnalysisWgsl,
+					}),
+					entryPoint: "main",
+				},
 			});
 			const renderPipeline = await device.createRenderPipelineAsync({
 				label: "ASCII Cell Render Pipeline",
@@ -914,8 +1121,6 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			let cellTexture: any = null;
 			// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
 			let computeBindGroup: any = null;
-			// biome-ignore lint/suspicious/noExplicitAny: WebGPU bind group shape is browser-provided and experimental here.
-			let renderBindGroup: any = null;
 			const uniformData = new Float32Array(44);
 
 			const writeUniforms = () => {
@@ -940,7 +1145,11 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				uniformData[16] = cellTextureWidth;
 				uniformData[17] = cellTextureHeight;
 				uniformData[18] = renderUniforms.asciiMix;
-				uniformData[19] = sourceIsCellGrid ? 1 : 0;
+				uniformData[19] =
+					historyValid &&
+					historyCameraVersion === (camera.asciiHistoryVersion ?? 0)
+						? 1
+						: 0;
 				uniformData[20] = renderWidth;
 				uniformData[21] = renderHeight;
 				uniformData[22] = renderUniforms.asciiBrightness;
@@ -952,7 +1161,9 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					? settings.cellHeight
 					: activeAtlas.cellSize.y;
 				uniformData[26] = renderUniforms.paletteMode;
-				uniformData[27] = renderUniforms.bloomStrength;
+				uniformData[27] = settings.enableBloomPass
+					? renderUniforms.bloomStrength
+					: 0;
 				uniformData.set(camera.position, 28);
 				uniformData[31] = camera.universeSign;
 				uniformData.set(camera.right, 32);
@@ -965,6 +1176,20 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			};
 
 			const recreateBindGroups = () => {
+				bloomHorizontalGroup = device.createBindGroup({
+					layout: bloomHorizontalPipeline.getBindGroupLayout(0),
+					entries: [
+						{ binding: 0, resource: cellTexture.createView() },
+						{ binding: 1, resource: bloomHorizontal.createView() },
+					],
+				});
+				bloomVerticalGroup = device.createBindGroup({
+					layout: bloomVerticalPipeline.getBindGroupLayout(0),
+					entries: [
+						{ binding: 0, resource: bloomHorizontal.createView() },
+						{ binding: 1, resource: bloomVertical.createView() },
+					],
+				});
 				computeBindGroup = device.createBindGroup({
 					layout: computePipeline.getBindGroupLayout(0),
 					entries: [
@@ -972,16 +1197,41 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 						{ binding: 1, resource: { buffer: uniformBuffer } },
 					],
 				});
-				renderBindGroup = device.createBindGroup({
-					layout: renderPipeline.getBindGroupLayout(0),
-					entries: [
-						{ binding: 0, resource: cellTexture.createView() },
-						{ binding: 1, resource: glyphTexture.createView() },
-						{ binding: 2, resource: glyphMetricsTexture.createView() },
-						{ binding: 3, resource: sampler },
-						{ binding: 4, resource: { buffer: uniformBuffer } },
-					],
-				});
+				historyValid = false;
+				for (let index = 0; index < 2; index++) {
+					analysisGroups[index] = device.createBindGroup({
+						layout: analysisPipeline.getBindGroupLayout(0),
+						entries: [
+							{ binding: 0, resource: cellTexture.createView() },
+							{
+								binding: 1,
+								resource: analysisStates[1 - index].createView(),
+							},
+							{ binding: 2, resource: glyphMetricsTexture.createView() },
+							{
+								binding: 3,
+								resource: analysisColors[1 - index].createView(),
+							},
+							{ binding: 4, resource: analysisColors[index].createView() },
+							{ binding: 5, resource: analysisStates[index].createView() },
+							{ binding: 6, resource: { buffer: uniformBuffer } },
+						],
+					});
+					renderGroups[index] = device.createBindGroup({
+						layout: renderPipeline.getBindGroupLayout(0),
+						entries: [
+							{ binding: 0, resource: cellTexture.createView() },
+							{ binding: 1, resource: glyphTexture.createView() },
+							{ binding: 2, resource: glyphMetricsTexture.createView() },
+							{ binding: 3, resource: sampler },
+							{ binding: 4, resource: { buffer: uniformBuffer } },
+							{ binding: 5, resource: bloomVertical.createView() },
+							{ binding: 6, resource: bloomSampler },
+							{ binding: 7, resource: analysisColors[index].createView() },
+							{ binding: 8, resource: analysisStates[index].createView() },
+						],
+					});
+				}
 			};
 
 			const resize = () => {
@@ -1001,20 +1251,48 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				const nextCellWidth = Math.max(
 					1,
 					sourceIsCellGrid
-						? Math.ceil(nextWidth / Math.max(2, settings.cellWidth))
+						? Math.min(
+								nextWidth,
+								Math.min(
+									nextWidth,
+									Math.ceil(nextWidth / Math.max(2, settings.cellWidth)) *
+										asciiSampleSide(settings.qualityValue),
+								) * asciiSampleSide(settings.qualityValue),
+							)
 						: nextWidth,
 				);
 				const nextCellHeight = Math.max(
 					1,
 					sourceIsCellGrid
-						? Math.ceil(nextHeight / Math.max(2, settings.cellHeight))
+						? Math.min(
+								nextHeight,
+								Math.min(
+									nextHeight,
+									Math.ceil(nextHeight / Math.max(2, settings.cellHeight)) *
+										asciiSampleSide(settings.qualityValue),
+								) * asciiSampleSide(settings.qualityValue),
+							)
 						: nextHeight,
+				);
+				const nextAnalysisWidth = Math.ceil(
+					nextWidth /
+						(sourceIsCellGrid
+							? settings.cellWidth
+							: glyphAtlasConfig.cellSize.x),
+				);
+				const nextAnalysisHeight = Math.ceil(
+					nextHeight /
+						(sourceIsCellGrid
+							? settings.cellHeight
+							: glyphAtlasConfig.cellSize.y),
 				);
 				if (
 					nextWidth === renderWidth &&
 					nextHeight === renderHeight &&
 					nextCellWidth === cellTextureWidth &&
-					nextCellHeight === cellTextureHeight
+					nextCellHeight === cellTextureHeight &&
+					nextAnalysisWidth === analysisWidth &&
+					nextAnalysisHeight === analysisHeight
 				)
 					return;
 				renderWidth = nextWidth;
@@ -1023,12 +1301,51 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				cellTextureHeight = nextCellHeight;
 				canvas.width = renderWidth;
 				canvas.height = renderHeight;
+				analysisWidth = nextAnalysisWidth;
+				analysisHeight = nextAnalysisHeight;
+				for (const texture of [...analysisColors, ...analysisStates])
+					texture.destroy();
+				analysisColors = [0, 1].map(() =>
+					device.createTexture({
+						size: [analysisWidth, analysisHeight, 1],
+						format: "rgba8unorm",
+						usage: 0x0004 | 0x0008,
+					}),
+				);
+				analysisStates = [0, 1].map(() =>
+					device.createTexture({
+						size: [analysisWidth, analysisHeight, 1],
+						format: "rgba8unorm",
+						usage: 0x0004 | 0x0008,
+					}),
+				);
 				cellTexture?.destroy?.();
 				cellTexture = device.createTexture({
 					size: [cellTextureWidth, cellTextureHeight, 1],
-					format: "rgba8unorm",
+					format: "rgba16float",
 					usage: 0x0004 | 0x0002 | 0x0008,
 				});
+				bloomHorizontal?.destroy?.();
+				bloomVertical?.destroy?.();
+				gpuBloomWidth = settings.enableBloomPass
+					? Math.max(
+							1,
+							Math.ceil(nextWidth * Math.min(settings.bloomScale, 0.5)),
+						)
+					: 1;
+				gpuBloomHeight = settings.enableBloomPass
+					? Math.max(
+							1,
+							Math.ceil(nextHeight * Math.min(settings.bloomScale, 0.5)),
+						)
+					: 1;
+				const bloomDescriptor = {
+					size: [gpuBloomWidth, gpuBloomHeight, 1],
+					format: "rgba16float",
+					usage: 0x0004 | 0x0008,
+				};
+				bloomHorizontal = device.createTexture(bloomDescriptor);
+				bloomVertical = device.createTexture(bloomDescriptor);
 				recreateBindGroups();
 				frame = 0;
 				lastRenderNow = 0;
@@ -1105,6 +1422,32 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 						1,
 					);
 					computePass.end();
+					if (settings.asciiEnabled) {
+						const analysisPass = commandEncoder.beginComputePass();
+						analysisPass.setPipeline(analysisPipeline);
+						analysisPass.setBindGroup(0, analysisGroups[analysisIndex]);
+						analysisPass.dispatchWorkgroups(
+							Math.ceil(analysisWidth / 8),
+							Math.ceil(analysisHeight / 8),
+						);
+						analysisPass.end();
+					}
+
+					if (settings.enableBloomPass && liveControls.bloomStrength > 0) {
+						for (const [pipeline, group] of [
+							[bloomHorizontalPipeline, bloomHorizontalGroup],
+							[bloomVerticalPipeline, bloomVerticalGroup],
+						]) {
+							const bloomPass = commandEncoder.beginComputePass();
+							bloomPass.setPipeline(pipeline);
+							bloomPass.setBindGroup(0, group);
+							bloomPass.dispatchWorkgroups(
+								Math.ceil(gpuBloomWidth / 8),
+								Math.ceil(gpuBloomHeight / 8),
+							);
+							bloomPass.end();
+						}
+					}
 					const currentTexture = context.getCurrentTexture();
 					const renderPass = commandEncoder.beginRenderPass({
 						colorAttachments: [
@@ -1117,10 +1460,13 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 						],
 					});
 					renderPass.setPipeline(renderPipeline);
-					renderPass.setBindGroup(0, renderBindGroup);
+					renderPass.setBindGroup(0, renderGroups[analysisIndex]);
 					renderPass.draw(3, 1, 0, 0);
 					renderPass.end();
 					device.queue.submit([commandEncoder.finish()]);
+					historyValid = settings.asciiEnabled;
+					historyCameraVersion = camera.asciiHistoryVersion ?? 0;
+					analysisIndex = 1 - analysisIndex;
 					const frameTimeMs = performance.now() - cpuFrameStart;
 					cpuAverageFrameTimeMs =
 						cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
@@ -1172,7 +1518,11 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				snapshotRuntime();
 				if (animationFrame) cancelAnimationFrame(animationFrame);
 				resizeObserver.disconnect();
+				for (const texture of [...analysisColors, ...analysisStates])
+					texture.destroy();
 				cellTexture?.destroy?.();
+				bloomHorizontal?.destroy?.();
+				bloomVertical?.destroy?.();
 				glyphTexture.destroy?.();
 				glyphMetricsTexture.destroy?.();
 				device.destroy?.();
