@@ -92,10 +92,10 @@ fn hash3(p: vec3<f32>) -> f32 {
 fn star_field(dir: vec3<f32>) -> vec3<f32> {
 	let cell = floor(normalize(dir) * 150.0);
 	let star_seed = hash3(cell);
-	let star = smoothstep(0.992, 1.0, star_seed);
+	let star = smoothstep(0.984, 1.0, star_seed);
 	let cold = vec3<f32>(0.45, 0.62, 1.0);
 	let warm = vec3<f32>(1.0, 0.86, 0.62);
-	return mix(cold, warm, hash3(cell + vec3<f32>(17.0, 3.0, 91.0))) * star * (0.25 + 1.6 * hash3(cell + vec3<f32>(9.0)));
+	return mix(cold, warm, hash3(cell + vec3<f32>(17.0, 3.0, 91.0))) * star * (0.25 + 1.6 * hash3(cell + vec3<f32>(9.0))) * 1.25;
 }
 
 // Match the per-sample GLSL emission ramp, not a post-process palette.
