@@ -33,20 +33,20 @@ const links: Array<{
 ];
 ---
 
-<header data-disable-clock={disableClock ? "true" : "false"} id="main-header" class="mb-8 px-6 mt-6">
+<header data-disable-clock={disableClock ? "true" : "false"} id="main-header" class="portfolio-header">
   <nav
     id="navigation-menu"
     aria-label="Main menu"
-    class="flex flex-col lg:flex-row justify-between items-start lg:items-center"
+    class="portfolio-navigation"
   >
-    <span class="mb-4 lg:mb-0">
-      <a href="/" target="_self" class="text-white font-medium text-md">
+    <span class="clock-label">
+      <span class="clock-caption">PERTH /</span> <a href="/" target="_self" class="text-foreground font-medium text-md">
         <span id="perth-time" aria-label="Current time in Perth">
           <span data-clock-hour>--</span><span class="clock-colon" data-clock-colon>:</span><span data-clock-minute>--</span><span class="clock-colon" data-clock-colon>:</span><span data-clock-second>--</span>
         </span>
       </a>
     </span>
-    <span class="flex flex-wrap gap-6 text-sm">
+    <span class="navigation-links">
       {
         links.map((link) => {
           const isActive = link.id === navbarActiveItemID;
@@ -56,7 +56,8 @@ const links: Array<{
               href={link.redirect ? link.redirect : link.url}
               target={link.redirect ? "_blank" : "_self"}
               id={link.id}
-              class:list={["text-gray-400 opacity-70 hover:opacity-100 inline-flex items-center gap-1", isActive && "text-white opacity-100"]}
+              aria-current={isActive ? "page" : undefined}
+              class="nav-link inline-flex items-center gap-1"
             >
               {link.title}
               {!isActive && (

@@ -56,195 +56,57 @@ const projects: Array<{
 ];
 ---
 
-<BaseLayout
-  navbarActiveItemID="home"
-  contentPlacement="right"
->
-  <main>
-    <section id="about" class="mt-6" aria-labelledby="about-heading">
-      <div
-        class="bh-home-card bg-black/10 border border-gray-600 rounded-lg font-mono text-sm p-6"
-        role="region"
-      >
-        <!-- Terminal header -->
-        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-600">
-          <div class="flex gap-2" role="img">
-            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <div class="w-3 h-3 rounded-full bg-green-500"></div>
-          </div>
-          <span class="text-gray-400 text-xs ml-2"
-            >$ xh austindelic.com</span
-          >
-        </div>
-        <!-- Content -->
-        <div class="text-xs">
-          <div class="space-y-2">
-            <div class="flex items-center gap-4 mb-4">
-              <div class="flex flex-col">
-                <h1 class="text-primary text-xl">Austin Delic</h1>
-                <p class="text-gray-400 text-xs">
-                  Software engineer / builder in Perth.
-                </p>
-              </div>
-            </div>
-
-            <!-- Personal paragraph -->
-            <div class="bh-home-inset bg-white/[0.04] rounded-lg p-3 mb-4">
-              <p class="text-gray-200 leading-relaxed">
-                I build production software across web, mobile, backend systems, cloud infrastructure, and AI product surfaces. Recent work spans healthcare payments platforms, accessibility tooling, Rust developer infrastructure, and full-stack client products.
-              </p>
-            </div>
-
-            <div class="border-b border-gray-600 w-full mb-2"></div>
-
-            <div class="flex">
-              <span class="text-gray-400 w-36 shrink-0">Location</span>
-              <span class="text-white">Perth, Australia</span>
-            </div>
-
-            <div class="flex">
-              <span class="text-gray-400 w-36 shrink-0">Work</span>
-              <span class="text-white">
-                Production full-stack engineering, AI products, systems tooling
-              </span>
-            </div>
-
-            <div class="flex">
-              <span class="text-gray-400 w-36 shrink-0">Focus</span>
-              <span class="text-white"
-              >End-to-end ownership, reliable delivery, useful abstractions</span
-              >
-            </div>
-
-            <div class="flex">
-              <span class="text-gray-400 w-36 shrink-0">Contact</span>
-              <span class="text-white">
-                <a
-                  class="text-cyan-600 hover:underline focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900"
-                  href="mailto:austin@austindelic.com"
-                  aria-label="Send email to austin@austindelic.com">austin@austindelic.com</a
-                >
-              </span>
-            </div>
-
-            <div class="flex">
-              <div class="flex items-center">
-                <span class="text-gray-400 w-36 shrink-0">Stack</span>
-                <div class="flex flex-wrap gap-2" role="list" aria-label="Tech">
-                  {
-                    Object.keys(techStack).map((lang) => (
-                      <span
-                        class="text-gray-400 hover:text-cyan-600"
-                        title={techStack[lang]}
-                      >
-                        {lang}
-                      </span>
-                    ))
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-3 pt-2 border-t border-gray-700 text-gray-500 text-xs">
-          <span class="text-gray-400">$</span> bat about.txt
-        </div>
-      </div>
-    </section>
-
-    <section id="projects" class="mt-2">
-      <div
-        class="bh-home-card bg-black/10 border border-gray-700 rounded font-mono text-sm text-gray-300 p-6"
-        role="region"
-        aria-label="Project showcase"
-      >
-        <h2 class="mb-4 text-sm font-bold text-gray-500">project samples</h2>
-        <div class="space-y-2" role="list">
-          {
-            projects.map((project, index) => (
-              <div
-                class="bh-hover-surface group hover:bg-gray-800/50 p-1 rounded"
-                role="listitem"
-              >
-                {project.link ? (
-                  <a
-                    href={project.link}
-                    target={project.link.startsWith("http") ? "_blank" : undefined}
-                    rel={
-                      project.link.startsWith("http")
-                        ? "noopener noreferrer"
-                        : undefined
-                    }
-                    class="block focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
-                    aria-label={`Visit ${project.title}: ${project.description}`}
-                  >
-                    <div class="flex items-start gap-2">
-                      <span
-                        class="text-gray-400 w-6 shrink-0"
-                        aria-hidden="true"
-                      >
-                        {String(index + 1).padStart(2, "0")}.
-                      </span>
-                      <span class="text-gray-500 w-20 shrink-0">
-                        {project.label}
-                      </span>
-                      <div class="min-w-0 flex-1">
-                        <span class="text-white group-hover:text-cyan-300 font-semibold">
-                          {project.title}
-                        </span>
-                        <span class="text-gray-500 ml-2">
-                          → {project.description}
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                ) : (
-                  <div
-                    class="flex items-start gap-2 opacity-60"
-                    aria-label={`${project.title}: ${project.description} (Coming soon)`}
-                  >
-                    <span class="text-gray-400 w-6 shrink-0" aria-hidden="true">
-                      {String(index + 1).padStart(2, "0")}.
-                    </span>
-                    <span class="text-gray-500 w-20 shrink-0">
-                      {project.label}
-                    </span>
-                    <div class="min-w-0 flex-1">
-                      <span class="text-white font-semibold">
-                        {project.title}
-                      </span>
-                      <span class="text-gray-500 ml-2">
-                        → {project.description}
-                      </span>
-                      <span class="text-gray-600 ml-2">[coming soon]</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          }
-        </div>
-        <div class="mt-3 pt-2 border-t border-gray-700 text-gray-500 text-xs">
-          <span class="text-gray-400">$</span> eza -la projects/ | total {
-            projects.length
-          }
-        </div>
-      </div>
-    </section>
-
-    <section id="blog" class="mt-8">
-      <h2 class="text-sm mb-6 font-semibold text-gray-500">latest posts</h2>
-      <ul class="space-y-6" role="list">
-        {
-          allPostsByDate.map((post) => (
-            <li class="flex flex-col gap-x-2 sm:flex-row" role="listitem">
-              <PostPreview post={post} />
-            </li>
-          ))
-        }
-      </ul>
-    </section>
-  </main>
+<BaseLayout navbarActiveItemID="home" contentPlacement="right">
+  <section id="about" class="portfolio-section" aria-labelledby="about-heading">
+    <div class="section-label"><span><span class="section-number">01 /</span> About</span><span>Perth, Australia</span></div>
+    <div class="identity-grid"><div class="identity-copy">
+    <div class="identity-heading"><svg class="pixel-mark" viewBox="0 0 13 7" aria-hidden="true"><path d="M1 0h3v1H1zM0 1h1v6H0zM4 1h1v6H4zM1 3h3v1H1zM7 0h4v1H7zM7 1h1v5H7zM11 1h1v5h-1zM7 6h4v1H7z" fill="currentColor"/></svg><h1 id="about-heading" class="intro-title">Austin Delic<span class="text-primary">.</span></h1></div>
+    <p class="intro-subtitle">Software engineer / builder in Perth.</p>
+    <p class="intro-copy">I build production software across web, mobile, backend systems, cloud infrastructure, and AI product surfaces. Recent work spans healthcare payments platforms, accessibility tooling, Rust developer infrastructure, and full-stack client products.</p>
+    </div>
+    <dl class="profile-details">
+      <div><dt>Location</dt><dd>Perth, Australia</dd></div>
+      <div><dt>Work</dt><dd>Production full-stack engineering, AI products, systems tooling</dd></div>
+      <div><dt>Focus</dt><dd>End-to-end ownership, reliable delivery, useful abstractions</dd></div>
+      <div><dt>Contact</dt><dd><a class="text-primary" href="mailto:austin@austindelic.com">austin@austindelic.com</a><button class="copy-email" type="button" aria-label="Copy email address" data-copy-email>Copy</button><span class="copy-status" role="status" aria-live="polite"></span></dd></div>
+      <div><dt>Stack</dt><dd class="stack-list">{Object.entries(techStack).map(([key, label]) => <span title={label}>{key}</span>)}</dd></div>
+    </dl></div>
+  </section>
+  <section id="projects" class="portfolio-section directory-panel" aria-labelledby="projects-heading">
+    <div class="section-label"><h2 id="projects-heading"><span class="section-number">02 /</span> Project samples</h2><span>{String(projects.length).padStart(2, "0")}</span></div>
+    <div class="directory-columns" aria-hidden="true"><span>Project</span><span>Category</span></div>
+    <ul class="ruled-list project-list">
+      {projects.map((project, index) => (
+        <li><a class="project-row" href={project.link} target={project.link.startsWith("http") ? "_blank" : undefined} rel={project.link.startsWith("http") ? "noopener noreferrer" : undefined}>
+          <span class="row-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+          <div><span class="row-title">{project.title}</span><p class="row-description">{project.description}</p></div>
+          <span class="row-category">{project.label}</span><span class="row-arrow" aria-hidden="true">↗</span>
+        </a></li>
+      ))}
+    </ul>
+  </section>
+  <section id="latest-posts" class="portfolio-section directory-panel" aria-labelledby="blog-heading">
+    <div class="section-label"><h2 id="blog-heading"><span class="section-number">03 /</span> Latest posts</h2><a href="/blog">All posts ↗</a></div>
+    <ul class="ruled-list">{allPostsByDate.map((post) => <li><PostPreview post={post} /></li>)}</ul>
+  </section>
 </BaseLayout>
+
+<script>
+  function initCopyEmail() {
+    const button = document.querySelector<HTMLButtonElement>("[data-copy-email]");
+    if (!button || button.dataset.ready) return;
+    button.dataset.ready = "true";
+    button.addEventListener("click", async () => {
+      const status = button.nextElementSibling;
+      try {
+        await navigator.clipboard.writeText("austin@austindelic.com");
+        if (status) status.textContent = "Copied";
+      } catch {
+        if (status) status.textContent = "Copy unavailable — select the address.";
+      }
+      window.setTimeout(() => { if (status) status.textContent = ""; }, 2500);
+    });
+  }
+  initCopyEmail();
+  document.addEventListener("astro:page-load", initCopyEmail);
+</script>

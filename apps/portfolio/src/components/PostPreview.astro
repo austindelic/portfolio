@@ -16,9 +16,8 @@ const datetime = date.toISOString();
 const postDate = getFormattedDate(date);
 ---
 
-<div class="flex flex-row gap-2 items-center text-sm">
-  <time datetime={datetime} class="min-w-[120px]">{postDate}</time>
-  <a class="hover:underline hover:text-cyan-700" href={`/blog/${post.slug}/`}>
-    {post.data.title}
-  </a>
-</div>
+<a class="post-row" href={`/blog/${post.slug}/`}>
+  <time datetime={datetime}>{postDate}</time>
+  <span class="row-title">{post.data.title}</span>
+  <span class="row-arrow" aria-hidden="true">↗</span>
+</a>

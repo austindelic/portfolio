@@ -11,21 +11,22 @@ const allPostsByDate = sortMDByDate(visiblePosts);
 ---
 
 <BaseLayout title="Blog" navbarActiveItemID="blog">
-  <section aria-label="Blog posts">
-    <h1 class="text-xl font-bold mb-6 drop-shadow-sm">Blog posts</h1>
+  <section class="portfolio-section directory-panel" aria-label="Blog posts">
+    <div class="section-label"><span>Writing</span><span>Archive</span></div>
+    <h1 class="page-title">Blog posts</h1>
 
     {
       allPostsByDate.length === 0 ? (
         <div class="flex items-center gap-4 mb-6">
           <div class="flex flex-col">
-            <h2 class="text-yellow-400 text-2xl font-bold">404</h2>
-            <p class="text-gray-400 text-xs">No posts published yet.</p>
+            <h2 class="text-primary text-2xl font-bold">404</h2>
+            <p class="text-muted-foreground text-xs">No posts published yet.</p>
           </div>
         </div>
       ) : (
-        <ul class="space-y-4 sm:space-y-2">
+        <ul class="ruled-list">
           {allPostsByDate.map((post) => (
-            <li class="flex flex-col gap-x-2 sm:flex-row">
+            <li >
               <PostPreview post={post} />
             </li>
           ))}
