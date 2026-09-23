@@ -252,6 +252,7 @@ fn fragment_main(input: VertexOut) -> @location(0) vec4<f32> {
 type AlternateRendererContext = {
 	state: RuntimeState;
 	onCameraReadout: RuntimeOptions["onCameraReadout"];
+	onReady: RuntimeOptions["onReady"];
 	runtimeProfile: RuntimeProfile;
 	animationMode: AnimationMode;
 	resolvedRendererMode: ResolvedRendererMode;
@@ -290,6 +291,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 	const {
 		state,
 		onCameraReadout,
+		onReady,
 		runtimeProfile,
 		animationMode,
 		resolvedRendererMode,
@@ -770,6 +772,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 						false,
 					);
 					writeCameraReadout();
+					if (frame === 0) onReady?.();
 					frame += 1;
 				} catch (renderError) {
 					setError(formatError(renderError));
@@ -1141,6 +1144,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 						timestampSupported,
 					);
 					writeCameraReadout();
+					if (frame === 0) onReady?.();
 					frame += 1;
 				} catch (renderError) {
 					setError(formatError(renderError));

@@ -145,6 +145,7 @@ function startBlackHoleSession(
 				cleanup = startAlternateRenderer({
 					state,
 					onCameraReadout: options.onCameraReadout,
+					onReady: options.onReady,
 					runtimeProfile,
 					animationMode,
 					resolvedRendererMode,
@@ -1563,7 +1564,8 @@ export function createRuntimeState(props: Props): RuntimeState {
 		animationMode: props.animationMode ?? "off",
 		animationAutoplay: props.animationAutoplay ?? true,
 		animationPlaying:
-			(props.animationAutoplay ?? true) && props.animationMode !== "off",
+			(props.animationAutoplay ?? true) &&
+			(props.animationMode ?? "off") !== "off",
 		animationRoute: props.animationRoute ?? "/",
 		reactRenderCount: 0,
 		requestRender() {},
@@ -1622,22 +1624,39 @@ export function mountBlackHoleRuntime(
 	let options = initialOptions;
 	let disposed = false;
 	let cleanup: (() => void) | undefined;
+	let generation = 0;
 	const start = () => {
 		if (disposed) return;
+		const currentGeneration = ++generation;
 		cleanup?.();
 		cleanup = undefined;
-		cleanup = startBlackHoleSession(canvas, state, {
-			...options,
-			onReady: () => {
-				resolveReady(true);
-				options.onReady?.();
-			},
-			onError: (error) => {
-				if (error) resolveReady(false);
-				options.onError(error);
-			},
-			onContextRestored: start,
-		});
+		const mount = () => {
+			if (disposed || generation !== currentGeneration) return;
+			try {
+				cleanup = startBlackHoleSession(canvas, state, {
+					...options,
+					onReady: () => {
+						resolveReady(true);
+						options.onReady?.();
+					},
+					onError: (error) => {
+						if (error) resolveReady(false);
+						options.onError(error);
+					},
+					onContextRestored: start,
+				});
+			} catch (error) {
+				resolveReady(false);
+				options.onError(formatError(error));
+			}
+		};
+		const font = `${state.atlasConfig.textSize}px "${state.atlasConfig.fontFamily}"`;
+		if (document.fonts.check(font)) mount();
+		else {
+			// A smaller public entrypoint can beat the font download. Do not bake
+			// fallback glyphs into the atlas; ignore completion after route disposal.
+			void document.fonts.load(font).then(mount, mount);
+		}
 	};
 	start();
 	return {
