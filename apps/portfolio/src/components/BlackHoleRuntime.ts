@@ -11,6 +11,7 @@ import bufferBSource from "../shaders/black-hole/buffer-b.glsl?raw";
 import bufferCSource from "../shaders/black-hole/buffer-c.glsl?raw";
 import bufferDSource from "../shaders/black-hole/buffer-d.glsl?raw";
 import imageSource from "../shaders/black-hole/image.glsl?raw";
+import { submitPrograms } from "./BlackHoleCompilation";
 import {
 	type AnimationEditorApi,
 	type AnimationMode,
@@ -30,7 +31,6 @@ import {
 	createInitialCamera,
 	createInitialControls,
 	createKeyboardTexture,
-	createPass,
 	createPingPongTarget,
 	createRenderSettingsFromQuality,
 	createRenderTarget,
@@ -48,6 +48,7 @@ import {
 	formatError,
 	type GlyphAtlasConfig,
 	glyphControlsKey,
+	initializePass,
 	isControlKeyboardTarget,
 	isWebGpuAvailable,
 	length,
@@ -73,6 +74,7 @@ import {
 	TARGET_ALLOCATION_SCALE_STEPS,
 	updateCamera,
 	updateKeyboardTexture,
+	VERTEX_SOURCE,
 	writeAnimationControlsFromFrame,
 	writeRenderUniforms,
 } from "./BlackHoleCore";
@@ -391,31 +393,21 @@ function startBlackHoleSession(
 	let fallbackTargets: FallbackTargets | null = null;
 	let contextLost = false;
 
-	const ensureFallbackPasses = () => {
-		if (fallbackPasses) return;
-
-		const next: Partial<FallbackPassSet> = {};
-		try {
-			next.a = createPass(
-				gl,
-				"Buffer A",
-				createStandardFragmentSource("Buffer A", bufferASource),
-			);
-			next.image = createPass(
-				gl,
-				"Image",
-				createStandardFragmentSource("Image", imageSource),
-			);
-			next.ascii = createPass(
-				gl,
-				"ASCII",
-				createStandardFragmentSource("ASCII", asciiSource),
-			);
-			fallbackPasses = next as FallbackPassSet;
-		} catch (error) {
-			for (const pass of Object.values(next)) gl.deleteProgram(pass.program);
-			throw error;
-		}
+	let pendingPrograms: ReturnType<typeof submitPrograms> | undefined;
+	let compilationTimer: ReturnType<typeof setTimeout> | undefined;
+	const submitFallbackPasses = () => {
+		pendingPrograms = submitPrograms(
+			gl,
+			[
+				["Buffer A", bufferASource],
+				["Image", imageSource],
+				["ASCII", asciiSource],
+			].map(([name, source]) => ({
+				name,
+				vertex: VERTEX_SOURCE,
+				fragment: createStandardFragmentSource(name, source),
+			})),
+		);
 	};
 
 	const writeCameraReadout = (force = false) => {
@@ -469,7 +461,7 @@ function startBlackHoleSession(
 		sync: () => writeCameraReadout(true),
 	};
 	try {
-		ensureFallbackPasses();
+		submitFallbackPasses();
 	} catch (fallbackError) {
 		options.onError(formatError(fallbackError));
 		gl.deleteBuffer(vertexBuffer);
@@ -1097,21 +1089,33 @@ function startBlackHoleSession(
 		);
 		// These passes only feed bloom; camera state is CPU-owned.
 		if (activeRenderUniforms.bloomStrength !== 0) {
-			fallbackPasses.b ??= createPass(
-				gl,
-				"Buffer B",
-				createStandardFragmentSource("Buffer B", bufferBSource),
-			);
-			fallbackPasses.c ??= createPass(
-				gl,
-				"Buffer C",
-				createStandardFragmentSource("Buffer C", bufferCSource),
-			);
-			fallbackPasses.d ??= createPass(
-				gl,
-				"Buffer D",
-				createStandardFragmentSource("Buffer D", bufferDSource),
-			);
+			if (!fallbackPasses.b || !fallbackPasses.c || !fallbackPasses.d) {
+				const batch = submitPrograms(
+					gl,
+					[
+						["Buffer B", bufferBSource],
+						["Buffer C", bufferCSource],
+						["Buffer D", bufferDSource],
+					].map(([name, source]) => ({
+						name,
+						vertex: VERTEX_SOURCE,
+						fragment: createStandardFragmentSource(name, source),
+					})),
+				);
+				// Editor changes can arrive immediately before a contributing frame. Submit
+				// together, then synchronously finish rather than briefly dropping bloom.
+				const programs = batch.finish(true);
+				if (!programs) throw new Error("Shader compilation was cancelled.");
+				try {
+					fallbackPasses.b = initializePass(gl, "Buffer B", programs[0]);
+					fallbackPasses.c = initializePass(gl, "Buffer C", programs[1]);
+					fallbackPasses.d = initializePass(gl, "Buffer D", programs[2]);
+				} catch (error) {
+					for (const program of programs) gl.deleteProgram(program);
+					fallbackPasses.b = fallbackPasses.c = fallbackPasses.d = undefined;
+					throw error;
+				}
+			}
 
 			renderPass(
 				gl,
@@ -1313,6 +1317,7 @@ function startBlackHoleSession(
 			publishStats(frameTimeMs, now);
 			updateCameraReadout(now);
 
+			if (frame === 0) options.onReady?.();
 			frame += 1;
 		} catch (renderError) {
 			options.onError(formatError(renderError));
@@ -1327,7 +1332,13 @@ function startBlackHoleSession(
 	};
 
 	const requestRender = () => {
-		if (!disposed && !contextLost && !animationFrame && !document.hidden) {
+		if (
+			!disposed &&
+			fallbackPasses &&
+			!contextLost &&
+			!animationFrame &&
+			!document.hidden
+		) {
 			animationFrame = requestAnimationFrame(renderFrame);
 		}
 	};
@@ -1419,6 +1430,9 @@ function startBlackHoleSession(
 	const disposeGpuResources = () => {
 		if (gpuResourcesDisposed) return;
 		gpuResourcesDisposed = true;
+		clearTimeout(compilationTimer);
+		pendingPrograms?.cancel();
+		pendingPrograms = undefined;
 		disposeTargets();
 		gl.deleteBuffer(vertexBuffer);
 		gl.deleteTexture(fallbackTexture.texture);
@@ -1471,14 +1485,40 @@ function startBlackHoleSession(
 	canvas.addEventListener("webglcontextlost", handleContextLost);
 	canvas.addEventListener("webglcontextrestored", handleContextRestored);
 
-	initTimeMs = performance.now() - setupStart;
-	updateCameraReadout(performance.now(), true);
-	requestRender();
+	const completeCompilation = () => {
+		if (disposed || contextLost || !pendingPrograms) return;
+		try {
+			const programs = pendingPrograms.finish();
+			if (!programs) {
+				compilationTimer = setTimeout(completeCompilation, 4);
+				return;
+			}
+			pendingPrograms = undefined;
+			try {
+				fallbackPasses = {
+					a: initializePass(gl, "Buffer A", programs[0]),
+					image: initializePass(gl, "Image", programs[1]),
+					ascii: initializePass(gl, "ASCII", programs[2]),
+				};
+			} catch (error) {
+				for (const program of programs) gl.deleteProgram(program);
+				throw error;
+			}
+			initTimeMs = performance.now() - setupStart;
+			updateCameraReadout(performance.now(), true);
+			requestRender();
+		} catch (error) {
+			options.onError(formatError(error));
+			disposed = true;
+			disposeGpuResources();
+		}
+	};
+	completeCompilation();
 
 	let cleaned = false;
 	return () => {
 		if (cleaned) return;
-        cleaned = true;
+		cleaned = true;
 		snapshotRuntime(true);
 		disposed = true;
 		if (animationFrame) cancelAnimationFrame(animationFrame);
@@ -1575,6 +1615,10 @@ export function mountBlackHoleRuntime(
 	state: RuntimeState,
 	initialOptions: RuntimeOptions,
 ) {
+	let resolveReady: (ready: boolean) => void = () => {};
+	const ready = new Promise<boolean>((resolve) => {
+		resolveReady = resolve;
+	});
 	let options = initialOptions;
 	let disposed = false;
 	let cleanup: (() => void) | undefined;
@@ -1584,11 +1628,20 @@ export function mountBlackHoleRuntime(
 		cleanup = undefined;
 		cleanup = startBlackHoleSession(canvas, state, {
 			...options,
+			onReady: () => {
+				resolveReady(true);
+				options.onReady?.();
+			},
+			onError: (error) => {
+				if (error) resolveReady(false);
+				options.onError(error);
+			},
 			onContextRestored: start,
 		});
 	};
 	start();
 	return {
+		ready,
 		updateSettings(next: Partial<RuntimeOptions>) {
 			if (!disposed) {
 				options = { ...options, ...next };
@@ -1621,6 +1674,7 @@ export function mountBlackHoleRuntime(
 		dispose() {
 			if (disposed) return;
 			disposed = true;
+			resolveReady(false);
 			cleanup?.();
 			cleanup = undefined;
 		},

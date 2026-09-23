@@ -4,6 +4,7 @@ import {
 	getBlackHoleRouteAnimation,
 } from "../config/black-hole-animation";
 import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
+import { submitPrograms } from "./BlackHoleCompilation";
 export type Vec3 = [number, number, number];
 
 export type AsciiCellSize = {
@@ -1990,69 +1991,24 @@ ${entrySource}
 `;
 }
 
-export function compileShader(
-	gl: WebGL2RenderingContext,
-	type: number,
-	source: string,
-	name: string,
-): WebGLShader {
-	const shader = gl.createShader(type);
-	if (!shader) throw new Error(`Could not create ${name} shader.`);
-
-	gl.shaderSource(shader, source);
-	gl.compileShader(shader);
-
-	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-		const log = gl.getShaderInfoLog(shader) || "Unknown shader compile error.";
-		gl.deleteShader(shader);
-		throw new Error(`${name} failed to compile:\n${log}`);
-	}
-
-	return shader;
-}
-
 export function createPass(
 	gl: WebGL2RenderingContext,
 	name: string,
 	fragmentSource: string,
 ): ProgramPass {
-	const vertex = compileShader(
-		gl,
-		gl.VERTEX_SHADER,
-		VERTEX_SOURCE,
-		`${name} vertex`,
-	);
-	let fragment: WebGLShader;
-	try {
-		fragment = compileShader(
-			gl,
-			gl.FRAGMENT_SHADER,
-			fragmentSource,
-			`${name} fragment`,
-		);
-	} catch (error) {
-		gl.deleteShader(vertex);
-		throw error;
-	}
-	const program = gl.createProgram();
-	if (!program) {
-		gl.deleteShader(vertex);
-		gl.deleteShader(fragment);
-		throw new Error(`Could not create ${name} program.`);
-	}
+	const batch = submitPrograms(gl, [
+		{ name, vertex: VERTEX_SOURCE, fragment: fragmentSource },
+	]);
+	const programs = batch.finish(true);
+	if (!programs) throw new Error("Shader compilation was cancelled.");
+	return initializePass(gl, name, programs[0]);
+}
 
-	gl.attachShader(program, vertex);
-	gl.attachShader(program, fragment);
-	gl.linkProgram(program);
-	gl.deleteShader(vertex);
-	gl.deleteShader(fragment);
-
-	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-		const log = gl.getProgramInfoLog(program) || "Unknown program link error.";
-		gl.deleteProgram(program);
-		throw new Error(`${name} failed to link:\n${log}`);
-	}
-
+export function initializePass(
+	gl: WebGL2RenderingContext,
+	name: string,
+	program: WebGLProgram,
+): ProgramPass {
 	const pass: ProgramPass = {
 		channels: [],
 		vao: null,
@@ -2096,7 +2052,6 @@ export function createPass(
 		},
 	};
 	// Sampler indices are program state and never change during its lifetime.
-	// biome-ignore lint/correctness/useHookAtTopLevel: WebGL useProgram is not a React hook.
 	gl.useProgram(program);
 	pass.locations.iChannels.forEach((location, unit) => {
 		if (location) gl.uniform1i(location, unit);
@@ -2489,7 +2444,6 @@ export function renderPass(
 	gl.bindFramebuffer(gl.FRAMEBUFFER, target?.framebuffer ?? null);
 
 	gl.viewport(0, 0, width, height);
-	// biome-ignore lint/correctness/useHookAtTopLevel: WebGLRenderingContext.useProgram is not a React hook.
 	gl.useProgram(pass.program);
 
 	if (!pass.vao) {

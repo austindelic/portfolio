@@ -59,22 +59,16 @@ async (page) => {
 			};
 		}
 		if (scenario === "compile" || scenario === "bloom-compile") {
-			const parameter = WebGL2RenderingContext.prototype.getShaderParameter;
-			let checks = 0;
-			WebGL2RenderingContext.prototype.getShaderParameter = function (
-				shader,
-				p,
-			) {
-				if (
-					p === this.COMPILE_STATUS &&
-					++checks === (scenario === "compile" ? 4 : 8)
-				) {
-					live.failed = true;
-					return false;
-				}
-				return parameter.call(this, shader, p);
-			};
-		}
+const source = WebGL2RenderingContext.prototype.shaderSource;
+            WebGL2RenderingContext.prototype.shaderSource = function(shader, text) {
+              if (!live.failed && (scenario === "compile" || window.__injectBloomFailure)) {
+                live.failed = true;
+                return source.call(this, shader, text + "\nTHIS_IS_AN_INJECTED_COMPILATION_ERROR");
+              }
+              return source.call(this, shader, text);
+            };
+        }
+
 		if (scenario === "unavailable") {
 			const get = HTMLCanvasElement.prototype.getContext;
 			HTMLCanvasElement.prototype.getContext = function (type, ...args) {
