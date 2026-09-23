@@ -38,14 +38,7 @@ export async function runBenchmark({
 		label: string;
 		rendererMode: RendererMode;
 		backend: ShaderBackend;
-	}> = [
-		{ label: "Full WebGL2", rendererMode: "full", backend: "webgl2" },
-		{
-			label: "Fallback Full WebGL2",
-			rendererMode: "fallback-full",
-			backend: "webgl2",
-		},
-	];
+	}> = [{ label: "Full WebGL2", rendererMode: "full", backend: "webgl2" }];
 	if (isWebGpuAvailable()) {
 		scenarios.push({
 			label: "Full WebGPU",
@@ -76,6 +69,12 @@ export async function runBenchmark({
 			window.__blackHoleStats = undefined;
 			setRendererModeState(scenario.rendererMode);
 			setBackendState(scenario.backend);
+			const initializationDeadline = performance.now() + 15000;
+			while (
+				!window.__blackHoleStats &&
+				performance.now() < initializationDeadline
+			)
+				await wait(50);
 			await wait(900);
 			const cpuFrameTimes: number[] = [];
 			const wallFrameTimes: number[] = [];

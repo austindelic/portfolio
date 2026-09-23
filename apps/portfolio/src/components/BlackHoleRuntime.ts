@@ -5,14 +5,9 @@ import {
 	getBlackHoleRouteAnimation,
 	normalizeBlackHoleAnimationRoute,
 } from "../config/black-hole-animation";
-import { asciiSourceDimension } from "../lib/ascii-analysis";
-import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
-import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
-import bufferBSource from "../shaders/black-hole/buffer-b.glsl?raw";
-import bufferCSource from "../shaders/black-hole/buffer-c.glsl?raw";
-import bufferDSource from "../shaders/black-hole/buffer-d.glsl?raw";
-import imageSource from "../shaders/black-hole/image.glsl?raw";
-import { submitPrograms } from "./BlackHoleCompilation";
+import { asciiSampleSide, asciiSourceDimension } from "../lib/ascii-analysis";
+import type { BackendFrame, BlackHoleBackend } from "./BlackHoleBackend";
+import { RenderTargetAllocationError } from "./BlackHoleBackend";
 import {
 	type AnimationEditorApi,
 	type AnimationMode,
@@ -23,37 +18,24 @@ import {
 	type CameraEditorApi,
 	type CameraState,
 	CONTROL_KEY_CODES,
-	chooseFallbackTextureFormat,
 	cloneVec3,
 	copyVec3Into,
 	createGlyphAtlasConfig,
-	createGlyphTextureSet,
 	createInitialCamera,
 	createInitialControls,
-	createKeyboardTexture,
-	createPingPongTarget,
 	createRenderSettingsFromQuality,
-	createRenderTarget,
 	createRenderUniforms,
-	createSolidTexture,
-	createStandardFragmentSource,
 	DEFAULT_ASCII_CELL_SIZE,
 	DIRECT_FALLBACK_DPR,
 	detectRuntimeProfile,
-	disposeProgramPass,
-	disposeRenderTarget,
 	estimateTextureMemoryBytes,
 	evaluateAnimationSequenceInto,
-	type FallbackPassSet,
-	type FallbackTargets,
 	formatError,
 	type GlyphAtlasConfig,
 	glyphControlsKey,
-	initializePass,
 	isControlKeyboardTarget,
 	isWebGpuAvailable,
 	length,
-	MAX_GLYPH_ATLAS_DIMENSION,
 	MOUSE_SENSITIVITY,
 	MOVE_SPEED,
 	MOVE_SPEED_FACTOR,
@@ -62,9 +44,7 @@ import {
 	parseUniverseSign,
 	type RendererMode,
 	type RenderSettings,
-	type RenderUniforms,
 	type RuntimeSnapshot,
-	renderPass,
 	resolveRendererMode,
 	resolveRenderSettings,
 	resolveShaderBackend,
@@ -74,8 +54,6 @@ import {
 	stringifyAnimationValue,
 	TARGET_ALLOCATION_SCALE_STEPS,
 	updateCamera,
-	updateKeyboardTexture,
-	VERTEX_SOURCE,
 	writeAnimationControlsFromFrame,
 	writeRenderUniforms,
 } from "./BlackHoleCore";
@@ -87,6 +65,15 @@ import {
 } from "./BlackHoleOrbit";
 
 export type RuntimeState = {
+	resumeAnimation?: {
+		phase: AnimationPhase;
+		sequence: BlackHoleAnimationKeyframe[];
+		time: number;
+		loops: boolean;
+		index: number;
+		route: BlackHoleAnimationRouteKey;
+		playing: boolean;
+	};
 	animationAutoplay: boolean;
 	animationEditor: AnimationEditorApi;
 	animationMode: AnimationMode;
@@ -102,6 +89,8 @@ export type RuntimeState = {
 	runtimeSnapshot: RuntimeSnapshot;
 };
 export type RuntimeOptions = {
+	onCanvasReplaced?: (canvas: HTMLCanvasElement) => void;
+	onRenderFailure?: (error: unknown) => void;
 	renderSettings: RenderSettings;
 	asciiMix: number;
 	showControls: boolean;
@@ -118,10 +107,97 @@ export type RuntimeOptions = {
 	onAnimationPlaying?: (playing: boolean) => void;
 	onCameraReadout?: (camera: CameraState, force: boolean) => void;
 };
+
 function startBlackHoleSession(
 	canvas: HTMLCanvasElement,
 	state: RuntimeState,
 	options: RuntimeOptions,
+) {
+	const abort = new AbortController();
+	const setupStart = performance.now();
+	let attempt: AbortController | undefined;
+	let cleanup: (() => void) | undefined;
+	let owned: BlackHoleBackend | undefined;
+	let fallingBack = false;
+	let generation = 0;
+	const selected = resolveShaderBackend(
+		options.backendState,
+		resolveRendererMode(options.rendererModeState),
+	);
+	const initialize = async (
+		kind: "webgpu" | "webgl2",
+		reason: string | null,
+	) => {
+		const current = ++generation;
+		const controller = new AbortController();
+		attempt = controller;
+		const fail = (error: unknown) => {
+			if (abort.signal.aborted || current !== generation) return;
+			controller.abort();
+			cleanup?.();
+			cleanup = undefined;
+			owned?.dispose();
+			owned = undefined;
+			if (selected === "webgpu" && !fallingBack) {
+				fallingBack = true;
+				const fresh = canvas.cloneNode(false) as HTMLCanvasElement;
+				canvas.replaceWith(fresh);
+				canvas = fresh;
+				options.onCanvasReplaced?.(fresh);
+				void initialize("webgl2", formatError(error));
+			} else options.onError(formatError(error));
+		};
+		try {
+			const factory =
+				kind === "webgpu"
+					? (await import("./BlackHoleWebGpuBackend")).createWebGpuBackend
+					: (await import("./BlackHoleWebGlBackend")).createWebGlBackend;
+			controller.signal.throwIfAborted();
+			const backend = await factory({
+				canvas,
+				cellGrid: options.rendererModeState === "ascii-cell",
+				settings: resolveRenderSettings(options.renderSettings),
+				atlas: state.atlasConfig,
+				initialBloomStrength: state.controls.bloomStrength,
+				signal: controller.signal,
+				onFailure: fail,
+				onInvalidate: () => state.requestRender(),
+				profiling: options.debugStats || options.showControls,
+			});
+			if (abort.signal.aborted || current !== generation) {
+				backend.dispose();
+				return;
+			}
+			owned = backend;
+			cleanup = startRendererSession(
+				canvas,
+				state,
+				{ ...options, onRenderFailure: fail },
+				backend,
+				reason,
+				setupStart,
+			);
+			options.onError(null);
+		} catch (error) {
+			fail(error);
+		}
+	};
+	void initialize(selected, null);
+	return () => {
+		abort.abort();
+		attempt?.abort();
+		cleanup?.();
+		owned?.dispose();
+	};
+}
+
+function startRendererSession(
+	canvas: HTMLCanvasElement,
+	state: RuntimeState,
+	options: RuntimeOptions,
+	backend: BlackHoleBackend,
+	fallbackReason: string | null,
+	setupStart: number,
 ) {
 	const {
 		renderSettings,
@@ -131,74 +207,11 @@ function startBlackHoleSession(
 		debugStats,
 		rendererModeState,
 		backendState,
-		animationMode,
 	} = options;
 
 	const settings = resolveRenderSettings(renderSettings);
 	const runtimeProfile = detectRuntimeProfile();
 	const resolvedRendererMode = resolveRendererMode(rendererModeState);
-	const resolvedBackend = resolveShaderBackend(
-		backendState,
-		resolvedRendererMode,
-	);
-	const setupStart = performance.now();
-
-	if (resolvedRendererMode === "ascii-cell" || resolvedBackend === "webgpu") {
-		let cancelled = false;
-		let cleanup: (() => void) | undefined;
-		void import("./BlackHoleAlternateRenderer")
-			.then(({ startAlternateRenderer }) => {
-				if (cancelled) return;
-				cleanup = startAlternateRenderer({
-					state,
-					onCameraReadout: options.onCameraReadout,
-					onReady: options.onReady,
-					runtimeProfile,
-					animationMode,
-					resolvedRendererMode,
-					resolvedBackend,
-
-					debugStats,
-					showControls,
-
-					rendererModeState,
-
-					canvas,
-					settings,
-
-					interactive,
-					setError: options.onError,
-					asciiMix,
-					onContextRestored: options.onContextRestored,
-					setupStart,
-					setBackendState: options.onBackend,
-				});
-			})
-			.catch((error) => {
-				if (!cancelled) options.onError(formatError(error));
-			});
-		return () => {
-			cancelled = true;
-			cleanup?.();
-		};
-	}
-
-	const gl = canvas.getContext("webgl2", {
-		alpha: false,
-		antialias: false,
-		depth: false,
-		preserveDrawingBuffer: true,
-		stencil: false,
-	});
-
-	if (!gl) {
-		options.onError("WebGL2 is not available in this browser.");
-		return;
-	}
-
-	gl.disable(gl.DEPTH_TEST);
-	gl.disable(gl.BLEND);
-	gl.clearColor(0, 0, 0, 1);
 
 	let perfSearch = "";
 	let perfFlags = new Set<string>();
@@ -248,6 +261,7 @@ function startBlackHoleSession(
 	}
 	const initialAnimationRoute = currentAnimationRoute();
 	const freshRouteEntry =
+		!fallbackReason &&
 		activeAnimationMode() === "route" &&
 		!persistedAnimationSnapshot &&
 		!state.runtimeSnapshot.cameraPosition;
@@ -279,11 +293,12 @@ function startBlackHoleSession(
 	};
 	// Preserve the full pipeline already displayed by every WebGL2 route.
 	// The former prepass setup always failed (undefined scale), then rebuilt this pipeline.
-	const mode = "fallback";
-	const fallbackReason: string | null =
-		rendererModeState === "fallback-full"
-			? "Forced fallback renderer selected."
-			: null;
+	const mode =
+		resolvedRendererMode === "ascii-cell"
+			? "ascii-cell"
+			: backend.kind === "webgpu"
+				? "webgpu"
+				: "fallback";
 	let startTime = performance.now();
 	let lastTime = startTime;
 	let shaderTime =
@@ -309,7 +324,7 @@ function startBlackHoleSession(
 	let lastStatsPublish = 0;
 	let lastRuntimeSnapshotUpdate = 0;
 	let lastPersistentSnapshotUpdate = 0;
-	let keyboardDirty = true;
+
 	let pointerActive = false;
 	let lastPointerX = 0;
 	let lastPointerY = 0;
@@ -318,10 +333,7 @@ function startBlackHoleSession(
 		state.runtimeSnapshot.movementSpeed ??
 		persistedAnimationSnapshot?.movementSpeed ??
 		MOVE_SPEED;
-	const maxTextureSize = Math.max(
-		2,
-		Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) || MAX_GLYPH_ATLAS_DIMENSION,
-	);
+	const maxTextureSize = backend.maxTextureSize;
 
 	const keyboardData = new Uint8Array(256 * 4);
 	const mouse = new Float32Array([0, 0, -1, -1]);
@@ -392,56 +404,9 @@ function startBlackHoleSession(
 	};
 	const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-	const fallbackFormat = chooseFallbackTextureFormat(gl);
-	const fallbackTexture = createSolidTexture(gl, [0, 0, 0, 255]);
-	const keyboardTexture = createKeyboardTexture(gl, keyboardData);
 	let glyphAtlasConfig = state.atlasConfig;
 	let liveGlyphControlsKey = glyphControlsKey(state.controls);
-	let glyphTextures = createGlyphTextureSet(gl, glyphAtlasConfig);
-	const vertexBuffer = gl.createBuffer();
-	const channelResolutionScratch = new Float32Array(12);
-
-	if (!vertexBuffer) {
-		options.onError("Could not create fullscreen vertex buffer.");
-		glyphTextures.dispose();
-		gl.deleteTexture(fallbackTexture.texture);
-		gl.deleteTexture(keyboardTexture.texture);
-		return;
-	}
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER,
-		new Float32Array([-1, -1, 3, -1, -1, 3]),
-		gl.STATIC_DRAW,
-	);
-
-	let fallbackPasses: FallbackPassSet | null = null;
-
-	let fallbackTargets: FallbackTargets | null = null;
 	let contextLost = false;
-
-	let pendingPrograms: ReturnType<typeof submitPrograms> | undefined;
-	let compilationTimer: ReturnType<typeof setTimeout> | undefined;
-	const submitFallbackPasses = () => {
-		pendingPrograms = submitPrograms(
-			gl,
-			[
-				["Buffer A", bufferASource],
-				["Image", imageSource],
-				[
-					"ASCII",
-					imageSource.slice(0, imageSource.indexOf("void mainImage")) +
-						asciiSource,
-				],
-			].map(([name, source]) => ({
-				name,
-				vertex: VERTEX_SOURCE,
-				fragment: createStandardFragmentSource(name, source),
-			})),
-		);
-	};
-
 	const writeCameraReadout = (force = false) => {
 		if (showControls) options.onCameraReadout?.(camera, force);
 	};
@@ -495,52 +460,23 @@ function startBlackHoleSession(
 		},
 		sync: () => writeCameraReadout(true),
 	};
-	try {
-		submitFallbackPasses();
-	} catch (fallbackError) {
-		options.onError(formatError(fallbackError));
-		gl.deleteBuffer(vertexBuffer);
-		gl.deleteTexture(fallbackTexture.texture);
-		gl.deleteTexture(keyboardTexture.texture);
-		glyphTextures.dispose();
-		return;
-	}
-
-	const disposeFallbackTargets = () => {
-		fallbackTargets?.a.dispose();
-		disposeRenderTarget(gl, fallbackTargets?.b ?? null);
-		disposeRenderTarget(gl, fallbackTargets?.c ?? null);
-		disposeRenderTarget(gl, fallbackTargets?.d ?? null);
-		disposeRenderTarget(gl, fallbackTargets?.scene ?? null);
-		fallbackTargets = null;
-	};
-
-	const disposeTargets = () => {
-		disposeFallbackTargets();
-	};
-
-	const disposeFallbackTargetGroup = (targets: Partial<FallbackTargets>) => {
-		targets.a?.dispose();
-		disposeRenderTarget(gl, targets.b ?? null);
-		disposeRenderTarget(gl, targets.c ?? null);
-		disposeRenderTarget(gl, targets.d ?? null);
-		disposeRenderTarget(gl, targets.scene ?? null);
-	};
 
 	const syncGlyphAtlasConfig = (nextConfig: GlyphAtlasConfig) => {
 		if (nextConfig.key === glyphAtlasConfig.key) return;
-
-		glyphTextures.dispose();
-		glyphTextures = createGlyphTextureSet(gl, nextConfig);
+		backend.setGlyphAtlas(nextConfig);
 		glyphAtlasConfig = nextConfig;
 	};
-
-	let animationPhase: AnimationPhase = "off";
-	let animationSequence: BlackHoleAnimationKeyframe[] = [];
-	let animationSequenceTime = 0;
-	let animationSequenceLoops = false;
-	let animationFrameIndex = 0;
+	const resume = fallbackReason ? state.resumeAnimation : undefined;
+	let animationPhase: AnimationPhase = resume?.phase ?? "off";
+	let animationSequence: BlackHoleAnimationKeyframe[] = resume?.sequence ?? [];
+	let animationSequenceTime = resume?.time ?? 0;
+	let animationSequenceLoops = resume?.loops ?? false;
+	let animationFrameIndex = resume?.index ?? 0;
 	let animationSequenceJustStarted = false;
+	if (resume) {
+		activeAnimationRoute = resume.route;
+		state.animationPlaying = resume.playing;
+	}
 	const scratchAnimationFrame: BlackHoleAnimationKeyframe = {
 		duration: 0,
 		position: [0, 0, 0],
@@ -931,7 +867,6 @@ function startBlackHoleSession(
 
 		for (const scale of scaleSteps) {
 			targetAllocationScale = scale;
-			disposeTargets();
 
 			try {
 				createTargets();
@@ -946,7 +881,6 @@ function startBlackHoleSession(
 			} catch (error) {
 				lastError = error;
 				lastAllocationFailure = formatError(error);
-				disposeTargets();
 			}
 		}
 
@@ -955,52 +889,34 @@ function startBlackHoleSession(
 			: new Error("Could not allocate render targets.");
 	};
 
+	const sourceDimension = (dimension: number, cell: number) =>
+		resolvedRendererMode === "ascii-cell"
+			? Math.min(
+					dimension,
+					Math.ceil(dimension / Math.max(2, cell)) *
+						asciiSampleSide(settings.qualityValue),
+				)
+			: asciiSourceDimension(
+					dimension,
+					Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
+					settings.qualityValue,
+					settings.sceneScale,
+				);
 	const createFallbackTargets = () => {
 		sceneWidth = allocatedTargetDimension(
-			asciiSourceDimension(
-				renderWidth,
-				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
-				settings.qualityValue,
-				settings.sceneScale,
-			),
+			sourceDimension(renderWidth, settings.cellWidth),
 		);
 		sceneHeight = allocatedTargetDimension(
-			asciiSourceDimension(
-				renderHeight,
-				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
-				settings.qualityValue,
-				settings.sceneScale,
-			),
+			sourceDimension(renderHeight, settings.cellHeight),
 		);
 		prepassWidth = sceneWidth;
 		prepassHeight = sceneHeight;
 		bloomWidth = sceneWidth;
 		bloomHeight = sceneHeight;
-		const nextTargets: Partial<FallbackTargets> = {};
-
-		try {
-			nextTargets.a = createPingPongTarget(
-				gl,
-				sceneWidth,
-				sceneHeight,
-				fallbackFormat,
-				"linear",
-			);
-			nextTargets.scene = createRenderTarget(
-				gl,
-				sceneWidth,
-				sceneHeight,
-				fallbackFormat,
-				"linear",
-			);
-
-			fallbackTargets = nextTargets as FallbackTargets;
-		} catch (error) {
-			disposeFallbackTargetGroup(nextTargets);
-			throw error;
-		}
+		backend.resize(renderWidth, renderHeight, sceneWidth, sceneHeight);
 	};
 
+	let lastRenderNow = 0;
 	let sizeDirty = true;
 	let measuredDpr = 0;
 	const resize = () => {
@@ -1009,7 +925,10 @@ function startBlackHoleSession(
 		sizeDirty = false;
 		measuredDpr = deviceDpr;
 		const rect = canvas.getBoundingClientRect();
-		const dprCap = Math.min(settings.maxDevicePixelRatio, DIRECT_FALLBACK_DPR);
+		const dprCap =
+			resolvedRendererMode === "ascii-cell"
+				? settings.maxDevicePixelRatio
+				: Math.min(settings.maxDevicePixelRatio, DIRECT_FALLBACK_DPR);
 		const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
 		const nextWidth = Math.min(
 			maxTextureSize,
@@ -1020,20 +939,10 @@ function startBlackHoleSession(
 			Math.max(1, Math.floor(rect.height * dpr * settings.resolutionScale)),
 		);
 		const nextSceneWidth = allocatedTargetDimension(
-			asciiSourceDimension(
-				nextWidth,
-				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
-				settings.qualityValue,
-				settings.sceneScale,
-			),
+			sourceDimension(nextWidth, settings.cellWidth),
 		);
 		const nextSceneHeight = allocatedTargetDimension(
-			asciiSourceDimension(
-				nextHeight,
-				Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
-				settings.qualityValue,
-				settings.sceneScale,
-			),
+			sourceDimension(nextHeight, settings.cellHeight),
 		);
 		const nextPrepassWidth = nextSceneWidth;
 		const nextPrepassHeight = nextSceneHeight;
@@ -1058,7 +967,6 @@ function startBlackHoleSession(
 		currentDpr = dpr;
 		canvas.width = renderWidth;
 		canvas.height = renderHeight;
-		disposeTargets();
 
 		createTargetsWithRetry(createFallbackTargets);
 
@@ -1077,7 +985,8 @@ function startBlackHoleSession(
 		const activeAtlas = glyphAtlasConfig;
 		const stats: BlackHoleStats = {
 			mode,
-			backend: "webgl2",
+			backend: backend.kind,
+			requestedBackend: backendState,
 			requestedRendererMode: rendererModeState,
 			runtimeProfile,
 			frame,
@@ -1143,15 +1052,12 @@ function startBlackHoleSession(
 				estimateTextureMemoryBytes(
 					sceneWidth,
 					sceneHeight,
-					fallbackFormat.type === gl.HALF_FLOAT ? 8 : 4,
-					3 +
-						Number(Boolean(fallbackTargets?.b)) +
-						Number(Boolean(fallbackTargets?.c)) +
-						Number(Boolean(fallbackTargets?.d)),
+					backend.bytesPerPixel,
+					3 + 3 * Number(backend.bloomAllocated),
 				),
 			initTimeMs,
-			gpuFrameTimeMs: null,
-			gpuTimingSupported: false,
+			gpuFrameTimeMs: backend.gpuFrameTimeMs,
+			gpuTimingSupported: backend.gpuTimingSupported,
 			webgpuAvailable: isWebGpuAvailable(),
 			fallbackReason:
 				[fallbackReason, allocationScaleReason].filter(Boolean).join("; ") ||
@@ -1168,250 +1074,30 @@ function startBlackHoleSession(
 		window.__blackHoleStats = stats;
 	};
 
-	const ensureBloomTargets = () => {
-		if (!fallbackTargets) return;
-		fallbackTargets.b ??= createRenderTarget(
-			gl,
-			sceneWidth,
-			sceneHeight,
-			fallbackFormat,
-			"linear",
-		);
-		fallbackTargets.c ??= createRenderTarget(
-			gl,
-			sceneWidth,
-			sceneHeight,
-			fallbackFormat,
-			"linear",
-		);
-		fallbackTargets.d ??= createRenderTarget(
-			gl,
-			sceneWidth,
-			sceneHeight,
-			fallbackFormat,
-			"linear",
-		);
+	const backendFrame: BackendFrame = {
+		time: 0,
+		delta: 0,
+		frame: 0,
+		mouse,
+		keyboard: keyboardData,
+		camera,
+		uniforms: activeRenderUniforms,
+		asciiEnabled: settings.asciiEnabled,
 	};
-
-	const renderFallback = (
-		time: number,
-		delta: number,
-		activeRenderUniforms: RenderUniforms,
-		activeAsciiEnabled: boolean,
-	) => {
-		if (!fallbackPasses || !fallbackTargets) return;
-
-		if (activeRenderUniforms.bloomStrength !== 0 && !fallbackTargets.d) {
-			try {
-				ensureBloomTargets();
-			} catch {
-				// Lazy bloom allocation needs the same fallback as initial allocation.
-				createTargetsWithRetry(() => {
-					createFallbackTargets();
-					ensureBloomTargets();
-				});
-			}
-		}
-
-		renderPass(
-			gl,
-			fallbackPasses.a,
-			vertexBuffer,
-			fallbackTargets.a.write,
-			sceneWidth,
-			sceneHeight,
-			time,
-			delta,
-			frame,
-			mouse,
-			keyboardTexture,
-			fallbackTexture,
-			fallbackTexture,
-			fallbackTargets.a.read,
-			camera,
-			settings.qualityValue,
-			0.5,
-			0,
-			channelResolutionScratch,
-			activeRenderUniforms,
-		);
-		// These passes only feed bloom; camera state is CPU-owned.
-		if (activeRenderUniforms.bloomStrength !== 0) {
-			if (!fallbackPasses.b || !fallbackPasses.c || !fallbackPasses.d) {
-				const batch = submitPrograms(
-					gl,
-					[
-						["Buffer B", bufferBSource],
-						["Buffer C", bufferCSource],
-						["Buffer D", bufferDSource],
-					].map(([name, source]) => ({
-						name,
-						vertex: VERTEX_SOURCE,
-						fragment: createStandardFragmentSource(name, source),
-					})),
-				);
-				// Editor changes can arrive immediately before a contributing frame. Submit
-				// together, then synchronously finish rather than briefly dropping bloom.
-				const programs = batch.finish(true);
-				if (!programs) throw new Error("Shader compilation was cancelled.");
-				try {
-					fallbackPasses.b = initializePass(gl, "Buffer B", programs[0]);
-					fallbackPasses.c = initializePass(gl, "Buffer C", programs[1]);
-					fallbackPasses.d = initializePass(gl, "Buffer D", programs[2]);
-				} catch (error) {
-					for (const program of programs) gl.deleteProgram(program);
-					fallbackPasses.b = fallbackPasses.c = fallbackPasses.d = undefined;
-					throw error;
-				}
-			}
-
-			renderPass(
-				gl,
-				fallbackPasses.b,
-				vertexBuffer,
-				fallbackTargets.b ?? null,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				fallbackTargets.a.write,
-				fallbackTexture,
-				fallbackTexture,
-				keyboardTexture,
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-			renderPass(
-				gl,
-				fallbackPasses.c,
-				vertexBuffer,
-				fallbackTargets.c ?? null,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				fallbackTargets.b ?? fallbackTexture,
-				fallbackTexture,
-				fallbackTexture,
-				fallbackTexture,
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-			renderPass(
-				gl,
-				fallbackPasses.d,
-				vertexBuffer,
-				fallbackTargets.d ?? null,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				fallbackTargets.c ?? fallbackTexture,
-				fallbackTexture,
-				fallbackTexture,
-				fallbackTexture,
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-		}
-		if (activeAsciiEnabled) {
-			renderPass(
-				gl,
-				fallbackPasses.image,
-				vertexBuffer,
-				fallbackTargets.scene,
-				sceneWidth,
-				sceneHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				fallbackTargets.a.write,
-				fallbackTargets.b ?? fallbackTexture,
-				fallbackTargets.c ?? fallbackTexture,
-				fallbackTargets.d ?? fallbackTexture,
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-			renderPass(
-				gl,
-				fallbackPasses.ascii,
-				vertexBuffer,
-				null,
-				renderWidth,
-				renderHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				fallbackTargets.scene,
-				glyphTextures.atlas,
-				glyphTextures.metrics,
-				settings.enableBloomPass
-					? (fallbackTargets.d ?? fallbackTexture)
-					: fallbackTexture,
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-		} else {
-			renderPass(
-				gl,
-				fallbackPasses.image,
-				vertexBuffer,
-				null,
-				renderWidth,
-				renderHeight,
-				time,
-				delta,
-				frame,
-				mouse,
-				fallbackTargets.a.write,
-				fallbackTargets.b ?? fallbackTexture,
-				fallbackTargets.c ?? fallbackTexture,
-				fallbackTargets.d ?? fallbackTexture,
-				camera,
-				settings.qualityValue,
-				0.5,
-				0,
-				channelResolutionScratch,
-				activeRenderUniforms,
-			);
-		}
-
-		fallbackTargets.a.swap();
-	};
-
 	const renderFrame = (now: number) => {
 		if (disposed) return;
 
 		const cpuFrameStart = performance.now();
 		animationFrame = 0;
+		if (
+			resolvedRendererMode === "ascii-cell" &&
+			frame > 0 &&
+			now - lastRenderNow < settings.frameIntervalMs
+		) {
+			animationFrame = requestAnimationFrame(renderFrame);
+			return;
+		}
+		lastRenderNow = now;
 
 		try {
 			if (resetFrameRequested) {
@@ -1421,11 +1107,6 @@ function startBlackHoleSession(
 				resetFrameRequested = false;
 			}
 			resize();
-
-			if (keyboardDirty) {
-				updateKeyboardTexture(gl, keyboardTexture, keyboardData);
-				keyboardDirty = false;
-			}
 
 			syncAnimationRoute();
 
@@ -1445,6 +1126,10 @@ function startBlackHoleSession(
 				activeAsciiEnabled,
 				asciiMix,
 			);
+			if (resolvedRendererMode === "ascii-cell") {
+				activeRenderUniforms.asciiCellSize.x = settings.cellWidth;
+				activeRenderUniforms.asciiCellSize.y = settings.cellHeight;
+			}
 			const shaderDelta = delta * liveControls.timeScale;
 			lastTime = now;
 			shaderTime += shaderDelta;
@@ -1454,12 +1139,21 @@ function startBlackHoleSession(
 			}
 			snapshotRuntime(reducedMotion.matches, now);
 
-			renderFallback(
-				shaderTime,
-				shaderDelta,
-				activeRenderUniforms,
-				activeAsciiEnabled,
-			);
+			backendFrame.time = shaderTime;
+			backendFrame.delta = shaderDelta;
+			backendFrame.frame = frame;
+			backendFrame.asciiEnabled = activeAsciiEnabled;
+			let submitted: boolean | undefined;
+			try {
+				submitted = backend.render(backendFrame);
+			} catch (error) {
+				if (!(error instanceof RenderTargetAllocationError)) throw error;
+				lastAllocationFailure = formatError(error);
+				createTargetsWithRetry(() => {
+					createFallbackTargets();
+					submitted = backend.render(backendFrame);
+				});
+			}
 
 			const frameTimeMs = performance.now() - cpuFrameStart;
 			cpuAverageFrameTimeMs = cpuAverageFrameTimeMs * 0.94 + frameTimeMs * 0.06;
@@ -1467,10 +1161,12 @@ function startBlackHoleSession(
 			publishStats(frameTimeMs, now);
 			updateCameraReadout(now);
 
-			if (frame === 0) options.onReady?.();
-			frame += 1;
+			if (submitted !== false) {
+				if (frame === 0) options.onReady?.();
+				frame += 1;
+			}
 		} catch (renderError) {
-			options.onError(formatError(renderError));
+			options.onRenderFailure?.(renderError);
 			disposed = true;
 			disposeGpuResources();
 			return;
@@ -1482,13 +1178,7 @@ function startBlackHoleSession(
 	};
 
 	const requestRender = () => {
-		if (
-			!disposed &&
-			fallbackPasses &&
-			!contextLost &&
-			!animationFrame &&
-			!document.hidden
-		) {
+		if (!disposed && !contextLost && !animationFrame && !document.hidden) {
 			animationFrame = requestAnimationFrame(renderFrame);
 		}
 	};
@@ -1510,7 +1200,6 @@ function startBlackHoleSession(
 		}
 		if (CONTROL_KEY_CODES.has(event.keyCode)) event.preventDefault();
 		keyboardData[event.keyCode * 4] = pressed ? 255 : 0;
-		keyboardDirty = true;
 		requestRender();
 	};
 
@@ -1585,18 +1274,7 @@ function startBlackHoleSession(
 	const disposeGpuResources = () => {
 		if (gpuResourcesDisposed) return;
 		gpuResourcesDisposed = true;
-		clearTimeout(compilationTimer);
-		pendingPrograms?.cancel();
-		pendingPrograms = undefined;
-		disposeTargets();
-		gl.deleteBuffer(vertexBuffer);
-		gl.deleteTexture(fallbackTexture.texture);
-		gl.deleteTexture(keyboardTexture.texture);
-		Object.values(fallbackPasses ?? {}).forEach((pass) => {
-			if (!pass) return;
-			disposeProgramPass(gl, pass);
-		});
-		glyphTextures.dispose();
+		backend.dispose();
 	};
 
 	const handleContextLost = (event: Event) => {
@@ -1640,41 +1318,24 @@ function startBlackHoleSession(
 	canvas.addEventListener("webglcontextlost", handleContextLost);
 	canvas.addEventListener("webglcontextrestored", handleContextRestored);
 
-	const completeCompilation = () => {
-		if (disposed || contextLost || !pendingPrograms) return;
-		try {
-			const programs = pendingPrograms.finish();
-			if (!programs) {
-				compilationTimer = setTimeout(completeCompilation, 4);
-				return;
-			}
-			pendingPrograms = undefined;
-			try {
-				fallbackPasses = {
-					a: initializePass(gl, "Buffer A", programs[0]),
-					image: initializePass(gl, "Image", programs[1]),
-					ascii: initializePass(gl, "ASCII", programs[2]),
-				};
-			} catch (error) {
-				for (const program of programs) gl.deleteProgram(program);
-				throw error;
-			}
-			initTimeMs = performance.now() - setupStart;
-			updateCameraReadout(performance.now(), true);
-			requestRender();
-		} catch (error) {
-			options.onError(formatError(error));
-			disposed = true;
-			disposeGpuResources();
-		}
-	};
-	completeCompilation();
+	initTimeMs = performance.now() - setupStart;
+	updateCameraReadout(performance.now(), true);
+	requestRender();
 
 	let cleaned = false;
 	return () => {
 		if (cleaned) return;
 		cleaned = true;
 		snapshotRuntime(true);
+		state.resumeAnimation = {
+			phase: animationPhase,
+			sequence: animationSequence,
+			time: animationSequenceTime,
+			loops: animationSequenceLoops,
+			index: animationFrameIndex,
+			route: activeAnimationRoute,
+			playing: state.animationPlaying,
+		};
 		disposed = true;
 		if (animationFrame) cancelAnimationFrame(animationFrame);
 		resizeObserver.disconnect();
@@ -1783,7 +1444,14 @@ export function mountBlackHoleRuntime(
 	const start = () => {
 		if (disposed) return;
 		const currentGeneration = ++generation;
+		const hadSession = Boolean(cleanup);
 		cleanup?.();
+		if (hadSession && canvas.parentNode) {
+			const fresh = canvas.cloneNode(false) as HTMLCanvasElement;
+			canvas.replaceWith(fresh);
+			canvas = fresh;
+			options.onCanvasReplaced?.(fresh);
+		}
 		cleanup = undefined;
 		const mount = () => {
 			if (disposed || generation !== currentGeneration) return;
@@ -1799,6 +1467,10 @@ export function mountBlackHoleRuntime(
 						options.onError(error);
 					},
 					onContextRestored: start,
+					onCanvasReplaced: (next) => {
+						canvas = next;
+						options.onCanvasReplaced?.(next);
+					},
 				});
 			} catch (error) {
 				resolveReady(false);

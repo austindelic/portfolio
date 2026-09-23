@@ -30,6 +30,7 @@
 		"tailwindcss": "^4.1.18"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.3.9"
+		"@biomejs/biome": "2.3.9",
+		"@webgpu/types": "^0.1.74"
 	}
 }

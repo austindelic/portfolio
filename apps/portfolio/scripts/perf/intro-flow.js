@@ -1,5 +1,10 @@
 async (page) => {
 	await page.addInitScript(() => {
+		// This exact-camera harness intercepts WebGL uniforms; route flows also test Auto/WebGPU.
+		Object.defineProperty(navigator, "gpu", {
+			configurable: true,
+			value: undefined,
+		});
 		let now = 1000,
 			id = 0;
 		const callbacks = new Map();
