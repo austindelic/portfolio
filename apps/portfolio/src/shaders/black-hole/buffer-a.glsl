@@ -243,7 +243,7 @@ vec4 hash43x(vec3 p) {
     return vec4((rz >> 1) & uvec4(0x7fffffffU))/float(0x7fffffff);
 }
 vec3 stars(vec3 p) {
-    vec3 col = vec3(0); float rad = .087*iResolution.y; float dens = 0.15; float id = 0.; float z = 1.;
+    vec3 col = vec3(0); float rad = .087*iResolution.y; float dens = 0.30; float id = 0.; float z = 1.;
     for (float i = 0.; i < 5.; i++) {
         p *= mat3(0.86564, -0.28535, 0.41140, 0.50033, 0.46255, -0.73193, 0.01856, 0.83942, 0.54317);
         vec3 q = abs(p); vec3 p2 = p/max(q.x, max(q.y,q.z)); p2 *= rad;
@@ -259,7 +259,7 @@ vec3 stars(vec3 p) {
         col += bri*z*.00009/pow(d + 0.025, 3.0)*(mix(vec3(1.0,0.45,0.1),vec3(0.75,0.85,1.), id)*0.6+0.4);
         rad = floor(rad*1.08); dens *= 1.45; z *= 0.6; p = p.yxz;
     }
-    return col;
+    return col * 1.25;
 }
 const float XYCELL_SIZE = 1.2; const float ZCELL_SIZE = 6.0; const int BLOCK_SIZE = 10; const int BLOCK_GAP = 2; const int ITERATIONS = 40;
 float hash(float v) { return fract(sin(v)*43758.5453123); }
