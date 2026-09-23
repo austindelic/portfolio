@@ -33,9 +33,15 @@ async (page) => {
 	// Block client entrypoints until web fonts are loaded, on both builds.
 	await page.route("**/_astro/*.js", async (route) => {
 		await page.evaluate(async () => {
-			await document.fonts.load('12px "Departure Mono"');
-			await document.fonts.load('12px "DSEG14Modern"');
-			await document.fonts.ready;
+			// Do not await FontFaceSet.ready here: deferred modules can block
+            // document readiness while this request is intercepted.
+            await Promise.all([
+              ["Departure Mono", "/fonts/DepartureMono-Regular.woff2"],
+              ["DSEG14Modern", "/fonts/DSEG14Modern-Regular.woff2"],
+            ].map(async ([family, url]) => {
+              const font = await new FontFace(family, `url(${url})`).load();
+              document.fonts.add(font);
+            }));
 		});
 		await route.continue();
 	});

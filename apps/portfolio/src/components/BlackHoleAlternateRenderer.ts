@@ -1,11 +1,9 @@
 import { normalizeBlackHoleAnimationRoute } from "../config/black-hole-animation";
 import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
 import {
-	type AnimationEditorApi,
 	type AnimationMode,
 	animationKeyframeFromCamera,
 	type BlackHoleStats,
-	type CameraEditorApi,
 	chooseByteTextureFormat,
 	cloneVec3,
 	copyVec3Into,
@@ -21,10 +19,7 @@ import {
 	createStandardFragmentSource,
 	disposeRenderTarget,
 	estimateTextureMemoryBytes,
-	formatCameraNumber,
-	formatCameraVec3,
 	formatError,
-	type GlyphAtlasConfig,
 	glyphControlsKey,
 	isControlKeyboardTarget,
 	isWebGpuAvailable,
@@ -32,7 +27,6 @@ import {
 	MAX_GLYPH_ATLAS_DIMENSION,
 	MOUSE_SENSITIVITY,
 	MOVE_SPEED,
-	type Props,
 	parseCameraVec3,
 	parseUniverseSign,
 	type QualityPreset,
@@ -41,15 +35,14 @@ import {
 	type ResolvedRendererMode,
 	type ResolvedShaderBackend,
 	type RuntimeProfile,
-	type RuntimeSnapshot,
 	renderPass,
 	type ShaderBackend,
-	type ShaderControls,
 	setCameraForward,
 	stringifyAnimationValue,
 	updateCamera,
 	writeRenderUniforms,
-} from "./BlackHoleShader";
+} from "./BlackHoleCore";
+import type { RuntimeOptions, RuntimeState } from "./BlackHoleRuntime";
 
 const ASCII_CELL_TRACE_SOURCE = `
 out vec4 shadertoyFragColor;
@@ -257,18 +250,18 @@ fn fragment_main(input: VertexOut) -> @location(0) vec4<f32> {
 `;
 
 type AlternateRendererContext = {
+	state: RuntimeState;
+	onCameraReadout: RuntimeOptions["onCameraReadout"];
 	runtimeProfile: RuntimeProfile;
 	animationMode: AnimationMode;
 	resolvedRendererMode: ResolvedRendererMode;
 	resolvedBackend: ResolvedShaderBackend;
-	runtimeSnapshotRef: import("react").RefObject<RuntimeSnapshot>;
-	initialPropsRef: import("react").RefObject<Props>;
+
 	debugStats: boolean;
 	showControls: boolean;
-	atlasConfigRef: import("react").RefObject<GlyphAtlasConfig>;
-	controlsRef: import("react").RefObject<ShaderControls>;
+
 	rendererModeState: RendererMode;
-	reactRenderCountRef: import("react").RefObject<number>;
+
 	canvas: HTMLCanvasElement;
 	settings: {
 		qualityValue: number;
@@ -284,54 +277,36 @@ type AlternateRendererContext = {
 		asciiEnabled: boolean;
 		qualityPreset: QualityPreset;
 	};
-	animationRouteRef: import("react").RefObject<string>;
-	cameraPositionInputRef: import("react").RefObject<HTMLInputElement | null>;
-	cameraForwardInputRef: import("react").RefObject<HTMLInputElement | null>;
-	cameraUniverseInputRef: import("react").RefObject<HTMLInputElement | null>;
-	cameraEditorRef: import("react").RefObject<CameraEditorApi>;
-	requestRenderRef: import("react").RefObject<() => void>;
-	animationEditorRef: import("react").RefObject<AnimationEditorApi>;
+
 	interactive: boolean;
-	setError: import("react").Dispatch<
-		import("react").SetStateAction<string | null>
-	>;
+	setError: (error: string | null) => void;
 	asciiMix: number;
-	setContextRestoreToken: import("react").Dispatch<
-		import("react").SetStateAction<number>
-	>;
+	onContextRestored: () => void;
 	setupStart: number;
-	setBackendState: import("react").Dispatch<
-		import("react").SetStateAction<ShaderBackend>
-	>;
+	setBackendState: (backend: ShaderBackend) => void;
 };
 
 export function startAlternateRenderer(context: AlternateRendererContext) {
 	const {
+		state,
+		onCameraReadout,
 		runtimeProfile,
 		animationMode,
 		resolvedRendererMode,
 		resolvedBackend,
-		runtimeSnapshotRef,
-		initialPropsRef,
+
 		debugStats,
 		showControls,
-		atlasConfigRef,
-		controlsRef,
+
 		rendererModeState,
-		reactRenderCountRef,
+
 		canvas,
 		settings,
-		animationRouteRef,
-		cameraPositionInputRef,
-		cameraForwardInputRef,
-		cameraUniverseInputRef,
-		cameraEditorRef,
-		requestRenderRef,
-		animationEditorRef,
+
 		interactive,
 		setError,
 		asciiMix,
-		setContextRestoreToken,
+		onContextRestored,
 		setupStart,
 		setBackendState,
 	} = context;
@@ -346,7 +321,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 		let cellTextureHeight = 1;
 		let lastTime = performance.now();
 		let lastRenderNow = 0;
-		let shaderTime = runtimeSnapshotRef.current.shaderTime ?? 0;
+		let shaderTime = state.runtimeSnapshot.shaderTime ?? 0;
 		let averageFrameTimeMs = 16.7;
 		let cpuAverageFrameTimeMs = 16.7;
 		let lastStatsPublish = 0;
@@ -361,17 +336,16 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 		const mouse = new Float32Array([0, 0, -1, -1]);
 		const camera = createInitialCamera({
 			position:
-				runtimeSnapshotRef.current.cameraPosition ??
-				initialPropsRef.current.initialCameraPosition,
+				state.runtimeSnapshot.cameraPosition ??
+				state.initialProps.initialCameraPosition,
 			forward:
-				runtimeSnapshotRef.current.cameraForward ??
-				initialPropsRef.current.initialCameraForward,
+				state.runtimeSnapshot.cameraForward ??
+				state.initialProps.initialCameraForward,
 			universeSign:
-				runtimeSnapshotRef.current.universeSign ??
-				initialPropsRef.current.initialUniverseSign,
+				state.runtimeSnapshot.universeSign ??
+				state.initialProps.initialUniverseSign,
 		});
-		const movementSpeed =
-			runtimeSnapshotRef.current.movementSpeed ?? MOVE_SPEED;
+		const movementSpeed = state.runtimeSnapshot.movementSpeed ?? MOVE_SPEED;
 		let activeAsciiBackend = resolvedBackend;
 		let fallbackReason: string | null =
 			resolvedBackend === "webgpu" && !isWebGpuAvailable()
@@ -379,7 +353,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				: null;
 
 		const snapshotRuntime = (now = performance.now()) => {
-			const snapshot = runtimeSnapshotRef.current;
+			const snapshot = state.runtimeSnapshot;
 			snapshot.cameraPosition = snapshot.cameraPosition
 				? copyVec3Into(snapshot.cameraPosition, camera.position)
 				: cloneVec3(camera.position);
@@ -403,8 +377,8 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			if (!debugStats && !import.meta.env.DEV && !showControls) return;
 			if (!showControls && now - lastStatsPublish < 250) return;
 			lastStatsPublish = now;
-			const activeAtlas = atlasConfigRef.current;
-			const activeControls = controlsRef.current;
+			const activeAtlas = state.atlasConfig;
+			const activeControls = state.controls;
 			const cellCount = cellTextureWidth * cellTextureHeight;
 			const computeWorkgroups =
 				Math.ceil(cellTextureWidth / 8) * Math.ceil(cellTextureHeight / 8);
@@ -418,7 +392,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				cpuAverageFrameTimeMs,
 				averageFrameTimeMs,
 				fps: averageFrameTimeMs > 0 ? 1000 / averageFrameTimeMs : 0,
-				reactRenderCount: reactRenderCountRef.current,
+				reactRenderCount: state.reactRenderCount,
 				dpr: renderWidth / Math.max(1, canvas.getBoundingClientRect().width),
 				targetAllocationScale: 1,
 				prepassScale: 0,
@@ -475,9 +449,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				fallbackReason,
 				lastAllocationFailure: null,
 				animationMode,
-				animationRoute: normalizeBlackHoleAnimationRoute(
-					animationRouteRef.current,
-				),
+				animationRoute: normalizeBlackHoleAnimationRoute(state.animationRoute),
 				animationPhase: "off",
 				animationPlaying: false,
 				animationFrameIndex: 0,
@@ -489,34 +461,10 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 		};
 
 		const writeCameraReadout = (force = false) => {
-			const activeElement = document.activeElement;
-			if (!showControls) return;
-
-			if (
-				cameraPositionInputRef.current &&
-				(force || activeElement !== cameraPositionInputRef.current)
-			) {
-				cameraPositionInputRef.current.value = formatCameraVec3(
-					camera.position,
-				);
-			}
-			if (
-				cameraForwardInputRef.current &&
-				(force || activeElement !== cameraForwardInputRef.current)
-			) {
-				cameraForwardInputRef.current.value = formatCameraVec3(camera.forward);
-			}
-			if (
-				cameraUniverseInputRef.current &&
-				(force || activeElement !== cameraUniverseInputRef.current)
-			) {
-				cameraUniverseInputRef.current.value = formatCameraNumber(
-					camera.universeSign,
-				);
-			}
+			if (showControls) onCameraReadout?.(camera, force);
 		};
 
-		cameraEditorRef.current = {
+		state.cameraEditor = {
 			applyPosition: (value: string) => {
 				const nextPosition = parseCameraVec3(value);
 				if (!nextPosition) {
@@ -526,7 +474,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				camera.position = nextPosition;
 				snapshotRuntime();
 				writeCameraReadout(true);
-				requestRenderRef.current();
+				state.requestRender();
 				return true;
 			},
 			applyForward: (value: string) => {
@@ -538,7 +486,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				setCameraForward(camera, nextForward);
 				snapshotRuntime();
 				writeCameraReadout(true);
-				requestRenderRef.current();
+				state.requestRender();
 				return true;
 			},
 			applyUniverse: (value: string) => {
@@ -550,13 +498,13 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				camera.universeSign = nextUniverseSign;
 				snapshotRuntime();
 				writeCameraReadout(true);
-				requestRenderRef.current();
+				state.requestRender();
 				return true;
 			},
 			sync: () => writeCameraReadout(true),
 		};
 
-		animationEditorRef.current = {
+		state.animationEditor = {
 			play: () => {},
 			pause: () => {},
 			restartIntro: () => {},
@@ -564,7 +512,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			setRoute: () => {},
 			currentKeyframe: () =>
 				stringifyAnimationValue(
-					animationKeyframeFromCamera(camera, controlsRef.current, true, 2.5),
+					animationKeyframeFromCamera(camera, state.controls, true, 2.5),
 				),
 			routeConfig: () => "",
 		};
@@ -574,7 +522,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			if (isControlKeyboardTarget(event.target)) return;
 			if (event.keyCode < 0 || event.keyCode > 255) return;
 			keyboardData[event.keyCode * 4] = pressed ? 255 : 0;
-			requestRenderRef.current();
+			state.requestRender();
 		};
 
 		const handlePointerDown = (event: PointerEvent) => {
@@ -583,23 +531,23 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			lastPointerX = event.clientX;
 			lastPointerY = event.clientY;
 			canvas.setPointerCapture?.(event.pointerId);
-			requestRenderRef.current();
+			state.requestRender();
 		};
 		const handlePointerMove = (event: PointerEvent) => {
 			if (!interactive || !pointerActive) return;
-			const direction = controlsRef.current.invertControls ? -1 : 1;
+			const direction = state.controls.invertControls ? -1 : 1;
 			camera.pendingYaw -=
 				(event.clientX - lastPointerX) * MOUSE_SENSITIVITY * direction;
 			camera.pendingPitch -=
 				(event.clientY - lastPointerY) * MOUSE_SENSITIVITY * direction;
 			lastPointerX = event.clientX;
 			lastPointerY = event.clientY;
-			requestRenderRef.current();
+			state.requestRender();
 		};
 		const handlePointerUp = (event: PointerEvent) => {
 			pointerActive = false;
 			canvas.releasePointerCapture?.(event.pointerId);
-			requestRenderRef.current();
+			state.requestRender();
 		};
 
 		const startWebGlAsciiCell = () => {
@@ -634,8 +582,8 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			);
 
 			const fallbackTexture = createSolidTexture(gl, [0, 0, 0, 255]);
-			let glyphAtlasConfig = atlasConfigRef.current;
-			let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
+			let glyphAtlasConfig = state.atlasConfig;
+			let liveGlyphControlsKey = glyphControlsKey(state.controls);
 			let glyphTextures = createGlyphTextureSet(gl, glyphAtlasConfig);
 			const cellPass = createPass(
 				gl,
@@ -650,7 +598,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			let cellTarget: RenderTarget | null = null;
 			const channelResolutionScratch = new Float32Array(12);
 			const activeRenderUniforms = createRenderUniforms(
-				controlsRef.current,
+				state.controls,
 				glyphAtlasConfig,
 				settings.asciiEnabled,
 				asciiMix,
@@ -728,7 +676,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					const delta = Math.min(0.1, Math.max(0.001, (now - lastTime) / 1000));
 					lastTime = now;
 					lastRenderNow = now;
-					const liveControls = controlsRef.current;
+					const liveControls = state.controls;
 					const nextGlyphControlsKey = glyphControlsKey(liveControls);
 					if (nextGlyphControlsKey !== liveGlyphControlsKey) {
 						liveGlyphControlsKey = nextGlyphControlsKey;
@@ -837,7 +785,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					animationFrame = requestAnimationFrame(renderFrame);
 				}
 			};
-			requestRenderRef.current = requestRender;
+			state.requestRender = requestRender;
 
 			const handleContextLost = (event: Event) => {
 				event.preventDefault();
@@ -847,7 +795,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			const handleContextRestored = () => {
 				contextLost = false;
 				setError(null);
-				setContextRestoreToken((token) => token + 1);
+				onContextRestored();
 			};
 			const resizeObserver = new ResizeObserver(requestRender);
 			resizeObserver.observe(canvas);
@@ -932,8 +880,8 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				},
 				primitive: { topology: "triangle-list" },
 			});
-			let glyphAtlasConfig = atlasConfigRef.current;
-			let liveGlyphControlsKey = glyphControlsKey(controlsRef.current);
+			let glyphAtlasConfig = state.atlasConfig;
+			let liveGlyphControlsKey = glyphControlsKey(state.controls);
 			let glyphRaster = createGlyphAtlasRaster(glyphAtlasConfig);
 			let glyphTexture = device.createTexture({
 				size: [glyphRaster.canvas.width, glyphRaster.canvas.height, 1],
@@ -968,7 +916,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 			const uniformData = new Float32Array(44);
 
 			const writeUniforms = () => {
-				const activeControls = controlsRef.current;
+				const activeControls = state.controls;
 				const activeAtlas = glyphAtlasConfig;
 				const renderUniforms = createRenderUniforms(
 					activeControls,
@@ -1103,7 +1051,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					const delta = Math.min(0.1, Math.max(0.001, (now - lastTime) / 1000));
 					lastTime = now;
 					lastRenderNow = now;
-					const liveControls = controlsRef.current;
+					const liveControls = state.controls;
 					const nextGlyphControlsKey = glyphControlsKey(liveControls);
 					if (nextGlyphControlsKey !== liveGlyphControlsKey) {
 						liveGlyphControlsKey = nextGlyphControlsKey;
@@ -1208,7 +1156,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 					animationFrame = requestAnimationFrame(renderFrame);
 				}
 			};
-			requestRenderRef.current = requestRender;
+			state.requestRender = requestRender;
 			initTimeMs = performance.now() - setupStart;
 			const resizeObserver = new ResizeObserver(requestRender);
 			resizeObserver.observe(canvas);
@@ -1234,7 +1182,7 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				animationFrame = 0;
 			} else {
 				lastTime = performance.now();
-				requestRenderRef.current();
+				state.requestRender();
 			}
 		};
 		document.addEventListener("visibilitychange", handleVisibility);
@@ -1300,8 +1248,8 @@ export function startAlternateRenderer(context: AlternateRendererContext) {
 				canvas.removeEventListener("pointerup", handlePointerUp);
 				canvas.removeEventListener("pointercancel", handlePointerUp);
 			}
-			requestRenderRef.current = () => {};
-			cameraEditorRef.current = {
+			state.requestRender = () => {};
+			state.cameraEditor = {
 				applyPosition: () => false,
 				applyForward: () => false,
 				applyUniverse: () => false,

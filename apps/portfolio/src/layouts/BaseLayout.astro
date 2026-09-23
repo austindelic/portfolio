@@ -5,7 +5,7 @@ import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import "../styles/global.css";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
-import BlackHoleShader from "@/components/BlackHoleShader";
+import BlackHoleBackground from "../components/BlackHoleBackground.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../config";
 
 const {
@@ -69,7 +69,7 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
     <div class={backgroundLayerClass}>
       <div class="absolute inset-0 bg-black" />
       <div class="bh-background-canvas absolute inset-0">
-        <BlackHoleShader
+        <BlackHoleBackground
           showControls={false}
           interactive={false}
           forceActiveRender={true}
@@ -95,8 +95,6 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
           initialCameraForward={[-0.566, -0.067, -0.822]}
           initialUniverseSign={1}
           className="bh-layout-shader h-full w-full"
-          client:only="react"
-          transition:persist="black-hole-background"
         />
       </div>
   </div>

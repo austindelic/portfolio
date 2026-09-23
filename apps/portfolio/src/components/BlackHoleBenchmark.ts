@@ -4,7 +4,7 @@ import {
 	isWebGpuAvailable,
 	type RendererMode,
 	type ShaderBackend,
-} from "./BlackHoleShader";
+} from "./BlackHoleCore";
 
 type BenchmarkOptions = {
 	signal: AbortSignal;
