@@ -279,7 +279,7 @@ export default function BlackHoleControls({
 	const backendOptions: Array<{ label: string; value: ShaderBackend }> = [
 		{ label: "Auto", value: "auto" },
 		{ label: "WebGL2", value: "webgl2" },
-		{ label: "WebGPU Experimental", value: "webgpu" },
+		{ label: "WebGPU", value: "webgpu" },
 	];
 	const fontOptions = FONT_OPTIONS.map((font) => ({
 		label: font,
@@ -658,7 +658,7 @@ export default function BlackHoleControls({
 					<div className="grid gap-2 font-mono text-[10px] text-white/65">
 						{benchmarkResults.length === 0 ? (
 							<p className="leading-snug text-white/35">
-								Runs full, fallback, and WebGPU when available.
+								Compares the full WebGL2 and WebGPU renderers.
 							</p>
 						) : (
 							benchmarkResults.map((result) => (

@@ -1,0 +1,16 @@
+{
+  "referenceBuild": "Pre-migration production build preserved in /private/tmp/black-hole-webgl-reference",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "frames": [
+    30,
+    120,
+    420
+  ],
+  "meanAbsoluteError": 0,
+  "maxChannelDifference": 0,
+  "differentChannels": 0
+}

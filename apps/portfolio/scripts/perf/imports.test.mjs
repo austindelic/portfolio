@@ -6,7 +6,9 @@ test("shared renderer modules have no React or editor adapter imports", async ()
 	for (const name of [
 		"BlackHoleCore.ts",
 		"BlackHoleRuntime.ts",
-		"BlackHoleAlternateRenderer.ts",
+		"BlackHoleWebGpuBackend.ts",
+		"BlackHoleWebGlBackend.ts",
+		"BlackHoleGl.ts",
 		"BlackHoleCompilation.ts",
 	]) {
 		const text = await readFile(
