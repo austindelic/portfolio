@@ -20,6 +20,7 @@ const {
 	BlackHoleOrbitController,
 	varyOrbit,
 	createOrbitFrame,
+	frameIntroSequence,
 	writeMotionFrame,
 } = await import(
 	`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`
@@ -46,6 +47,49 @@ const frame = () => ({
 });
 const close = (a, b, eps = 1e-5) =>
 	assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
+test("intro lands on responsive framing without changing the authored flight", () => {
+	const config = routes["/"],
+		original = structuredClone(config);
+	for (const aspect of [1440 / 900, 390 / 844]) {
+		const sequence = frameIntroSequence(config.intro, config.orbit, aspect);
+		assert.deepEqual(sequence.slice(0, -1), config.intro.slice(0, -1));
+		const endpoint = sequence.at(-1),
+			authored = config.intro.at(-1);
+		assert.deepEqual({ ...endpoint, forward: authored.forward }, authored);
+		const direction = config.orbit.lookTarget.map(
+			(v, i) => v - endpoint.position[i],
+		);
+		const yaw =
+			Math.atan2(direction[0], direction[2]) +
+			Math.atan(
+				config.orbit.framingTarget[0] *
+					Math.min(1, Math.max(0.35, aspect / 1.5)) *
+					Math.tan(Math.PI / 6),
+			);
+		close(Math.atan2(endpoint.forward[0], endpoint.forward[2]), yaw);
+		assert.notDeepEqual(endpoint.forward, authored.forward);
+		const controller = new BlackHoleOrbitController(
+			endpoint,
+			config.orbit,
+			aspect,
+		);
+		controller.join(config.orbit, aspect, 2);
+		const output = frame();
+		for (let i = 0; i < 180; i++) {
+			controller.update(1 / 60, aspect, false, output);
+			const dot = endpoint.forward.reduce(
+				(sum, v, j) => sum + v * output.forward[j],
+				0,
+			);
+			assert.ok(
+				Math.acos(Math.min(1, dot)) < Math.PI / 180,
+				"handoff must not reframe the camera",
+			);
+		}
+	}
+	assert.deepEqual(config, original);
+});
+
 test("orbit pose and derivatives close across the loop seam", () => {
 	const a = createMotion(),
 		b = createMotion();
