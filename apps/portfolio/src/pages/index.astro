@@ -12,6 +12,7 @@ import { Code } from "pixelarticons/react/Code.js";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import { Copy } from "pixelarticons/react/Copy.js";
 
+import portfolio from "../data/portfolio.json";
 import { getCollection } from "astro:content";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import PostPreview from "../components/PostPreview.astro";
@@ -25,62 +26,23 @@ const visiblePosts = allPosts.filter((post) => post.data.published !== false);
 const allPostsByDate = sortMDByDate(visiblePosts);
 
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
-const techStack: Record<string, string> = {
-	ts: "TypeScript",
-	go: "Go",
-	rust: "Rust",
-	python: "Python",
-	postgres: "Postgres",
-	next: "Next.js",
-	angular: "Angular",
-	dotnet: ".NET",
-	azure: "Azure",
-};
-
-// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
-const projects: Array<{
-	title: string;
-	description: string;
-	link: string;
-	label: string;
-}> = [
-	{
-		title: "Tactify",
-		description:
-			"AI accessibility platform for tactile SVG graphics and guided audio narration.",
-		label: "product",
-		link: "/blog/building-tactify/",
-	},
-	{
-		title: "Still",
-		description:
-			"Rust project environment manager built around typed desired state.",
-		label: "systems",
-		link: "https://github.com/austindelic/still",
-	},
-	{
-		title: "Production systems",
-		description:
-			"Notes from shipping across web, mobile, APIs, cloud, CI/CD, and support tooling.",
-		label: "work",
-		link: "/blog/production-systems-notes/",
-	},
-];
+const { profile, projects } = portfolio;
+const techStack = profile.stack;
 ---
 
 <BaseLayout navbarActiveItemID="home" contentPlacement="right">
   <section id="about" class="portfolio-section" aria-labelledby="about-heading">
-    <div class="section-label"><span><span class="section-number">01 /</span> About</span><span>Perth, Australia</span></div>
+    <div class="section-label"><span><span class="section-number">01 /</span> About</span><span>{profile.location}</span></div>
     <div class="identity-grid"><div class="identity-copy">
-    <h1 id="about-heading" class="intro-title">Austin Delic<span class="text-primary">.</span></h1>
-    <p class="intro-subtitle">Software engineer / builder in Perth.</p>
-    <p class="intro-copy">I build production software across web, mobile, backend systems, cloud infrastructure, and AI product surfaces. Recent work spans healthcare payments platforms, accessibility tooling, Rust developer infrastructure, and full-stack client products.</p>
+    <h1 id="about-heading" class="intro-title">{profile.name}<span class="text-primary">.</span></h1>
+    <p class="intro-subtitle">{profile.subtitle}</p>
+    <p class="intro-copy">{profile.bio}</p>
     </div>
     <dl class="profile-details">
-      <div><dt><MapPin className="ui-icon" aria-hidden="true" />Location</dt><dd>Perth, Australia</dd></div>
-      <div><dt><Briefcase className="ui-icon" aria-hidden="true" />Work</dt><dd>Production full-stack engineering, AI products, systems tooling</dd></div>
-      <div><dt><Target className="ui-icon" aria-hidden="true" />Focus</dt><dd>End-to-end ownership, reliable delivery, useful abstractions</dd></div>
-      <div><dt><Mail className="ui-icon" aria-hidden="true" />Contact</dt><dd><a class="text-primary" href="mailto:austin@austindelic.com">austin@austindelic.com</a><button class="copy-email" type="button" aria-label="Copy email address" data-copy-email><Copy className="ui-icon" aria-hidden="true" /></button><span class="copy-status" role="status" aria-live="polite"></span></dd></div>
+      <div><dt><MapPin className="ui-icon" aria-hidden="true" />Location</dt><dd>{profile.location}</dd></div>
+      <div><dt><Briefcase className="ui-icon" aria-hidden="true" />Work</dt><dd>{profile.work}</dd></div>
+      <div><dt><Target className="ui-icon" aria-hidden="true" />Focus</dt><dd>{profile.focus}</dd></div>
+      <div><dt><Mail className="ui-icon" aria-hidden="true" />Contact</dt><dd><a class="text-primary" href={`mailto:${profile.email}`}>{profile.email}</a><button class="copy-email" type="button" aria-label="Copy email address" data-copy-email><Copy className="ui-icon" aria-hidden="true" /></button><span class="copy-status" role="status" aria-live="polite"></span></dd></div>
       <div><dt><Code className="ui-icon" aria-hidden="true" />Stack</dt><dd class="stack-list">{Object.entries(techStack).map(([key, label]) => <span title={label}>{key}</span>)}</dd></div>
     </dl></div>
   </section>
@@ -111,7 +73,7 @@ const projects: Array<{
     button.addEventListener("click", async () => {
       const status = button.nextElementSibling;
       try {
-        await navigator.clipboard.writeText("austin@austindelic.com");
+        await navigator.clipboard.writeText(button.previousElementSibling?.textContent ?? "");
         if (status) status.textContent = "Copied";
       } catch {
         if (status) status.textContent = "Copy unavailable — select the address.";

@@ -1,0 +1,18 @@
+                                                            
+ ┌────────────────────────────────────────────────────────┐ 
+ │  ⌂ Home  ≡ Blog  @ Socials  ↓ Resume  ◎ Explore        │ 
+ │ PERTH / 00:00:00                                       │ 
+ │                                                        │ 
+ │ 01 / ABOUT                         Perth, Australia    │ 
+ │ Austin Delic.                                          │ 
+ │ Software engineer / builder in Perth.                  │ 
+ │                                                        │ 
+ │ I build production software across web, mobile,        │ 
+ │ backend systems, cloud infrastructure, and AI product  │ 
+ │ surfaces. Recent work spans healthcare payments        │ 
+ │ platforms, accessibility tooling, Rust developer       │ 
+ │ infrastructure, and full-stack client products.        │ 
+ │                                                        │ 
+ └────────────────────────────────────────────────────────┘ 
+                                                            
+Tab focus  Enter open  j/k scroll  ? help  q quit  | Static 

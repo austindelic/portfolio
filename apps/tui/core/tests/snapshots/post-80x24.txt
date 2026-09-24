@@ -1,0 +1,24 @@
+                                                                                
+ ┌────────────────────────────────────────────────────────────────────────────┐ 
+ │  ⌂ Home  ≡ Blog  @ Socials  ↓ Resume  ◎ Explore                            │ 
+ │ PERTH / 00:00:00                                                           │ 
+ │                                                                            │ 
+ │ Building Tactify                                                           │ 
+ │ 2026-07-08                                                                 │ 
+ │ Notes on turning an accessibility problem into an AI product that converts │ 
+ │ visual learning material into tactile graphics and guided audio.           │ 
+ │                                                                            │ 
+ │ Tactify started as a simple frustration: a lot of learning material        │ 
+ │ assumes vision as the default interface.                                   │ 
+ │                                                                            │ 
+ │ Worksheets, diagrams, charts, and classroom handouts often carry the real  │ 
+ │ explanation in layout, arrows, shape, labels, and visual grouping. If you  │ 
+ │ cannot inspect that visual structure directly, the material is not just    │ 
+ │ inconvenient. It is incomplete.                                            │ 
+ │                                                                            │ 
+ │ I wanted to explore whether AI could help translate that visual structure  │ 
+ │ into something more tactile and navigable. Not just "describe this image", │ 
+ │ but turn the image into a set of artifacts someone could actually use:     │ 
+ └────────────────────────────────────────────────────────────────────────────┘ 
+                                                                                
+Tab focus  Enter open  j/k scroll  ? help  q quit  | Static background          

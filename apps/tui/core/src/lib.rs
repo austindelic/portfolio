@@ -1,3 +1,5 @@
+pub mod frame;
+pub mod portfolio;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
@@ -28,40 +30,32 @@ pub struct ContactInfo {
 }
 
 pub fn get_projects() -> Vec<Project> {
-    vec![
-        Project {
-            name: "SSH Portfolio".to_string(),
-            description: "This terminal — an interactive SSH portfolio built with Rust, russh, and ratatui.".to_string(),
-            tech: vec!["Rust".to_string(), "russh".to_string(), "ratatui".to_string()],
-            url: Some("https://github.com/austindelic".to_string()),
-        },
-        Project {
-            name: "Portfolio Website".to_string(),
-            description: "Personal site and blog built with Astro and TypeScript in a Turborepo monorepo.".to_string(),
-            tech: vec!["Astro".to_string(), "TypeScript".to_string(), "React".to_string()],
-            url: Some("https://austindelic.com".to_string()),
-        },
-        Project {
-            name: "Distributed Cache".to_string(),
-            description: "High-throughput distributed cache with consistent hashing and replication.".to_string(),
-            tech: vec!["Rust".to_string(), "Tokio".to_string()],
-            url: None,
-        },
-    ]
+    let content = portfolio::PortfolioApp::default().content;
+    content
+        .projects
+        .into_iter()
+        .map(|p| Project {
+            name: p.title,
+            description: p.description,
+            tech: vec![p.label],
+            url: Some(if p.link.starts_with('/') {
+                format!("https://austindelic.com{}", p.link)
+            } else {
+                p.link
+            }),
+        })
+        .collect()
 }
 
 pub fn get_profile() -> Profile {
+    let p = portfolio::PortfolioApp::default().content.profile;
     Profile {
-        name: "Austin Delic".to_string(),
-        bio: "Systems engineer focused on building fast, reliable infrastructure.\n\n\
-              I work across the stack but feel most at home in Rust, TypeScript, \
-              and low-level systems code.\n\n\
-              Currently building developer tooling and exploring distributed systems."
-            .to_string(),
+        name: p.name,
+        bio: p.bio,
         contact: ContactInfo {
-            email: "austin@austindelic.com".to_string(),
-            github: "github.com/austindelic".to_string(),
-            website: "austindelic.com".to_string(),
+            email: p.email,
+            github: "github.com/austindelic".into(),
+            website: "austindelic.com".into(),
         },
     }
 }
@@ -90,6 +84,12 @@ pub struct App {
     projects_state: ListState,
     projects: Vec<Project>,
     profile: Profile,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl App {
@@ -170,7 +170,11 @@ impl App {
 
         let title = Paragraph::new("Austin Delic")
             .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+            .style(
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )
             .block(
                 Block::default()
                     .borders(Borders::ALL)
@@ -219,7 +223,9 @@ impl App {
                 ListItem::new(vec![
                     Line::from(Span::styled(
                         p.name.clone(),
-                        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(Span::styled(
                         p.description.clone(),
@@ -268,8 +274,7 @@ impl App {
             .wrap(Wrap { trim: true });
         frame.render_widget(bio, chunks[0]);
 
-        let help = Paragraph::new("  Esc/q: back")
-            .style(Style::default().fg(Color::DarkGray));
+        let help = Paragraph::new("  Esc/q: back").style(Style::default().fg(Color::DarkGray));
         frame.render_widget(help, chunks[1]);
     }
 
@@ -295,8 +300,7 @@ impl App {
             .style(Style::default().fg(Color::White));
         frame.render_widget(para, chunks[0]);
 
-        let help = Paragraph::new("  Esc/q: back")
-            .style(Style::default().fg(Color::DarkGray));
+        let help = Paragraph::new("  Esc/q: back").style(Style::default().fg(Color::DarkGray));
         frame.render_widget(help, chunks[1]);
     }
 }

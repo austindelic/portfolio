@@ -1,3 +1,4 @@
 [workspace]
-members = ["core", "ssh", "wasm"]
+members = ["core", "cli", "renderer", "ssh"]
+default-members = ["cli"]
 resolver = "2"

@@ -1,0 +1,40 @@
+                                                                                                                        
+                      ┌──────────────────────────────────────────────────────────────────────────┐                      
+                      │  ⌂ Home  ≡ Blog  @ Socials  ↓ Resume  ◎ Explore                          │                      
+                      │ PERTH / 00:00:00                                                         │                      
+                      │                                                                          │                      
+                      │ Building Tactify                                                         │                      
+                      │ 2026-07-08                                                               │                      
+                      │ Notes on turning an accessibility problem into an AI product that        │                      
+                      │ converts visual learning material into tactile graphics and guided       │                      
+                      │ audio.                                                                   │                      
+                      │                                                                          │                      
+                      │ Tactify started as a simple frustration: a lot of learning material      │                      
+                      │ assumes vision as the default interface.                                 │                      
+                      │                                                                          │                      
+                      │ Worksheets, diagrams, charts, and classroom handouts often carry the     │                      
+                      │ real explanation in layout, arrows, shape, labels, and visual grouping.  │                      
+                      │ If you cannot inspect that visual structure directly, the material is    │                      
+                      │ not just inconvenient. It is incomplete.                                 │                      
+                      │                                                                          │                      
+                      │ I wanted to explore whether AI could help translate that visual          │                      
+                      │ structure into something more tactile and navigable. Not just "describe  │                      
+                      │ this image", but turn the image into a set of artifacts someone could    │                      
+                      │ actually use: simplified tactile-ready SVG graphics and guided audio     │                      
+                      │ narration that explains how to explore them.                             │                      
+                      │                                                                          │                      
+                      │ The first version of Tactify is built around that pipeline.              │                      
+                      │                                                                          │                      
+                      │ An uploaded visual document moves through several stages:                │                      
+                      │                                                                          │                      
+                      │   image -> simplify -> vectorize -> script -> audio -> experience        │                      
+                      │                                                                          │                      
+                      │                                                                          │                      
+                      │ The product surface is a Next.js and React workspace for upload,         │                      
+                      │ review, and playback. The backend is Go, with typed API contracts and a  │                      
+                      │ processing flow that can treat the work as more than a single request-   │                      
+                      │ response action. That matters because document transformation has a lot  │                      
+                      │ of failure points: image quality, text density, diagram complexity, AI   │                      
+                      └──────────────────────────────────────────────────────────────────────────┘                      
+                                                                                                                        
+Tab focus  Enter open  j/k scroll  ? help  q quit  | Static background                                                  
