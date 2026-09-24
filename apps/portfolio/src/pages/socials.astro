@@ -14,17 +14,18 @@ const socials = portfolio.socials;
 const icons = { Globe, Code, Video, Camera, Music, Briefcase, Mail };
 ---
 
-<BaseLayout navbarActiveItemID="socials">
+<BaseLayout title="Links | Austin Delic" description="Find my code, videos and social accounts, or send me an email." navbarActiveItemID="socials">
   <section class="portfolio-section directory-panel" aria-labelledby="links-heading">
     <div class="section-label"><span>Social links</span><span>{String(socials.length).padStart(2, "0")}</span></div>
-    <h1 id="links-heading" class="page-title">{portfolio.profile.name}<span class="text-primary">.</span></h1>
+    <h1 id="links-heading" class="page-title">Find me here.</h1>
+    <p class="page-intro">Code on GitHub, videos on YouTube, or just send me an email.</p>
     <ul class="ruled-list">
       {socials.map((item, index) => {
         const Icon = icons[item.icon as keyof typeof icons];
         return (
         <li><a class="social-row" href={item.href} target={item.href.startsWith("mailto:") ? undefined : "_blank"} rel={item.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}>
           <span class="row-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-          <div><span class="row-title social-title"><Icon className="ui-icon" aria-hidden="true" />{item.title}</span>{item.badge && <span class="small-badge">{item.badge}</span>}<p class="row-description">{item.description}</p></div>
+          <div><span class="row-title social-title"><Icon className="ui-icon" aria-hidden="true" />{item.title}</span><p class="row-description">{item.description}</p></div>
 
         </a></li>
       ); })}

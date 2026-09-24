@@ -3,4 +3,4 @@
 
 export const SITE_TITLE = "Austin Delic | Portfolio";
 export const SITE_DESCRIPTION =
-	"Software engineer and builder in Perth working across production full-stack systems, AI products, and Rust tooling.";
+	"I’m Austin, a software engineer in Perth. I build web and mobile apps, backend systems, and tools in Rust.";

@@ -1,11 +1,11 @@
 {
   "profile": {
     "name": "Austin Delic",
-    "subtitle": "Software engineer / builder in Perth.",
-    "bio": "I build production software across web, mobile, backend systems, cloud infrastructure, and AI product surfaces. Recent work spans healthcare payments platforms, accessibility tooling, Rust developer infrastructure, and full-stack client products.",
+    "subtitle": "Software engineer in Perth.",
+    "bio": "I build web and mobile apps, work on the backend, and write tools in Rust. My projects include Tactify, which turns visual learning material into tactile graphics and audio, and Still, a project environment manager. This site has a terminal version too.",
     "location": "Perth, Australia",
-    "work": "Production full-stack engineering, AI products, systems tooling",
-    "focus": "End-to-end ownership, reliable delivery, useful abstractions",
+    "work": "Web, mobile and backend development",
+    "focus": "Accessibility and developer tools",
     "email": "austin@austindelic.com",
     "stack": {
       "ts": "TypeScript",
@@ -22,21 +22,20 @@
   "projects": [
     {
       "title": "Tactify",
-      "description": "AI accessibility platform for tactile SVG graphics and guided audio narration.",
-      "label": "product",
-      "link": "/blog/building-tactify/"
+      "description": "Turns visual learning material into tactile graphics and guided audio.",
+      "label": "product"
     },
     {
       "title": "Still",
-      "description": "Rust project environment manager built around typed desired state.",
+      "description": "A Rust tool for managing a project’s tools, packages and tasks.",
       "label": "systems",
       "link": "https://github.com/austindelic/still"
     },
     {
-      "title": "Production systems",
-      "description": "Notes from shipping across web, mobile, APIs, cloud, CI/CD, and support tooling.",
-      "label": "work",
-      "link": "/blog/production-systems-notes/"
+      "title": "This site + the TUI",
+      "description": "An Astro site and a Rust terminal app, with shared content and a black hole.",
+      "label": "personal",
+      "link": "/blog/site-and-terminal/"
     }
   ],
   "socials": [
@@ -56,7 +55,6 @@
       "title": "YouTube",
       "description": "Austin Develops",
       "href": "https://youtube.com/@austindevelops",
-      "badge": "new",
       "icon": "Video"
     },
     {

@@ -49,7 +49,7 @@ async (page) => {
 			const anchors = {
 				"/": [8.613, 3.1586, 21.229],
 				"/blog": [3.45, 3.45, 4.6],
-				"/blog/building-tactify": [4.4, 0.44, 2.2],
+				"/blog/site-and-terminal": [4.4, 0.44, 2.2],
 				"/socials": [1.155, 0.105, 0.63],
 				"/404": [-1.1, -0.22, 1.1],
 			};
@@ -69,7 +69,7 @@ async (page) => {
 	};
 	for (const path of [
 		"/blog",
-		"/blog/building-tactify",
+		"/blog/site-and-terminal",
 		"/socials",
 		"/404",
 		"/",

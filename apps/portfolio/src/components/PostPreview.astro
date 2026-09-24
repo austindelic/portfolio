@@ -18,6 +18,6 @@ const postDate = getFormattedDate(date);
 
 <a class="post-row" href={`/blog/${post.slug}/`}>
   <time datetime={datetime}>{postDate}</time>
-  <span class="row-title">{post.data.title}</span>
+  <div><span class="row-title">{post.data.title}</span><p class="row-description">{post.data.description}</p></div>
 
 </a>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1080" viewBox="0 0 1000 1080" role="img" aria-labelledby="title desc">
+<title id="title">From light paths to terminal cells</title>
+<desc id="desc">Buffer A traces curved light paths and disc emission. Buffers B, C and D prepare and blur bloom. The image pass applies exposure and display colour. ASCII analysis selects glyphs, then asynchronous readback delivers characters and RGB colours to the terminal.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="m1 1 5 3-5 3" fill="none" stroke="#ffa133" stroke-width="1.5"/></marker></defs>
+<rect width="1000" height="1080" fill="#0b0e14"/>
+<g font-family="monospace" fill="#bfbdb6">
+<text x="48" y="62" font-size="28" fill="#ffa133">FROM LIGHT PATHS TO TERMINAL CELLS</text>
+<g fill="#11151c" stroke="#404650">
+<rect x="48" y="98" width="904" height="142"/>
+<rect x="48" y="288" width="904" height="142"/>
+<rect x="48" y="478" width="904" height="142"/>
+<rect x="48" y="668" width="904" height="142"/>
+<rect x="48" y="858" width="904" height="142"/>
+</g>
+<g fill="none" stroke="#ffa133" stroke-width="3" marker-end="url(#arrow)">
+<path d="M500 240v34"/><path d="M500 430v34"/><path d="M500 620v34"/><path d="M500 810v34"/>
+</g>
+<g font-size="30" fill="#ffa133">
+<text x="76" y="149">01 / BLACK-HOLE SCENE</text>
+<text x="76" y="339">02 / BLOOM PASSES</text>
+<text x="76" y="529">03 / DISPLAY IMAGE</text>
+<text x="76" y="719">04 / GLYPH ANALYSIS</text>
+<text x="76" y="909">05 / TERMINAL OUTPUT</text>
+</g>
+<g font-size="28">
+<text x="76" y="200">Curved light paths + disc emission</text>
+<text x="76" y="390">Scaled copies → horizontal + vertical blur</text>
+<text x="76" y="580">Exposure + display colour</text>
+<text x="76" y="770">Coverage + edge direction + frame history</text>
+<text x="76" y="960">Async readback → characters + RGB colours</text>
+</g>
+<text x="48" y="1046" font-size="24" fill="#b0b0a1">GLSL source → generated WGSL → native GPU renderer</text>
+</g>
+</svg>

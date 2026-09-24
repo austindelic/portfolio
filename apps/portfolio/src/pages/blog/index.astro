@@ -10,16 +10,17 @@ const visiblePosts = allPosts.filter((post) => post.data.published !== false);
 const allPostsByDate = sortMDByDate(visiblePosts);
 ---
 
-<BaseLayout title="Blog" navbarActiveItemID="blog">
+<BaseLayout title="Blog | Austin Delic" description="Notes on this site, the terminal version, and what goes into building them." navbarActiveItemID="blog">
   <section class="portfolio-section directory-panel" aria-label="Blog posts">
-    <div class="section-label"><span>Writing</span><span>Archive</span></div>
-    <h1 class="page-title">Blog posts</h1>
+    <div class="section-label"><span>Writing</span><span>{String(allPostsByDate.length).padStart(2, "0")}</span></div>
+    <h1 class="page-title">Blog</h1>
+    <p class="page-intro">A closer look at what I’m building.</p>
 
     {
       allPostsByDate.length === 0 ? (
         <div class="flex items-center gap-4 mb-6">
           <div class="flex flex-col">
-            <h2 class="text-primary text-2xl font-bold">404</h2>
+
             <p class="text-muted-foreground text-xs">No posts published yet.</p>
           </div>
         </div>
