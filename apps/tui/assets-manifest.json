@@ -7,6 +7,7 @@
   "packages/black-hole/shaders/webgpu/ascii-analysis.wgsl": "d99bacb5e6e0d484fdad515502af0e6a242f1f8431b533c28459a6793be08c68",
   "apps/portfolio/src/data/portfolio.json": "8f293357dabdb3b94af7dee993bdcc24ebbfcf7c3d75fab78cd3fc72e45d9748",
   "apps/portfolio/public/resume.pdf": "5b40b5256eee99297cc9c54486f491091e227cffb085e16923114f269555a946",
+  "apps/portfolio/src/content/blog/contracts-in-rust-and-cpp/index.md": "47929c0696b0df74a7028c3ae7632285bd33cfaa7fbe160a5a29a80c79ecf83e",
   "apps/portfolio/src/content/blog/site-and-terminal/index.md": "b390bd5fdbbe871db949f71413645db051265b4cd8dfed684229758602a0d2f7",
   "packages/black-hole/shaders/webgpu/uniform-layout.json": "150d779d5ada127d39c7a7c2d55353cbf698942053720ce07a21638e7175b150",
   "packages/black-hole/routes.json": "e045693abbac5ea2c3781a48a61ed951367e6bd7af44e66ca7056bb916724567",
