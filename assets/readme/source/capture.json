@@ -1,0 +1,37 @@
+{
+  "source": "Live project WebGL2 ascii-cell renderer",
+  "nativeCapture": [
+    5280,
+    5280
+  ],
+  "cameraPosition": [
+    11.256,
+    2.652,
+    18.44
+  ],
+  "cameraForward": [
+    -0.5171,
+    -0.1219,
+    -0.8472
+  ],
+  "cellSize": [
+    26.4,
+    39.6
+  ],
+  "textSize": 40,
+  "bloomStrength": 0,
+  "shaderTime": 0,
+  "originalSha256": "7cab09d668366d95859124828b085e52954feb79712eae5e9c02834ebffccd30",
+  "crop": [
+    500,
+    1600,
+    4500,
+    3700
+  ],
+  "storedSize": [
+    1600,
+    840
+  ],
+  "resampling": "Lanczos",
+  "storedEncoding": "Lossless WebP"
+}
