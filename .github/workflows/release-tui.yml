@@ -37,10 +37,10 @@ jobs:
     outputs:
       release: ${{ steps.plan.outputs.release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
       - run: npm ci --prefix apps/tui/release
       - run: npm test --prefix apps/tui/release
       - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs
@@ -48,7 +48,7 @@ jobs:
         run: node apps/tui/release/run.mjs plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: release-plan, path: release-plan.json, if-no-files-found: error }
   native:
     needs: plan
@@ -67,11 +67,11 @@ jobs:
       NPM_TARGET: ${{ matrix.npm }}
       MACOSX_DEPLOYMENT_TARGET: '13.0'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
       - run: node --test packages/black-hole/tests/*.test.mjs
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: release-plan }
       - run: node apps/tui/release/version.cjs
       - run: node apps/tui/scripts/sync-assets.mjs --check
@@ -90,7 +90,7 @@ jobs:
           rustup target add "$RUST_TARGET"
           if [[ "$RUNNER_OS" == Windows ]]; then export RUSTFLAGS='-C target-feature=+crt-static'; fi
           bash apps/tui/scripts/release-build.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: native-${{ matrix.npm }}
           path: release/
@@ -99,12 +99,12 @@ jobs:
     needs: [plan, native]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: actions/download-artifact@v7
         with: { pattern: 'native-*', path: release, merge-multiple: true }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: release-plan }
       - run: node apps/tui/release/version.cjs
       - name: Assemble both registries from identical native binaries
@@ -121,7 +121,7 @@ jobs:
             node apps/tui/scripts/test-platform-selection.cjs "packed/$registry"
           done
           node apps/tui/release/bundle.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: npm-package, path: 'packed/', if-no-files-found: error }
   packed-test:
     needs: package
@@ -136,12 +136,12 @@ jobs:
           - { runner: windows-2022, npm: win32-x64 }
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: actions/download-artifact@v7
         with: { name: npm-package, path: packed }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: 'native-${{ matrix.npm }}', path: release }
       - name: Test the exact npm tarballs in a real terminal
         timeout-minutes: 5
@@ -173,9 +173,9 @@ jobs:
     needs: packed-test
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: npm-package, path: packed }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: tested-release
           path: packed/
@@ -193,12 +193,12 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
       - run: npm ci --prefix apps/tui/release
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: tested-release, path: packed }
       - name: Publish tested archives and create the GitHub Release
         env:
@@ -219,10 +219,10 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: actions/download-artifact@v7
         with:
           name: tested-release
           path: packed
@@ -233,7 +233,7 @@ jobs:
         env:
           RECOVERY_RUN_ID: ${{ inputs.recovery_run_id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ steps.original.outputs.sha }}
           fetch-depth: 0

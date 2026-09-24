@@ -19,20 +19,20 @@ jobs:
     steps:
       - name: Exercise checkout with automatic line-ending conversion
         run: git config --global core.autocrlf true
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22' }
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '22', package-manager-cache: false }
       - run: node --test packages/black-hole/tests/*.test.mjs
       - run: node apps/tui/scripts/sync-assets.mjs --check
       - run: git diff --exit-code
   validate:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: opentofu/setup-opentofu@v1
         with: { tofu_version: '1.11.5', tofu_wrapper: false }
-      - uses: actions/setup-node@v4
-        with: { node-version: '22' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '22', package-manager-cache: false }
       - run: tofu -chdir=infra fmt -check -recursive
       - run: tofu -chdir=infra init -backend=false -input=false -lockfile=readonly
       - run: tofu -chdir=infra validate
