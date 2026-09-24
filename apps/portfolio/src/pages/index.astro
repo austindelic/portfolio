@@ -47,20 +47,22 @@ const techStack = profile.stack;
     </dl></div>
   </section>
   <section id="projects" class="portfolio-section directory-panel" aria-labelledby="projects-heading">
-    <div class="section-label"><h2 id="projects-heading"><span class="section-number">02 /</span> Project samples</h2><span>{String(projects.length).padStart(2, "0")}</span></div>
+    <div class="section-label"><h2 id="projects-heading"><span class="section-number">02 /</span> Projects</h2><span>{String(projects.length).padStart(2, "0")}</span></div>
     <div class="directory-columns" aria-hidden="true"><span>Project</span><span>Category</span></div>
     <ul class="ruled-list project-list">
-      {projects.map((project, index) => (
-        <li><a class="project-row" href={project.link} target={project.link.startsWith("http") ? "_blank" : undefined} rel={project.link.startsWith("http") ? "noopener noreferrer" : undefined}>
+      {projects.map((project, index) => {
+        const Tag = project.link ? "a" : "div";
+        return (
+        <li><Tag class="project-row" href={project.link} target={project.link?.startsWith("http") ? "_blank" : undefined} rel={project.link?.startsWith("http") ? "noopener noreferrer" : undefined}>
           <span class="row-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
           <div><span class="row-title">{project.title}</span><p class="row-description">{project.description}</p></div>
           <span class="row-category">{project.label}</span>
-        </a></li>
-      ))}
+        </Tag></li>
+      ); })}
     </ul>
   </section>
   <section id="latest-posts" class="portfolio-section directory-panel" aria-labelledby="blog-heading">
-    <div class="section-label"><h2 id="blog-heading"><span class="section-number">03 /</span> Latest posts</h2><a href="/blog">All posts</a></div>
+    <div class="section-label"><h2 id="blog-heading"><span class="section-number">03 /</span> From the blog</h2><a href="/blog">All posts</a></div>
     <ul class="ruled-list">{allPostsByDate.map((post) => <li><PostPreview post={post} /></li>)}</ul>
   </section>
 </BaseLayout>
@@ -76,7 +78,7 @@ const techStack = profile.stack;
         await navigator.clipboard.writeText(button.previousElementSibling?.textContent ?? "");
         if (status) status.textContent = "Copied";
       } catch {
-        if (status) status.textContent = "Copy unavailable — select the address.";
+        if (status) status.textContent = "Couldn’t copy. Select the address to copy it.";
       }
       window.setTimeout(() => { if (status) status.textContent = ""; }, 2500);
     });

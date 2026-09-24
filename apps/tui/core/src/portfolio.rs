@@ -51,7 +51,7 @@ pub struct Project {
     pub title: String,
     pub description: String,
     pub label: String,
-    pub link: String,
+    pub link: Option<String>,
 }
 #[derive(Clone, Deserialize)]
 pub struct Social {
@@ -379,12 +379,13 @@ impl PortfolioApp {
                     Kind::Muted,
                 ));
                 rows.push(Row::new("", Kind::Body));
-                rows.push(Row::new("02 / PROJECT SAMPLES", Kind::Heading));
+                rows.push(Row::new("02 / PROJECTS", Kind::Heading));
                 for (i, p) in self.content.projects.iter().enumerate() {
-                    rows.push(Row::link(
-                        format!("{:02}  {}  / {}", i + 1, p.title, p.label),
-                        self.resolve(&p.link),
-                    ));
+                    let title = format!("{:02}  {}  / {}", i + 1, p.title, p.label);
+                    rows.push(match &p.link {
+                        Some(link) => Row::link(title, self.resolve(link)),
+                        None => Row::new(title, Kind::Body),
+                    });
                     rows.push(Row::new(&p.description, Kind::Muted));
                     rows.push(Row::new("", Kind::Body));
                 }
@@ -872,17 +873,29 @@ mod tests {
     #[test]
     fn published_content_and_internal_navigation() {
         let app = PortfolioApp::default();
-        assert_eq!(app.posts.len(), 3);
-        assert!(app.posts.iter().all(|p| p.slug != "example"));
+        assert_eq!(app.posts.len(), 1);
+        assert_eq!(app.posts[0].slug, "site-and-terminal");
+        assert!(app.content.projects[0].link.is_none());
+        let rows = app.document();
+        let tactify = rows
+            .iter()
+            .find(|row| row.text.contains("01  Tactify"))
+            .unwrap();
+        assert!(tactify.action.is_none());
+        let site = rows
+            .iter()
+            .find(|row| row.text.contains("03  This site + the TUI"))
+            .unwrap();
+        assert_eq!(site.action, Some(Action::Navigate(Page::Post(0))));
         assert!(app.posts.windows(2).all(|p| p[0].date >= p[1].date));
         assert_eq!(app.content.projects.len(), 3);
         assert_eq!(app.content.socials.len(), 7);
         assert_eq!(
-            app.resolve("/blog/building-tactify/"),
+            app.resolve("/blog/site-and-terminal/"),
             Action::Navigate(Page::Post(
                 app.posts
                     .iter()
-                    .position(|p| p.slug == "building-tactify")
+                    .position(|p| p.slug == "site-and-terminal")
                     .unwrap()
             ))
         );

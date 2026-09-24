@@ -12,9 +12,7 @@ async (page) => {
 	for (const path of [
 		"/",
 		"/blog/",
-		"/blog/building-tactify/",
-		"/blog/production-systems-notes/",
-		"/blog/still-and-desired-state/",
+		"/blog/site-and-terminal/",
 		"/socials/",
 		"/404.html",
 	]) {

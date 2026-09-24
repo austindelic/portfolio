@@ -2,34 +2,11 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="404: Not Found">
+<BaseLayout title="Page not found | Austin Delic" description="That page is gone, or the link is wrong. Head home or read the blog.">
   <section class="portfolio-section" aria-labelledby="error-heading">
     <div class="section-label"><span>Page not found</span><span>404</span></div>
-    <h1 id="error-heading" class="page-title text-destructive">404</h1>
-    <p class="error-copy"><span class="text-destructive">ERROR:</span> The requested resource could not be found on this server. The page you are trying to access does not exist or has been moved.</p>
-    <dl class="error-details">
-      <div><dt>Status</dt><dd class="text-destructive">404 Not Found</dd></div>
-      <div><dt>Request</dt><dd id="current-path">{Astro.url.pathname}</dd></div>
-      <div><dt>Server</dt><dd>terminus v1.0</dd></div>
-      <div><dt>Timestamp</dt><dd id="error-time">Loading...</dd></div>
-    </dl>
-    <div class="error-actions">
-      <h2>Suggested actions</h2>
-      <ol>
-        <li>Check the URL for typos</li>
-        <li>Return to the <a href="/">homepage</a></li>
-        <li>Browse available <a href="/blog">blog posts</a></li>
-      </ol>
-    </div>
+    <h1 id="error-heading" class="page-title">Nothing here.</h1>
+    <p class="error-copy">That page is gone, or the link is wrong.</p>
+    <p class="page-intro"><a href="/">Head home</a> or <a href="/blog">read the blog</a>.</p>
   </section>
-  <script>
-    function updateErrorDetails() {
-      const path = document.getElementById("current-path");
-      const time = document.getElementById("error-time");
-      if (path) path.textContent = window.location.pathname;
-      if (time) time.textContent = new Date().toISOString();
-    }
-    updateErrorDetails();
-    document.addEventListener("astro:page-load", updateErrorDetails);
-  </script>
 </BaseLayout>
