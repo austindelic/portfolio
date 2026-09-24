@@ -15,7 +15,3 @@ run = "node scripts/sync-assets.mjs"
 
 [tasks.check-assets]
 run = "node scripts/sync-assets.mjs --check"
-
-[tasks.ssh]
-description = "Run the preserved SSH adapter (requires its existing server setup)"
-run = "cargo run -p tui-ssh"

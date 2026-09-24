@@ -1,0 +1,95 @@
+//! Cross-platform terminal acceptance test, including ConPTY on Windows.
+//! Usage: pty-smoke PROGRAM [ARGS...]; PROGRAM can be Node + the packed launcher.
+use anyhow::{Context, Result, bail, ensure};
+use portable_pty::{CommandBuilder, PtySize, native_pty_system};
+use std::{
+    io::{Read, Write},
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
+
+fn wait_for(output: &Arc<Mutex<Vec<u8>>>, needle: &str) -> Result<()> {
+    let start = Instant::now();
+    while start.elapsed() < Duration::from_secs(15) {
+        if String::from_utf8_lossy(&output.lock().unwrap()).contains(needle) {
+            return Ok(());
+        }
+        std::thread::sleep(Duration::from_millis(30));
+    }
+    bail!(
+        "Missing {needle:?}: {}",
+        String::from_utf8_lossy(&output.lock().unwrap())
+    );
+}
+fn main() -> Result<()> {
+    let args: Vec<_> = std::env::args_os().skip(1).collect();
+    ensure!(!args.is_empty(), "Supply a program and optional arguments");
+    for quit in [b'q', 3] {
+        let pair = native_pty_system().openpty(PtySize {
+            rows: 24,
+            cols: 80,
+            pixel_width: 0,
+            pixel_height: 0,
+        })?;
+        let mut cmd = CommandBuilder::new(&args[0]);
+        cmd.cwd(std::env::current_dir()?);
+        cmd.args(&args[1..]);
+        cmd.args(["--renderer", "static"]);
+        cmd.env("TERM", "xterm-256color");
+        let mut reader = pair.master.try_clone_reader()?;
+        let mut writer = pair.master.take_writer()?;
+        let mut child = pair.slave.spawn_command(cmd)?;
+        drop(pair.slave);
+        let output = Arc::new(Mutex::new(Vec::<u8>::new()));
+        let capture = output.clone();
+        std::thread::spawn(move || {
+            let mut bytes = [0; 8192];
+            while let Ok(n) = reader.read(&mut bytes) {
+                if n == 0 {
+                    break;
+                }
+                let mut out = capture.lock().unwrap();
+                if out.len() + n > 1_000_000 {
+                    out.clear();
+                }
+                out.extend_from_slice(&bytes[..n]);
+            }
+        });
+        let result = (|| -> Result<()> {
+            wait_for(&output, "Austin")?;
+            output.lock().unwrap().clear();
+            writer.write_all(b"\x1b[C\r")?;
+            writer.flush()?;
+            wait_for(&output, "Blog posts")?;
+            pair.master.resize(PtySize {
+                rows: 40,
+                cols: 120,
+                pixel_width: 0,
+                pixel_height: 0,
+            })?;
+            output.lock().unwrap().clear();
+            writer.write_all(b"?")?;
+            writer.flush()?;
+            wait_for(&output, "Tab")?;
+            writer.write_all(&[quit])?;
+            writer.flush()?;
+            let deadline = Instant::now() + Duration::from_secs(8);
+            loop {
+                if let Some(status) = child.try_wait()? {
+                    ensure!(status.success(), "Application exited with {status}");
+                    break;
+                }
+                ensure!(Instant::now() < deadline, "Application did not exit");
+                std::thread::sleep(Duration::from_millis(30));
+            }
+            Ok(())
+        })();
+        if result.is_err() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+        result.context("Packed CLI terminal smoke test")?;
+        println!("PASS: navigation, help, resize and exit ({quit})");
+    }
+    Ok(())
+}

@@ -4,7 +4,14 @@ fn main() -> anyhow::Result<()> {
     let start = Instant::now();
     let mut gpu = Renderer::new()?;
     eprintln!("Adapter: {}; init {:?}", gpu.adapter, start.elapsed());
-    let request = Request::default();
+    let mut request = Request::default();
+    if let Ok(columns) = std::env::var("TUI_RENDER_COLUMNS") {
+        let columns: u16 = columns.parse()?;
+        anyhow::ensure!((40..=240).contains(&columns), "Columns must be 40–240");
+        request.width = columns;
+        request.height = (columns / 3).max(1);
+    }
+    eprintln!("Grid: {}x{}", request.width, request.height);
     let mut count = 0;
     let start = Instant::now();
     let mut latest = None;

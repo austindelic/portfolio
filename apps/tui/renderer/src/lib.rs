@@ -155,16 +155,23 @@ impl Renderer {
     }
     async fn initialize() -> Result<Self> {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::METAL,
+            backends: if cfg!(target_os = "macos") {
+                wgpu::Backends::METAL
+            } else if cfg!(target_os = "windows") {
+                wgpu::Backends::DX12
+            } else {
+                wgpu::Backends::VULKAN
+            },
             ..wgpu::InstanceDescriptor::new_without_display_handle()
         });
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 compatible_surface: None,
+                force_fallback_adapter: std::env::var_os("AUSTINDELIC_SOFTWARE_GPU").is_some(),
                 ..Default::default()
             })
             .await
-            .context("No Metal GPU available")?;
+            .context("No compatible Metal/Vulkan/DirectX 12 adapter available")?;
         let adapter_name = adapter.get_info().name;
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
@@ -585,7 +592,7 @@ impl Worker {
     pub fn start(fps: u32) -> Self {
         let request = Arc::new(Mutex::new(None::<Request>));
         let frame = Arc::new(Mutex::new(None));
-        let status = Arc::new(Mutex::new("Starting Metal renderer".into()));
+        let status = Arc::new(Mutex::new("Starting live renderer".into()));
         let stop = Arc::new(AtomicBool::new(false));
         let (req, out, msg, quit) = (request.clone(), frame.clone(), status.clone(), stop.clone());
         let thread = std::thread::spawn(move || {

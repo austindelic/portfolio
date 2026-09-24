@@ -45,3 +45,18 @@ yarn-error.log*
 
 # Local browser audit evidence
 .playwright-cli/
+
+# Generated native distribution and local OpenTofu data
+/apps/tui/npm/native/*
+/apps/tui/npm/THIRD_PARTY_NOTICES.md
+/release/
+/packed/
+/infra/.terraform/
+/infra/state/
+/infra/*.tfstate*
+/infra/*.tfplan
+/infra/*.tfvars
+!/infra/terraform.tfvars.example
+/infra/crash*.log
+/infra/errored_test.tfstate
+**/__pycache__/

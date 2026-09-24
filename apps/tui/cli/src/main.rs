@@ -11,8 +11,7 @@ use crossterm::{
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::{
-    io::{self, IsTerminal, Write},
-    process::{Command, Stdio},
+    io::{self, IsTerminal},
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -41,6 +40,9 @@ struct Args {
     /// Character width / height (e.g. 0.5); auto-detected when reported by the terminal.
     #[arg(long,value_parser=parse_aspect)]
     cell_aspect: Option<f32>,
+    /// Maximum width of the animation grid; text retains full terminal resolution.
+    #[arg(long, default_value_t=240, value_parser=clap::value_parser!(u16).range(40..=240))]
+    render_columns: u16,
 }
 fn parse_aspect(s: &str) -> std::result::Result<f32, String> {
     let n: f32 = s.parse().map_err(|_| "Expected a number".to_string())?;
@@ -87,13 +89,8 @@ fn main() -> Result<()> {
         }
     }));
     let stop = Arc::new(AtomicBool::new(false));
-    for signal in [
-        signal_hook::consts::SIGINT,
-        signal_hook::consts::SIGTERM,
-        signal_hook::consts::SIGHUP,
-    ] {
-        signal_hook::flag::register(signal, stop.clone())?;
-    }
+    let signal_stop = stop.clone();
+    ctrlc::set_handler(move || signal_stop.store(true, Ordering::Relaxed))?;
     let _session = Session::enter()?;
     run(args, stop)
 }
@@ -198,6 +195,9 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
     let mut input_at = None;
     let mut max_input_ms = 0f64;
     let resume_dir = tempfile::tempdir()?;
+    // Linux clipboard ownership must survive until another application pastes.
+    // Initialize lazily so startup needs no desktop clipboard.
+    let mut clipboard = None;
     while !stop.load(Ordering::Relaxed) {
         let now = Instant::now();
         let dt = now.duration_since(last).as_secs_f32().min(0.1);
@@ -266,8 +266,8 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
             && !app.renderer_status.starts_with("Static fallback:")
         {
             worker.request(Request {
-                width: grid_size(size.width, size.height).0,
-                height: grid_size(size.width, size.height).1,
+                width: render_grid(size.width, size.height, args.render_columns).0,
+                height: render_grid(size.width, size.height, args.render_columns).1,
                 generation,
                 history,
                 time: explore.time,
@@ -396,7 +396,12 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
                 _ => {}
             }
             if let Some(action) = action {
-                app.status = match perform(action, &app.content.profile.email, resume_dir.path()) {
+                app.status = match perform(
+                    action,
+                    &app.content.profile.email,
+                    resume_dir.path(),
+                    &mut clipboard,
+                ) {
                     Ok(message) => message,
                     Err(e) => format!("Action failed: {e}"),
                 };
@@ -413,7 +418,21 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
     }
     Ok(())
 }
-fn perform(action: Action, email: &str, temp: &std::path::Path) -> Result<String> {
+fn render_grid(width: u16, height: u16, columns: u16) -> (u16, u16) {
+    let (w, h) = grid_size(width, height);
+    let scale = (f32::from(columns) / f32::from(w)).min(1.);
+    (
+        (f32::from(w) * scale).round().max(1.) as u16,
+        (f32::from(h) * scale).round().max(1.) as u16,
+    )
+}
+
+fn perform(
+    action: Action,
+    email: &str,
+    temp: &std::path::Path,
+    clipboard: &mut Option<arboard::Clipboard>,
+) -> Result<String> {
     match action {
         Action::Open(url) => {
             anyhow::ensure!(
@@ -422,38 +441,30 @@ fn perform(action: Action, email: &str, temp: &std::path::Path) -> Result<String
                     || url.starts_with("mailto:"),
                 "Unsupported link: {url}"
             );
-            let result = Command::new("open")
-                .arg(&url)
-                .output()
-                .with_context(|| format!("Could not open {url}"))?;
-            anyhow::ensure!(
-                result.status.success(),
-                "Could not open {url}; select the URL and open it manually"
-            );
+            open::that(&url).with_context(|| {
+                format!("Could not open {url}; select the URL and open it manually")
+            })?;
             Ok(format!("Opened {url}"))
         }
         Action::Resume => {
             let path = temp.join("Austin-Delic-Resume.pdf");
             std::fs::write(&path, portfolio::RESUME)?;
-            let result = Command::new("open").arg(&path).output()?;
-            anyhow::ensure!(
-                result.status.success(),
-                "Could not open resume: {}",
-                path.display()
-            );
+            open::that(&path)
+                .with_context(|| format!("Could not open resume: {}", path.display()))?;
             Ok("Opened resume in the default PDF viewer".into())
         }
         Action::CopyEmail => {
-            let mut child = Command::new("pbcopy")
-                .stdin(Stdio::piped())
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .spawn()?;
-            child.stdin.take().unwrap().write_all(email.as_bytes())?;
-            anyhow::ensure!(
-                child.wait()?.success(),
-                "Clipboard unavailable; select {email}"
-            );
+            if clipboard.is_none() {
+                *clipboard = Some(
+                    arboard::Clipboard::new()
+                        .with_context(|| format!("Clipboard unavailable; select {email}"))?,
+                );
+            }
+            clipboard
+                .as_mut()
+                .unwrap()
+                .set_text(email)
+                .with_context(|| format!("Clipboard unavailable; select {email}"))?;
             Ok(format!("Copied {email}"))
         }
         Action::Navigate(_) => Ok(String::new()),
@@ -463,6 +474,11 @@ fn perform(action: Action, email: &str, temp: &std::path::Path) -> Result<String
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn render_resolution() {
+        assert_eq!(render_grid(240, 80, 120), (120, 40));
+        assert_eq!(render_grid(60, 18, 120), (60, 18));
+    }
     #[test]
     fn arguments_validate_limits() {
         assert_eq!(grid_size(480, 80), (240, 40));
