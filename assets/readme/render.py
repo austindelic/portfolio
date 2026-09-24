@@ -41,7 +41,7 @@ def masthead():
     text(draw, (900, 276), 'Software engineer', 40, MUTED)
     draw.rectangle((900, 340, 910, 350), fill=AMBER)
     text(draw, (930, 329), 'Perth, Australia', 32, AMBER)
-    save(image, 'masthead.webp')
+    save(image, 'masthead-rendered.webp')
 
 
 def strip(name, number, title, kind):
@@ -54,8 +54,10 @@ def strip(name, number, title, kind):
     text(draw, (150, 65), title, 82)
     if kind == 'still':
         # Connected layers of a project environment; not a product screenshot.
-        for x, y in [(1200, 40), (1320, 78), (1440, 116)]:
-            draw.line((x + 100, y + 25, x + 220, y + 63), fill=RULE, width=3)
+        cards = [(1200, 40), (1320, 78), (1440, 116)]
+        for index, (x, y) in enumerate(cards):
+            if index < len(cards) - 1:
+                draw.line((x + 100, y + 25, x + 220, y + 63), fill=RULE, width=3)
             draw.rectangle((x, y, x + 170, y + 64), fill=BG, outline=MUTED, width=3)
             draw.rectangle((x + 16, y + 18, x + 24, y + 26), fill=AMBER)
             draw.line((x + 44, y + 22, x + 143, y + 22), fill=MUTED, width=3)
@@ -94,7 +96,7 @@ def icons():
 if __name__ == '__main__':
     masthead()
     strip('portfolio.webp', '01', 'Portfolio', 'portfolio')
-    strip('still.webp', '02', 'Still', 'still')
+    strip('still-environment.webp', '02', 'Still', 'still')
     strip('tactify.webp', '03', 'Tactify', 'tactify')
     icons()
     assets = sorted([*HERE.glob('*.webp'), *HERE.glob('*.svg')])
