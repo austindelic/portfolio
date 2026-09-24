@@ -147,6 +147,7 @@ pub struct PortfolioApp {
     pub content: Content,
     pub posts: Vec<Post>,
     pub ascii: bool,
+    pub terminal_background: bool,
     pub help: bool,
     pub status: String,
     pub renderer_status: String,
@@ -175,6 +176,7 @@ impl PortfolioApp {
             posts: serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/posts.json")))
                 .expect("validated bundled posts"),
             ascii,
+            terminal_background: false,
             help: false,
             status: String::new(),
             renderer_status: "Static background".into(),
@@ -438,14 +440,19 @@ impl PortfolioApp {
     }
     pub fn render(&mut self, frame: &mut Frame, background: &CellFrame) {
         let area = frame.area();
+        let bg = if self.terminal_background {
+            Color::Reset
+        } else {
+            BG
+        };
         self.hits.clear();
-        frame.render_widget(Block::default().style(Style::default().bg(BG)), area);
+        frame.render_widget(Block::default().style(Style::default().bg(bg)), area);
         paint_background(frame, background);
         if area.width < 60 || area.height < 18 {
             frame.render_widget(Clear, area);
             frame.render_widget(
                 Paragraph::new("Resize terminal to at least 60 x 18\nq / Ctrl-C: quit")
-                    .style(Style::default().fg(FG).bg(BG)),
+                    .style(Style::default().fg(FG).bg(bg)),
                 area,
             );
             return;
@@ -460,14 +467,14 @@ impl PortfolioApp {
                 )
             };
             let box_area = Rect::new(1, area.height.saturating_sub(5), area.width - 2, 4);
-            paint_panel(frame, background, box_area);
+            paint_panel(frame, background, box_area, bg);
             render_panel_text(
                 frame,
                 &clean(
                     &format!("EXPLORE  /  Esc return  ? help  Space pause  0 reset\nWASD move · RF vertical · IJKL look · QE roll · arrows speed\n{help}"),
                     self.ascii,
                 ),
-                Style::default().fg(FG).bg(BG),
+                Style::default().fg(FG).bg(bg),
                 box_area,
                 false,
             );
@@ -483,13 +490,13 @@ impl PortfolioApp {
                 (area.width - width) / 2
             };
             let panel = Rect::new(x, 1, width, area.height - 3);
-            paint_panel(frame, background, panel);
+            paint_panel(frame, background, panel, bg);
             frame.render_widget(
                 Block::default()
                     .borders(Borders::ALL)
                     .border_set(border(self.ascii))
                     .border_style(Style::default().fg(BORDER))
-                    .style(Style::default().bg(BG)),
+                    .style(Style::default().bg(bg)),
                 panel,
             );
             let labels = if self.ascii {
@@ -507,7 +514,7 @@ impl PortfolioApp {
                     if self.focus == i {
                         Style::default().fg(SELECTED_FG).bg(ACCENT)
                     } else {
-                        Style::default().fg(FG).bg(BG)
+                        Style::default().fg(FG).bg(bg)
                     },
                     rect,
                     self.focus == i,
@@ -529,7 +536,7 @@ impl PortfolioApp {
             render_panel_text(
                 frame,
                 &clock,
-                Style::default().fg(MUTED).bg(BG),
+                Style::default().fg(MUTED).bg(bg),
                 Rect::new(x + 2, 3, width - 4, 1),
                 false,
             );
@@ -573,7 +580,7 @@ impl PortfolioApp {
                     Kind::Muted => MUTED,
                     _ => FG,
                 };
-                let mut style = Style::default().fg(color).bg(BG);
+                let mut style = Style::default().fg(color).bg(bg);
                 if matches!(kind, Kind::Heading) {
                     style = style.add_modifier(Modifier::BOLD);
                 }
@@ -595,18 +602,18 @@ impl PortfolioApp {
             self.status.clone()
         };
         let footer_area = Rect::new(0, area.height - 1, area.width, 1);
-        paint_panel(frame, background, footer_area);
+        paint_panel(frame, background, footer_area, bg);
         render_panel_text(
             frame,
             &clean(&footer, self.ascii),
-            Style::default().fg(MUTED).bg(BG),
+            Style::default().fg(MUTED).bg(bg),
             footer_area,
             false,
         );
         if self.help {
             let width = (area.width - 4).min(78);
             let rect = Rect::new((area.width - width) / 2, 1, width, area.height - 2);
-            paint_panel(frame, background, rect);
+            paint_panel(frame, background, rect, bg);
             let help = if area.height < 24 {
                 "Tab/Shift-Tab focus; Enter open
 Arrows/j/k scroll; Home/End jump
@@ -624,13 +631,13 @@ Esc / ? / Enter closes help"
             };
             let block = Block::bordered()
                 .border_set(border(self.ascii))
-                .style(Style::default().bg(BG))
+                .style(Style::default().bg(bg))
                 .border_style(Style::default().fg(ACCENT))
                 .title_style(Style::default().fg(FG))
                 .title(" Help ");
             let inner = block.inner(rect);
             frame.render_widget(block, rect);
-            render_panel_text(frame, help, Style::default().fg(FG).bg(BG), inner, false);
+            render_panel_text(frame, help, Style::default().fg(FG).bg(bg), inner, false);
         }
     }
 }
@@ -780,14 +787,18 @@ fn render_panel_text(frame: &mut Frame, text: &str, style: Style, area: Rect, se
     }
 }
 
-fn paint_panel(frame: &mut Frame, bg: &CellFrame, area: Rect) {
+fn paint_panel(frame: &mut Frame, bg: &CellFrame, area: Rect, background: Color) {
     // Repaint from the source, not the composed screen: help must hide page text
     // and overlapping panels must not dim the artwork twice.
     frame.render_widget(Clear, area);
-    frame.render_widget(Block::default().style(Style::default().bg(BG)), area);
+    frame.render_widget(
+        Block::default().style(Style::default().bg(background)),
+        area,
+    );
     paint_background_region(frame, bg, area, 15);
 }
 
+/// Paint artwork glyphs while preserving the background already set on the frame.
 pub fn paint_background(frame: &mut Frame, bg: &CellFrame) {
     paint_background_region(frame, bg, frame.area(), 100);
 }
@@ -808,8 +819,7 @@ fn paint_background_region(frame: &mut Frame, bg: &CellFrame, region: Rect, brig
                     .map(|channel| (u16::from(channel) * brightness / 100) as u8);
                 frame.buffer_mut()[(x, y)]
                     .set_char(c.glyph)
-                    .set_fg(Color::Rgb(rgb[0], rgb[1], rgb[2]))
-                    .set_bg(BG);
+                    .set_fg(Color::Rgb(rgb[0], rgb[1], rgb[2]));
             }
         }
     }
@@ -985,128 +995,150 @@ mod tests {
     }
     #[test]
     fn panel_text_preserves_artwork_only_outside_text_runs() {
-        let bg = CellFrame {
-            width: 1,
-            height: 1,
-            generation: 0,
-            cells: vec![Cell {
-                glyph: 'X',
-                rgb: [200, 100, 40],
-            }],
-        };
-        let mut terminal = Terminal::new(TestBackend::new(20, 8)).unwrap();
-        terminal
-            .draw(|f| {
-                paint_background(f, &bg);
-                let panel = Rect::new(1, 1, 18, 6);
-                paint_panel(f, &bg, panel);
-                render_panel_text(
-                    f,
-                    "A B\n\n界 e\u{301}",
-                    Style::default().fg(FG).bg(BG),
-                    panel,
-                    false,
-                );
-                render_panel_text(
-                    f,
-                    "Go",
-                    Style::default().fg(SELECTED_FG).bg(ACCENT),
-                    Rect::new(1, 5, 18, 1),
-                    true,
-                );
-            })
-            .unwrap();
-        let b = terminal.backend().buffer();
-        assert_eq!(b[(0, 0)].fg, Color::Rgb(200, 100, 40));
-        for position in [(4, 1), (1, 2), (5, 3), (18, 6)] {
-            assert_eq!(b[position].symbol(), "X");
-            assert_eq!(b[position].fg, Color::Rgb(30, 15, 6));
-            assert_eq!(b[position].bg, BG);
-        }
-        assert_eq!(b[(2, 1)].symbol(), " "); // Space within A B is opaque.
-        assert_eq!(b[(2, 1)].fg, FG);
-        assert_eq!(b[(1, 3)].symbol(), "界");
-        assert_eq!(b[(3, 3)].symbol(), " ");
-        assert_eq!(b[(4, 3)].symbol(), "e\u{301}");
-        for x in 1..19 {
-            assert_eq!(b[(x, 5)].bg, ACCENT);
-            assert_eq!(b[(x, 5)].fg, SELECTED_FG);
-            if x >= 3 {
-                assert_eq!(b[(x, 5)].symbol(), " ");
+        for terminal_background in [false, true] {
+            let expected_bg = if terminal_background {
+                Color::Reset
+            } else {
+                BG
+            };
+            let bg = CellFrame {
+                width: 1,
+                height: 1,
+                generation: 0,
+                cells: vec![Cell {
+                    glyph: 'X',
+                    rgb: [200, 100, 40],
+                }],
+            };
+            let mut terminal = Terminal::new(TestBackend::new(20, 8)).unwrap();
+            terminal
+                .draw(|f| {
+                    f.render_widget(
+                        Block::default().style(Style::default().bg(expected_bg)),
+                        f.area(),
+                    );
+                    paint_background(f, &bg);
+                    let panel = Rect::new(1, 1, 18, 6);
+                    paint_panel(f, &bg, panel, expected_bg);
+                    render_panel_text(
+                        f,
+                        "A B\n\n界 e\u{301}",
+                        Style::default().fg(FG).bg(expected_bg),
+                        panel,
+                        false,
+                    );
+                    render_panel_text(
+                        f,
+                        "Go",
+                        Style::default().fg(SELECTED_FG).bg(ACCENT),
+                        Rect::new(1, 5, 18, 1),
+                        true,
+                    );
+                })
+                .unwrap();
+            let b = terminal.backend().buffer();
+            assert_eq!(b[(0, 0)].fg, Color::Rgb(200, 100, 40));
+            for position in [(4, 1), (1, 2), (5, 3), (18, 6)] {
+                assert_eq!(b[position].symbol(), "X");
+                assert_eq!(b[position].fg, Color::Rgb(30, 15, 6));
+                assert_eq!(b[position].bg, expected_bg);
+            }
+            assert_eq!(b[(2, 1)].symbol(), " "); // Space within A B is opaque.
+            assert_eq!(b[(2, 1)].fg, FG);
+            assert_eq!(b[(1, 3)].symbol(), "界");
+            assert_eq!(b[(3, 3)].symbol(), " ");
+            assert_eq!(b[(4, 3)].symbol(), "e\u{301}");
+            for x in 1..19 {
+                assert_eq!(b[(x, 5)].bg, ACCENT);
+                assert_eq!(b[(x, 5)].fg, SELECTED_FG);
+                if x >= 3 {
+                    assert_eq!(b[(x, 5)].symbol(), " ");
+                }
             }
         }
     }
 
     #[test]
     fn panels_and_help_repaint_from_original_background() {
-        let bg = CellFrame {
-            width: 1,
-            height: 1,
-            generation: 0,
-            cells: vec![Cell {
-                glyph: 'X',
-                rgb: [200, 100, 40],
-            }],
-        };
-        let mut app = PortfolioApp::default();
-        let mut terminal = Terminal::new(TestBackend::new(120, 40)).unwrap();
-        for page in [
-            Page::Home,
-            Page::Blog,
-            Page::Post(0),
-            Page::Socials,
-            Page::Explore,
-        ] {
-            app.navigate(page);
-            terminal.draw(|f| app.render(f, &bg)).unwrap();
-            let original = terminal.backend().buffer().clone();
-            let padding = if app.page == Page::Explore {
-                (118, 38)
-            } else if app.page == Page::Home {
-                (43, 35)
+        for terminal_background in [false, true] {
+            let expected_bg = if terminal_background {
+                Color::Reset
             } else {
-                (23, 35)
+                BG
             };
-            assert_eq!(original[padding].symbol(), "X");
-            assert_eq!(original[padding].fg, Color::Rgb(30, 15, 6));
-            assert_eq!(original[(119, 39)].fg, Color::Rgb(30, 15, 6));
-            assert_eq!(original[(0, 0)].fg, Color::Rgb(200, 100, 40));
-            app.help = true;
-            terminal.draw(|f| app.render(f, &bg)).unwrap();
-            let help = terminal.backend().buffer();
-            // Blank help rows must contain source artwork even over page text.
-            for x in 22..98 {
-                assert_eq!(help[(x, 3)].symbol(), "X");
-                assert_eq!(help[(x, 3)].fg, Color::Rgb(30, 15, 6));
-            }
-            app.help = false;
-            terminal.draw(|f| app.render(f, &bg)).unwrap();
-            for y in 0..40 {
-                if y == 3 {
-                    continue;
-                } // The wall clock may tick between draws.
-                for x in 0..120 {
-                    assert_eq!(terminal.backend().buffer()[(x, y)], original[(x, y)]);
+            let bg = CellFrame {
+                width: 1,
+                height: 1,
+                generation: 0,
+                cells: vec![Cell {
+                    glyph: 'X',
+                    rgb: [200, 100, 40],
+                }],
+            };
+            let mut app = PortfolioApp {
+                terminal_background,
+                ..PortfolioApp::default()
+            };
+            let mut terminal = Terminal::new(TestBackend::new(120, 40)).unwrap();
+            for page in [
+                Page::Home,
+                Page::Blog,
+                Page::Post(0),
+                Page::Socials,
+                Page::Explore,
+            ] {
+                app.navigate(page);
+                terminal.draw(|f| app.render(f, &bg)).unwrap();
+                let original = terminal.backend().buffer().clone();
+                assert_eq!(original[(0, 0)].bg, expected_bg);
+                let padding = if app.page == Page::Explore {
+                    (118, 38)
+                } else if app.page == Page::Home {
+                    (43, 35)
+                } else {
+                    (23, 35)
+                };
+                assert_eq!(original[padding].symbol(), "X");
+                assert_eq!(original[padding].fg, Color::Rgb(30, 15, 6));
+                assert_eq!(original[(119, 39)].fg, Color::Rgb(30, 15, 6));
+                assert_eq!(original[(0, 0)].fg, Color::Rgb(200, 100, 40));
+                app.help = true;
+                terminal.draw(|f| app.render(f, &bg)).unwrap();
+                let help = terminal.backend().buffer();
+                // Blank help rows must contain source artwork even over page text.
+                for x in 22..98 {
+                    assert_eq!(help[(x, 3)].symbol(), "X");
+                    assert_eq!(help[(x, 3)].fg, Color::Rgb(30, 15, 6));
+                }
+                app.help = false;
+                terminal.draw(|f| app.render(f, &bg)).unwrap();
+                for y in 0..40 {
+                    if y == 3 {
+                        continue;
+                    } // The wall clock may tick between draws.
+                    for x in 0..120 {
+                        assert_eq!(terminal.backend().buffer()[(x, y)], original[(x, y)]);
+                    }
                 }
             }
-        }
-        // A fresh render and a reused terminal must agree after scrolling/resizing.
-        app.navigate(Page::Post(0));
-        app.scroll = 10;
-        terminal.backend_mut().resize(80, 24);
-        terminal.resize(Rect::new(0, 0, 80, 24)).unwrap();
-        terminal.draw(|f| app.render(f, &bg)).unwrap();
-        let mut fresh = Terminal::new(TestBackend::new(80, 24)).unwrap();
-        fresh.draw(|f| app.render(f, &bg)).unwrap();
-        for y in 0..24 {
-            if y == 3 {
-                continue;
-            }
-            for x in 0..80 {
-                assert_eq!(
-                    terminal.backend().buffer()[(x, y)],
-                    fresh.backend().buffer()[(x, y)]
-                );
+            // A fresh render and a reused terminal must agree after scrolling/resizing.
+            app.navigate(Page::Post(0));
+            app.scroll = 10;
+            terminal.backend_mut().resize(80, 24);
+            terminal.resize(Rect::new(0, 0, 80, 24)).unwrap();
+            terminal.draw(|f| app.render(f, &bg)).unwrap();
+            let mut fresh = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            fresh.draw(|f| app.render(f, &bg)).unwrap();
+            for y in 0..24 {
+                if y == 3 {
+                    continue;
+                }
+                for x in 0..80 {
+                    assert_eq!(
+                        terminal.backend().buffer()[(x, y)],
+                        fresh.backend().buffer()[(x, y)]
+                    );
+                }
             }
         }
     }
@@ -1130,23 +1162,39 @@ mod tests {
         assert_eq!(b[(0, 0)].symbol(), "X");
         assert_eq!(b[(0, 0)].fg, Color::Rgb(255, 0, 0));
         assert_ne!(b[(45, 6)].fg, Color::Rgb(255, 0, 0));
-        // Inspect actual composed cells, including overlays and blank padding.
-        // The only non-black backgrounds are the existing orange selections.
-        for page in [
-            Page::Home,
-            Page::Blog,
-            Page::Post(0),
-            Page::Socials,
-            Page::Explore,
-        ] {
-            app.navigate(page);
-            for help in [false, true] {
-                app.help = help;
-                terminal.draw(|f| app.render(f, &bg)).unwrap();
-                for cell in &terminal.backend().buffer().content {
-                    assert!(matches!(cell.bg, Color::Rgb(0, 0, 0) | ACCENT));
-                    if cell.bg == ACCENT {
-                        assert_eq!(cell.fg, Color::Rgb(34, 34, 34));
+        // Inspect composed cells, including cleared overlays and blank padding.
+        for terminal_background in [false, true] {
+            app.terminal_background = terminal_background;
+            let expected_bg = if terminal_background {
+                Color::Reset
+            } else {
+                BG
+            };
+            for (w, h) in [(30, 10), (60, 18), (80, 24), (120, 40)] {
+                let mut terminal = Terminal::new(TestBackend::new(w, h)).unwrap();
+                for page in [
+                    Page::Home,
+                    Page::Blog,
+                    Page::Post(0),
+                    Page::Socials,
+                    Page::Explore,
+                ] {
+                    app.navigate(page);
+                    for help in [false, true] {
+                        app.help = help;
+                        terminal.draw(|f| app.render(f, &bg)).unwrap();
+                        let buffer = terminal.backend().buffer();
+                        assert_eq!(buffer[(0, 0)].bg, expected_bg);
+                        if w >= 60 {
+                            assert_eq!(buffer[(0, 0)].symbol(), "X");
+                            assert_eq!(buffer[(0, 0)].fg, Color::Rgb(255, 0, 0));
+                        }
+                        for cell in &buffer.content {
+                            assert!(cell.bg == expected_bg || cell.bg == ACCENT);
+                            if cell.bg == ACCENT {
+                                assert_eq!(cell.fg, SELECTED_FG);
+                            }
+                        }
                     }
                 }
             }
