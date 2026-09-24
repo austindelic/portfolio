@@ -992,6 +992,7 @@ body.bh-exploring { overflow: hidden; }
 #explore-settings-content { padding: 16px; border-top: 1px solid var(--border); display: grid; gap: 12px; }
 #explore-settings-content label { display: flex; justify-content: space-between; }
 #explore-settings-content output { color: var(--primary); font-variant-numeric: tabular-nums; }
-#explore-settings-content input { width: 100%; accent-color: var(--primary); }
+#explore-settings-content input { accent-color: var(--primary); }
+#explore-settings-content input[type="range"] { width: 100%; }
 [data-explore-reset] { border: 1px solid var(--border); }
 .bh-explore button:hover { background: #ffffff0d; }

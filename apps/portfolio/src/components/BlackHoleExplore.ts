@@ -20,7 +20,15 @@ export function bindBlackHoleExplore(getRuntime: () => Runtime | undefined) {
 		"[data-explore-settings]",
 	);
 	const panel = overlay.querySelector<HTMLElement>("#explore-settings-content");
-	if (!toggle || !panel) return () => {};
+	const ascii = overlay.querySelector<HTMLInputElement>("#explore-ascii");
+	const resolution = overlay.querySelector<HTMLInputElement>(
+		"#explore-resolution",
+	);
+	const resolutionOutput = overlay.querySelector<HTMLOutputElement>(
+		'output[for="explore-resolution"]',
+	);
+	if (!toggle || !panel || !ascii || !resolution || !resolutionOutput)
+		return () => {};
 	let active = false;
 	let scrollX = 0,
 		scrollY = 0;
@@ -54,9 +62,17 @@ export function bindBlackHoleExplore(getRuntime: () => Runtime | undefined) {
 			foreground.inert = true;
 			document.body.classList.add("bh-exploring");
 			closeSettings();
-			for (const input of overlay.querySelectorAll<HTMLInputElement>("input")) {
+			for (const input of overlay.querySelectorAll<HTMLInputElement>(
+				"input[data-setting]",
+			)) {
 				input.value = input.defaultValue;
 				input.dispatchEvent(new Event("input"));
+			}
+			const renderSettings = runtime.getExploreRenderSettings();
+			if (renderSettings) {
+				ascii.checked = renderSettings.asciiEnabled;
+				resolution.value = String(Math.round(renderSettings.sourceScale * 100));
+				resolutionOutput.value = `${resolution.value}%`;
 			}
 			overlay.hidden = false;
 			trigger.setAttribute("aria-expanded", "true");
@@ -83,7 +99,9 @@ export function bindBlackHoleExplore(getRuntime: () => Runtime | undefined) {
 		},
 		options,
 	);
-	for (const input of overlay.querySelectorAll<HTMLInputElement>("input")) {
+	for (const input of overlay.querySelectorAll<HTMLInputElement>(
+		"input[data-setting]",
+	)) {
 		input.addEventListener(
 			"input",
 			() => {
@@ -101,6 +119,25 @@ export function bindBlackHoleExplore(getRuntime: () => Runtime | undefined) {
 			options,
 		);
 	}
+	ascii.addEventListener(
+		"change",
+		() => {
+			if (active)
+				runtime?.updateExploreRenderSettings({ asciiEnabled: ascii.checked });
+		},
+		options,
+	);
+	resolution.addEventListener(
+		"input",
+		() => {
+			resolutionOutput.value = `${resolution.value}%`;
+			if (active)
+				runtime?.updateExploreRenderSettings({
+					sourceScale: Number(resolution.value) / 100,
+				});
+		},
+		options,
+	);
 	// Give keyboard movement back to the scene after clicking it.
 	document.addEventListener(
 		"pointerdown",
