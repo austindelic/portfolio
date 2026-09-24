@@ -1,0 +1,29 @@
+name: Windows terminal diagnostics
+on:
+  push:
+    branches: [notcodex/windows-asset-validation]
+permissions:
+  contents: read
+jobs:
+  terminal:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Build diagnostic executables
+        shell: bash
+        run: |
+          rustup toolchain install 1.96.1 --profile minimal
+          rustup default 1.96.1
+          cargo build --locked --manifest-path apps/tui/Cargo.toml -p austindelic --bin austindelic --example pty-smoke
+          mkdir -p apps/tui/npm/native/win32-x64 packed
+          cp apps/tui/target/debug/austindelic.exe apps/tui/npm/native/win32-x64/
+          npm pack ./apps/tui/npm --pack-destination packed
+      - name: Diagnose terminal entry points
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          export NPM_CLI_JS="$(node -p "require('node:path').join(require('node:path').dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')")"
+          node apps/tui/scripts/test-packed.cjs packed/*.tgz apps/tui/target/debug/examples/pty-smoke.exe

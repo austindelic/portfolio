@@ -8,11 +8,21 @@ use std::{
     time::{Duration, Instant},
 };
 
-fn wait_for(output: &Arc<Mutex<Vec<u8>>>, needle: &str) -> Result<()> {
+fn wait_for(
+    output: &Arc<Mutex<Vec<u8>>>,
+    needle: &str,
+    child: &mut dyn portable_pty::Child,
+) -> Result<()> {
     let start = Instant::now();
     while start.elapsed() < Duration::from_secs(15) {
         if String::from_utf8_lossy(&output.lock().unwrap()).contains(needle) {
             return Ok(());
+        }
+        if let Some(status) = child.try_wait()? {
+            bail!(
+                "Process exited with {status} while waiting for {needle:?}: {}",
+                String::from_utf8_lossy(&output.lock().unwrap())
+            );
         }
         std::thread::sleep(Duration::from_millis(30));
     }
@@ -74,10 +84,11 @@ fn main() -> Result<()> {
             writer.flush()
         };
         let result = (|| -> Result<()> {
-            wait_for(&output, "Austin")?;
+            wait_for(&output, "Austin", child.as_mut())?;
+            println!("Initial screen received");
             output.lock().unwrap().clear();
             send(b"\x1b[C\r")?;
-            wait_for(&output, "Blog posts")?;
+            wait_for(&output, "Blog posts", child.as_mut())?;
             pair.master.resize(PtySize {
                 rows: 40,
                 cols: 120,
@@ -86,7 +97,7 @@ fn main() -> Result<()> {
             })?;
             output.lock().unwrap().clear();
             send(b"?")?;
-            wait_for(&output, "Tab")?;
+            wait_for(&output, "Tab", child.as_mut())?;
             send(&[quit])?;
             let deadline = Instant::now() + Duration::from_secs(8);
             loop {

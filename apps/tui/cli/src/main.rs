@@ -53,11 +53,26 @@ fn parse_aspect(s: &str) -> std::result::Result<f32, String> {
     }
 }
 struct Session;
+fn startup_trace(stage: &str) {
+    use std::io::Write;
+    if let Some(path) = std::env::var_os("AUSTINDELIC_STARTUP_TRACE") {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "{stage}");
+        }
+    }
+}
 impl Session {
     fn enter() -> Result<Self> {
+        startup_trace("enabling raw mode");
         terminal::enable_raw_mode()?;
         let guard = Self;
+        startup_trace("entering alternate screen");
         execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture, Hide)?;
+        startup_trace("terminal session entered");
         Ok(guard)
     }
 }
@@ -77,6 +92,7 @@ impl Drop for Session {
 }
 fn main() -> Result<()> {
     let args = Args::parse();
+    startup_trace("arguments parsed");
     anyhow::ensure!(
         io::stdin().is_terminal() && io::stdout().is_terminal(),
         "Run austindelic in an interactive terminal (stdin and stdout must be TTYs)."
@@ -90,6 +106,7 @@ fn main() -> Result<()> {
     }));
     let stop = Arc::new(AtomicBool::new(false));
     let signal_stop = stop.clone();
+    startup_trace("installing signal handler");
     ctrlc::set_handler(move || signal_stop.store(true, Ordering::Relaxed))?;
     let _session = Session::enter()?;
     run(args, stop)
@@ -169,7 +186,9 @@ impl Explore {
     }
 }
 fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
+    startup_trace("initializing terminal backend");
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
+    startup_trace("terminal backend initialized");
     let mut app = PortfolioApp::new(args.ascii);
     let fallback = portfolio::fallback();
     let mut background = fallback.clone();
@@ -177,6 +196,7 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
     let mut explore = Explore::default();
     let mut size = terminal.size()?;
     let mut aspect = cell_aspect(args.cell_aspect);
+    startup_trace("terminal dimensions read");
     let mut generation = 0;
     let mut history = 0;
     let mut drag = None;
@@ -294,6 +314,9 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
             || last_draw.elapsed() >= Duration::from_secs(1)
         {
             terminal.draw(|f| app.render(f, &background))?;
+            if last_draw == started - Duration::from_secs(1) {
+                startup_trace("first frame drawn");
+            }
             if let Some(at) = input_at.take() {
                 let elapsed: Duration = Instant::now().duration_since(at);
                 max_input_ms = max_input_ms.max(elapsed.as_secs_f64() * 1000.);

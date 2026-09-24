@@ -20,7 +20,22 @@ try {
   run(process.execPath, [npm, 'install', '--ignore-scripts', '--no-audit', '--no-fund', path.resolve(archive)], { cwd: temp });
   // npm exec is npx's implementation. Verify the actual locally installed package.
   run(process.execPath, [npm, 'exec', '--offline', '--', 'austindelic', '--version'], { cwd: temp });
-  run(path.resolve(helper), [process.execPath, npm, 'exec', '--offline', '--', 'austindelic'], { cwd: temp });
+  const root = path.join(temp, 'node_modules', 'austindelic');
+  const { executable } = require(path.join(root, 'bin', 'cli.cjs'));
+  const entries = [
+    ['native', [executable(process.platform, process.arch, root)]],
+    ['launcher', [process.execPath, path.join(root, 'bin', 'cli.cjs')]],
+    ['npm', [process.execPath, npm, 'exec', '--offline', '--', 'austindelic']],
+  ];
+  for (const [name, args] of entries) {
+    const trace = path.join(temp, `${name}-startup.log`);
+    console.log(`Testing terminal entry point: ${name}`);
+    try {
+      run(path.resolve(helper), args, { cwd: temp, env: { ...process.env, AUSTINDELIC_STARTUP_TRACE: trace } });
+    } finally {
+      console.log(`${name} startup trace:\n${fs.existsSync(trace) ? fs.readFileSync(trace, 'utf8') : '(process did not reach startup trace)'}`);
+    }
+  }
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }
