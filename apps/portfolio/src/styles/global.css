@@ -600,29 +600,6 @@ pre {
 .stack-list span {
 	border-bottom: 1px solid var(--line);
 }
-.copy-email {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	vertical-align: middle;
-	border: 0;
-	background: transparent;
-	padding: 4px;
-	margin: 0 0 0 4px;
-	font: inherit;
-	cursor: pointer;
-	color: var(--foreground);
-}
-.copy-email:hover {
-	background: var(--primary);
-	color: #222;
-}
-.copy-status {
-	display: block;
-	min-height: 0;
-	color: var(--primary);
-	font-size: 11px;
-}
 .ruled-list {
 	list-style: none;
 	padding: 0;
@@ -955,10 +932,6 @@ a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
 	align-self: start;
 }
 
-.copy-email .ui-icon {
-	width: 14px;
-	height: 14px;
-}
 .profile-details dt {
 	gap: 4px;
 }

@@ -9,8 +9,6 @@ import { Target } from "pixelarticons/react/Target.js";
 import { Mail } from "pixelarticons/react/Mail.js";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import { Code } from "pixelarticons/react/Code.js";
-// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
-import { Copy } from "pixelarticons/react/Copy.js";
 
 import portfolio from "../data/portfolio.json";
 import { getCollection } from "astro:content";
@@ -42,7 +40,7 @@ const techStack = profile.stack;
       <div><dt><MapPin className="ui-icon" aria-hidden="true" />Location</dt><dd>{profile.location}</dd></div>
       <div><dt><Briefcase className="ui-icon" aria-hidden="true" />Work</dt><dd>{profile.work}</dd></div>
       <div><dt><Target className="ui-icon" aria-hidden="true" />Focus</dt><dd>{profile.focus}</dd></div>
-      <div><dt><Mail className="ui-icon" aria-hidden="true" />Contact</dt><dd><a class="text-primary" href={`mailto:${profile.email}`}>{profile.email}</a><button class="copy-email" type="button" aria-label="Copy email address" data-copy-email><Copy className="ui-icon" aria-hidden="true" /></button><span class="copy-status" role="status" aria-live="polite"></span></dd></div>
+      <div><dt><Mail className="ui-icon" aria-hidden="true" />Contact</dt><dd><a class="text-primary" href={`mailto:${profile.email}`}>{profile.email}</a></dd></div>
       <div><dt><Code className="ui-icon" aria-hidden="true" />Stack</dt><dd class="stack-list">{Object.entries(techStack).map(([key, label]) => <span title={label}>{key}</span>)}</dd></div>
     </dl></div>
   </section>
@@ -66,23 +64,3 @@ const techStack = profile.stack;
     <ul class="ruled-list">{allPostsByDate.map((post) => <li><PostPreview post={post} /></li>)}</ul>
   </section>
 </BaseLayout>
-
-<script>
-  function initCopyEmail() {
-    const button = document.querySelector<HTMLButtonElement>("[data-copy-email]");
-    if (!button || button.dataset.ready) return;
-    button.dataset.ready = "true";
-    button.addEventListener("click", async () => {
-      const status = button.nextElementSibling;
-      try {
-        await navigator.clipboard.writeText(button.previousElementSibling?.textContent ?? "");
-        if (status) status.textContent = "Copied";
-      } catch {
-        if (status) status.textContent = "Couldn’t copy. Select the address to copy it.";
-      }
-      window.setTimeout(() => { if (status) status.textContent = ""; }, 2500);
-    });
-  }
-  initCopyEmail();
-  document.addEventListener("astro:page-load", initCopyEmail);
-</script>
