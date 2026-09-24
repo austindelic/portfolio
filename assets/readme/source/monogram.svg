@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="450" viewBox="0 0 720 450">
+  <title>Austin Delic — interlocking AD monogram</title>
+  <desc>Angular silver letterforms with shallow southeast extrusion and amber seams. The A overlaps the stem of the D.</desc>
+  <!-- Flat extrusion: every rear vertex is offset by (28, 20). -->
+  <polygon fill="#343b43" points="368,105 521,105 613,185 613,285 521,365 368,365"/>
+  <polygon fill="#59616a" points="493,85 585,165 613,185 521,105"/>
+  <polygon fill="#252d35" points="585,165 585,265 613,285 613,185"/>
+  <polygon fill="#343b43" points="585,265 493,345 521,365 613,285"/>
+  <!-- D front and its open counter. -->
+  <polygon fill="#c1c3bf" points="340,85 493,85 585,165 585,265 493,345 340,345"/>
+  <polygon fill="#0d1117" points="410,151 468,151 515,193 515,237 468,279 410,279"/>
+  <polygon fill="#343b43" points="410,151 438,171 438,279 410,279"/>
+  <polygon fill="#59616a" points="410,151 468,151 490,171 438,171"/>
+  <polyline fill="none" stroke="#ffa133" stroke-width="3" points="493,345 585,265 585,165"/>
+  <!-- A rear silhouette, then the face; the leg interlocks with the D stem. -->
+  <polygon fill="#252d35" points="166,365 276,105 336,105 446,365 372,365 348,299 264,299 240,365"/>
+  <polygon fill="#59616a" points="138,345 212,345 240,365 166,365"/>
+  <polygon fill="#343b43" points="308,85 418,345 446,365 336,105"/>
+  <polygon fill="#e6e3db" points="138,345 248,85 308,85 418,345 344,345 320,279 236,279 212,345"/>
+  <polygon fill="#0d1117" points="257,220 299,220 278,160"/>
+  <polygon fill="#59616a" points="257,220 268,220 283,175 278,160"/>
+  <polyline fill="none" stroke="#ffa133" stroke-width="3" points="308,85 418,345 446,365"/>
+</svg>

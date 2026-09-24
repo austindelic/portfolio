@@ -1,4 +1,4 @@
-<a href="https://austindelic.com"><img src="./assets/readme/masthead-rendered.webp" width="1800" alt="Austin Delic — software engineer in Perth, Australia. Artwork captured from my ASCII black-hole renderer." /></a>
+<a href="https://austindelic.com"><img src="./assets/readme/masthead-monogram.webp" width="1800" alt="Austin Delic — software engineer in Perth, Australia. Custom silver and amber AD monogram." /></a>
 
 I'm Austin, a software engineer in Perth and Founding Engineer at **The Next Something**.
 

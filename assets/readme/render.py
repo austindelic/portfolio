@@ -4,6 +4,7 @@ Uses a recorded renderer capture, the repository font, and geometric primitives.
 No network access or image-generation service is involved.
 """
 from pathlib import Path
+from xml.etree import ElementTree
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
@@ -32,16 +33,42 @@ def place_capture(canvas, size, xy, bounds):
     canvas.paste(layer, mask=mask)
 
 
+def monogram():
+    """Rasterize the editable polygon-only SVG with Pillow, without extra libraries."""
+    svg = ElementTree.parse(HERE / 'source/monogram.svg').getroot()
+    scale = 3
+    image = Image.new('RGB', (720 * scale, 450 * scale), BG)
+    draw = ImageDraw.Draw(image)
+    for element in svg:
+        tag = element.tag.rsplit('}', 1)[-1]
+        if tag in ('title', 'desc'):
+            continue
+        if tag not in ('polygon', 'polyline'):
+            raise ValueError(f'Unsupported monogram element: {tag}')
+        points = [tuple(float(n) * scale for n in point.split(','))
+                  for point in element.attrib['points'].split()]
+        fill = element.get('fill', 'none')
+        if fill != 'none':
+            draw.polygon(points, fill=fill)
+        stroke = element.get('stroke')
+        if stroke:
+            if tag == 'polygon':
+                points.append(points[0])
+            draw.line(points, fill=stroke,
+                      width=round(float(element.get('stroke-width', '1')) * scale),
+                      joint='curve')
+    return image.resize((720, 450), Image.Resampling.LANCZOS)
+
+
 def masthead():
     image = Image.new('RGB', (1800, 450), BG)
-    place_capture(image, (1600, 840), (-550, -178), (0, 0, 775, 449))
+    image.paste(monogram(), (0, 0))
     draw = ImageDraw.Draw(image)
-    draw.line((822, 95, 822, 355), fill=RULE, width=2)
     text(draw, (895, 150), 'Austin Delic', 104)
     text(draw, (900, 276), 'Software engineer', 40, MUTED)
     draw.rectangle((900, 340, 910, 350), fill=AMBER)
     text(draw, (930, 329), 'Perth, Australia', 32, AMBER)
-    save(image, 'masthead-rendered.webp')
+    save(image, 'masthead-monogram.webp')
 
 
 def strip(name, number, title, kind):
