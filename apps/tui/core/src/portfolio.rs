@@ -851,6 +851,17 @@ pub const RESUME: &[u8] = include_bytes!("../assets/resume.pdf");
 mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
+
+    // Frozen content keeps layout snapshots independent of publishing changes.
+    fn fixture_app(ascii: bool) -> PortfolioApp {
+        let mut app = PortfolioApp::new(ascii);
+        app.content = serde_json::from_str(include_str!("../tests/fixtures/portfolio.json"))
+            .expect("valid portfolio fixture");
+        app.posts = serde_json::from_str(include_str!("../tests/fixtures/posts.json"))
+            .expect("valid posts fixture");
+        app
+    }
+
     fn render(app: &mut PortfolioApp, w: u16, h: u16) -> String {
         let mut terminal = Terminal::new(TestBackend::new(w, h)).unwrap();
         terminal
@@ -872,9 +883,12 @@ mod tests {
     }
     #[test]
     fn published_content_and_internal_navigation() {
-        let app = PortfolioApp::default();
-        assert_eq!(app.posts.len(), 1);
-        assert_eq!(app.posts[0].slug, "site-and-terminal");
+        let mut app = PortfolioApp::default();
+        let site_index = app
+            .posts
+            .iter()
+            .position(|p| p.slug == "site-and-terminal")
+            .expect("bundled site-and-terminal post");
         assert!(app.content.projects[0].link.is_none());
         let rows = app.document();
         let tactify = rows
@@ -886,18 +900,15 @@ mod tests {
             .iter()
             .find(|row| row.text.contains("03  This site + the TUI"))
             .unwrap();
-        assert_eq!(site.action, Some(Action::Navigate(Page::Post(0))));
-        assert!(app.posts.windows(2).all(|p| p[0].date >= p[1].date));
+        assert_eq!(site.action, Some(Action::Navigate(Page::Post(site_index))));
+        assert!(app.posts.windows(2).all(|p| {
+            p[0].date > p[1].date || (p[0].date == p[1].date && p[0].slug < p[1].slug)
+        }));
         assert_eq!(app.content.projects.len(), 3);
         assert_eq!(app.content.socials.len(), 7);
         assert_eq!(
             app.resolve("/blog/site-and-terminal/"),
-            Action::Navigate(Page::Post(
-                app.posts
-                    .iter()
-                    .position(|p| p.slug == "site-and-terminal")
-                    .unwrap()
-            ))
+            Action::Navigate(Page::Post(site_index))
         );
         assert_eq!(
             app.resolve("https://austindelic.com/resume.pdf"),
@@ -908,6 +919,49 @@ mod tests {
             Action::Open("https://github.com/austindelic/still".into())
         );
         assert!(RESUME.starts_with(b"%PDF"));
+        app.navigate(Page::Blog);
+        let rows = app.document();
+        for (index, post) in app.posts.iter().enumerate() {
+            let action = Action::Navigate(Page::Post(index));
+            assert_eq!(app.resolve(&format!("/blog/{}/", post.slug)), action);
+            assert!(
+                rows.iter().any(|row| {
+                    row.action.as_ref() == Some(&action) && row.text.contains(&post.title)
+                }),
+                "missing blog entry for {}",
+                post.slug
+            );
+        }
+    }
+
+    #[test]
+    fn project_navigation_follows_slug_after_posts_are_reordered() {
+        let mut app = fixture_app(false);
+        let mut other = app.posts[0].clone();
+        other.slug = "another-post".into();
+        other.title = "Another post".into();
+        app.posts.insert(0, other);
+
+        for expected_index in [1, 0] {
+            app.navigate(Page::Home);
+            render(&mut app, 120, 40);
+            let action = app
+                .document()
+                .into_iter()
+                .find(|row| row.text.contains("03  This site + the TUI"))
+                .unwrap()
+                .action
+                .unwrap();
+            assert_eq!(action, Action::Navigate(Page::Post(expected_index)));
+            app.focus = app.actions.iter().position(|a| *a == action).unwrap() + 5;
+            app.input(Input::Enter);
+            assert_eq!(app.page, Page::Post(expected_index));
+            assert!(app
+                .document()
+                .iter()
+                .any(|row| row.text == "Rendering a Black Hole in the Browser and Terminal"));
+            app.posts.reverse();
+        }
     }
     #[test]
     fn focus_links_back_scroll_and_resize() {
@@ -988,7 +1042,7 @@ mod tests {
                 ("post", Page::Post(0), false),
                 ("ascii", Page::Socials, true),
             ] {
-                let mut app = PortfolioApp::new(ascii);
+                let mut app = fixture_app(ascii);
                 app.navigate(page);
                 let text = render(&mut app, w, h);
                 assert!(!text.contains("Resize terminal"));
