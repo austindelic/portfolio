@@ -223,6 +223,7 @@ function startRendererSession(
 	} = options;
 
 	let exploring = false;
+	let heldCameraPath: string | null = null;
 	let exploreAsciiEnabled = true;
 	// Keep the original sampling budget until the user moves the resolution slider.
 	let exploreSourceScale: number | undefined;
@@ -723,6 +724,24 @@ function startRendererSession(
 
 	const syncAnimationRoute = () => {
 		if (exploring) return;
+		if (heldCameraPath !== null) {
+			if (heldCameraPath === window.location.pathname) return;
+			heldCameraPath = null;
+			// Start the destination transition from the explored pose, not the
+			// orbit controller's stale position from before Explore.
+			const orbit = varyOrbit(
+				getBlackHoleRouteAnimation(currentAnimationRoute()).orbit,
+				orbitSeed,
+			);
+			orbitController = new BlackHoleOrbitController(
+				currentAnimationKeyframe(),
+				orbit,
+				viewportAspect(),
+			);
+			orbitController.join(orbit, viewportAspect());
+			routeIntroPending = false;
+			animationPhase = "transition";
+		}
 		if (!animationIsEnabled()) return;
 		if (activeAnimationMode() === "route") {
 			syncOrbitRoute();
@@ -762,6 +781,12 @@ function startRendererSession(
 	};
 
 	const evaluateAnimationFrame = (delta: number) => {
+		if (!exploring && heldCameraPath !== null)
+			return {
+				controls: lastAnimatedControls,
+				asciiEnabled: lastAnimatedAsciiEnabled,
+				active: true,
+			};
 		if (exploring)
 			return {
 				controls: state.controls,
@@ -1368,7 +1393,9 @@ function startRendererSession(
 		reset: resetExploration,
 		exit() {
 			if (!explorationEntry) return;
-			resetExploration();
+			clearInput();
+			movementSpeed = explorationEntry.movementSpeed;
+			heldCameraPath = window.location.pathname;
 			Object.assign(state.controls, explorationEntry.controls);
 			exploring = false;
 			exploreSourceScale = undefined;
