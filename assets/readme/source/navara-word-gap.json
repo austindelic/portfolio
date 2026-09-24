@@ -1,0 +1,23 @@
+{
+  "tool": "Built-in image_gen",
+  "intent": "User-selected middle variation: approved side-profile ute bridging the word gap",
+  "referenceImages": [
+    "Approved stylized side-profile banner"
+  ],
+  "originalOutput": "exec-da8dfe8e-db23-4eab-ae99-8c9e7bc9177d.png",
+  "originalSha256": "c675c0da828f8c882006d4515af079abbde3862906bca821028ed572c85f7edc",
+  "storedSource": "navara-word-gap.webp",
+  "storedDimensions": [
+    2172,
+    724
+  ],
+  "encoding": {
+    "format": "WebP",
+    "quality": 95,
+    "method": 6
+  },
+  "processing": "Format/compression conversion only; no crop, stretching, compositing, retouching or text replacement.",
+  "prompt": "navara-word-gap-prompt.txt",
+  "generationPasses": 1,
+  "selection": "Middle placement, chosen by user"
+}

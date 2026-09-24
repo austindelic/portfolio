@@ -1,9 +1,10 @@
 """Rebuild README artwork: python3 assets/readme/render.py (requires Pillow).
 
-Uses a recorded renderer capture, the repository font, and geometric primitives.
-No network access or image-generation service is involved.
+Uses a saved AI-generated masthead, a recorded renderer capture, and geometric
+primitives. Rebuilding uses saved assets locally; it does not call image generation.
 """
 from pathlib import Path
+from shutil import copyfile
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
@@ -33,15 +34,13 @@ def place_capture(canvas, size, xy, bounds):
 
 
 def masthead():
-    image = Image.new('RGB', (1800, 450), BG)
-    place_capture(image, (1600, 840), (-550, -178), (0, 0, 775, 449))
-    draw = ImageDraw.Draw(image)
-    draw.line((822, 95, 822, 355), fill=RULE, width=2)
-    text(draw, (895, 150), 'Austin Delic', 104)
-    text(draw, (900, 276), 'Software engineer', 40, MUTED)
-    draw.rectangle((900, 340, 910, 350), fill=AMBER)
-    text(draw, (930, 329), 'Perth, Australia', 32, AMBER)
-    save(image, 'masthead-rendered.webp')
+    # The approved imagegen result is the source of truth. Copy without another
+    # lossy encode; generation itself is not deterministic or performed here.
+    source = HERE / 'source/navara-word-gap.webp'
+    with Image.open(source) as image:
+        if image.size != (2172, 724):
+            raise ValueError('Unexpected generated masthead dimensions')
+    copyfile(source, HERE / 'masthead-navara-word-gap.webp')
 
 
 def strip(name, number, title, kind):
