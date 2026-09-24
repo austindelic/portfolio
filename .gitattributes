@@ -1,0 +1,20 @@
+# Asset hashes must be identical on every release platform.
+apps/portfolio/src/shaders/black-hole/webgpu/*.wgsl text eol=lf
+apps/portfolio/src/shaders/black-hole/webgpu/uniform-layout.json text eol=lf
+apps/portfolio/src/data/*.json text eol=lf
+apps/portfolio/src/content/blog/**/index.md text eol=lf
+apps/portfolio/src/lib/ascii-analysis.ts text eol=lf
+apps/portfolio/src/components/BlackHoleCore.ts text eol=lf
+apps/tui/assets-manifest.json text eol=lf
+apps/tui/core/assets/**/*.md text eol=lf
+apps/tui/core/assets/*.json text eol=lf
+apps/tui/renderer/assets/*.json text eol=lf
+apps/tui/renderer/assets/*.wgsl text eol=lf
+apps/tui/core/tests/snapshots/*.txt text eol=lf
+
+# Bash also needs LF when invoked by the Windows release runner.
+apps/tui/scripts/*.sh text eol=lf
+
+# Binary assets must never undergo line-ending conversion.
+*.pdf binary
+*.woff2 binary
