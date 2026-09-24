@@ -1,31 +1,30 @@
-# Validation — 24 September 2026
+# Local CLI distribution validation — 24 September 2026
 
-Environment: Apple Silicon macOS, Apple M5 GPU, Rust 1.96.1.
+The terminal portfolio is distributed only through npm and runs on the visitor's computer. The website remains on Cloudflare Pages. The former hosted SSH service and server deployment have been removed.
 
-## Executed
+## Verified before the final removal checks
 
-- All six canonical WGSL shader passes compiled and ran on Metal.
-- Offscreen 120×40 probe: 1.30 s GPU initialization, 1,132 completed frames over 12 seconds, approximately 94.3 FPS. This measures the renderer, **not terminal output**.
-- The captured frame shows a lensed ring and accretion disk and is bundled as the static fallback.
-- Static-mode PTY navigation: Home → Blog → article → Socials → Explore, help and back, and resize through 60×18, 30×10, 80×24, 160×50, and 120×40.
-- PTY q, Ctrl-C, and SIGTERM exits restored original termios settings, cursor visibility, and alternate-screen state.
-- Automatic no-adapter fallback passed the same PTY navigation, resize, and cleanup flow in a GPU-restricted sandbox.
-- Release-binary maximum measured input-to-draw latency (including terminal writes): approximately 30.1 ms across the static and fallback runs. Earlier debug measurements excluded part of the draw and are superseded.
-- 13 Rust tests passed: content/navigation/Markdown/sanitization/layouts, renderer metadata/orbits, and CLI argument/Explore controls.
-- Clippy passed with warnings denied for the new CLI, core, and renderer.
-- Preserved SSH adapter passed `cargo check`.
-- Astro production build passed, generating eight pages; all 43 existing website regression tests passed.
-- Playwright verified Home's three projects, three published blog posts and a full article, seven social links, and Explore open/close. No page errors. Navigation produced three `ERR_ABORTED` requests during Astro client navigation; the destination pages loaded and assertions passed.
+- All six canonical WGSL shader passes ran on an Apple M5 using Metal.
+- The macOS ARM64 release was packed with dependency notices, installed in a directory containing spaces, and exercised through npm exec (npx's implementation) in a real PTY: version, navigation, help, resize, q and Ctrl-C passed.
+- Integrated Metal PTY run: 267 GPU frames in 11.77 seconds, approximately 22.68 FPS, with maximum measured input-to-draw latency of 26.87 ms. Navigation, Explore and resize passed. Static, Ctrl-C and SIGTERM runs restored terminal settings, cursor visibility and alternate-screen state.
+- Automatic fallback passed lifecycle checks without access to a GPU.
+- Windows x64 (including DirectX 12 dependencies) and Intel macOS compile checks passed. Compilation is not runtime or graphics verification on those platforms.
+- Linux ARM64 previously built and executed the live software Vulkan renderer. A local two-CPU offscreen probe measured approximately 10.5 FPS at 60×20; this is not a guarantee for other computers.
+- Website build, regression tests and browser navigation previously passed. No website source or public DNS is changed by removing the hosted terminal service.
 
-## Still required before claiming full acceptance
+## Release gates
 
-- Complete the integrated GPU PTY run and sustained terminal-output FPS measurement. The offscreen renderer measurement does not establish the 30 FPS terminal target.
-- Compare fixed-camera, fixed-time browser and terminal captures visually.
-- Exercise injected GPU device loss and verify the fallback transition while the terminal is active.
-- Demonstrate the release binary in a graphical macOS terminal with Departure Mono configured.
+- Run the complete five-platform release workflow and test the single assembled tarball on every target. Local development archives containing only one target must not be published.
+- Verify Windows WARP and physical GPU execution, platform browser/resume/clipboard actions, and terminal behavior on Windows and Intel macOS.
+- Complete fixed-camera browser/terminal visual comparison, injected GPU device-loss recovery and longer sustained rendering measurements.
+- Set up npm package ownership and trusted publishing. No npm package has been published during implementation.
+- Import/reconcile the existing Cloudflare Pages project before applying its infrastructure configuration. No infrastructure application is necessary to run the local CLI.
 
-The final Metal/PTY rerun was blocked by the automatic approval service returning `401 Unauthorized: Missing bearer or basic authentication`. This was an approval-service failure, not a safety rejection. Static lifecycle tests were completed separately without GPU access.
+Native route transitions use spherical easing over shared camera presets rather than the browser's complete motion-derivative transition solver. The npm package stays outside the Bun workspace, with generated binaries and dependency notices excluded from Git.
 
-The release binary was installed into `apps/tui/dist/install/bin`, then passed static, Ctrl-C, SIGTERM, and automatic-fallback PTY runs. The Apple Silicon archive is under `apps/tui/dist`.
+## After removing hosted SSH
 
-The native route transitions deliberately use spherical easing over shared camera presets, rather than a full port of the browser's derivative-based transition solver.
+- 14 remaining workspace Rust tests pass; workspace Clippy with warnings denied, Rust formatting and canonical asset checks pass.
+- Five Node launcher tests pass. The rebuilt macOS ARM64 development tarball passes npm exec version and PTY navigation, help, resize, q and Ctrl-C checks.
+- OpenTofu initialization, schema validation and the Cloudflare-only mocked plan pass. The provider lockfile no longer includes Hetzner, and no server or DNS resources remain in the configuration.
+- Release and infrastructure workflow lint passes. npm publication depends only on the five-platform package tests; container publishing and server tests have been removed.

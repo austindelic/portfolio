@@ -1,0 +1,24 @@
+name: Check infrastructure and launcher
+on:
+  pull_request:
+    paths: ['infra/**', 'apps/tui/npm/**', 'apps/tui/scripts/**', '.github/workflows/**']
+  push:
+    branches: [main]
+    paths: ['infra/**', 'apps/tui/npm/**', 'apps/tui/scripts/**', '.github/workflows/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with: { tofu_version: '1.11.5', tofu_wrapper: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: tofu -chdir=infra fmt -check -recursive
+      - run: tofu -chdir=infra init -backend=false -input=false -lockfile=readonly
+      - run: tofu -chdir=infra validate
+      - run: tofu -chdir=infra test
+      - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs

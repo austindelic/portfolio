@@ -1,8 +1,10 @@
 # Austin Delic — terminal portfolio
 
-A native macOS CLI with the website's content and GPU black hole, rendered as actual terminal characters. Ratatui and Crossterm handle the terminal; `wgpu` runs the website's WGSL shaders offscreen through Metal. There is no window, browser, or Bevy runtime.
+A native terminal CLI with the website's content and GPU black hole, rendered as actual terminal characters. Ratatui and Crossterm handle the terminal; `wgpu` runs the website's WGSL shaders offscreen through Metal, Vulkan or DirectX 12. There is no window, browser, or Bevy runtime.
 
 ## Install and run
+
+After npm publication, run `npx austindelic` with Node 22 or newer. The standalone distribution lives in `npm/` and bundles five native targets.
 
 From this repository, with a current Rust toolchain:
 
@@ -19,9 +21,9 @@ cargo run -p austindelic
 cargo run -p austindelic -- --renderer static
 ```
 
-Content, published blog posts, shaders, glyph metrics, static artwork, and the resume PDF are embedded. No network or repository is needed at runtime. External links use the macOS `open` command only when activated. Copy email uses `pbcopy`.
+Content, published blog posts, shaders, glyph metrics, static artwork, and the resume PDF are embedded. No network or repository is needed at runtime. External links and the resume use the platform default application only when activated. Copy email uses the system clipboard through `arboard`.
 
-The initial package targets Apple Silicon macOS. Metal is optional: automatic mode starts with a static black hole and keeps it if GPU initialization fails. The existing SSH adapter is preserved, with no new server functionality. Ratzilla and Trunk have been removed.
+The local CLI supports macOS Metal, Linux Vulkan and Windows DirectX 12. Automatic mode starts with a static black hole and keeps it if graphics initialization fails. The app runs locally and is distributed through npm; no application server is required. The website remains on Cloudflare Pages.
 
 ## Terminal setup
 
@@ -29,7 +31,7 @@ Install [Departure Mono](https://departuremono.com/) and select it in your termi
 
 ```sh
 austindelic --renderer auto --fps 30
-austindelic --renderer gpu             # fail clearly if Metal cannot initialize
+austindelic --renderer gpu             # fail clearly if graphics cannot initialize
 austindelic --renderer static          # never initialize the GPU
 austindelic --no-animation             # render on demand; no autonomous motion
 austindelic --ascii                    # ASCII borders and labels
@@ -61,10 +63,10 @@ Explore is entered through the navigation bar. In static mode it displays the fa
 
 ## Source and assets
 
-- `core`: content, Markdown presentation, navigation, terminal composition, and the compatibility facade used by SSH.
-- `cli`: terminal lifecycle, events, macOS actions, and renderer orchestration.
-- `renderer`: Metal device, six website shader passes, triple-buffered asynchronous cell readback, latest-value worker mailboxes, and authored route cameras.
-- `ssh`: preserved legacy server. Its existing privileged port/key configuration is unchanged.
+- `core`: content, Markdown presentation, navigation, terminal composition.
+- `cli`: terminal lifecycle, events, platform actions, and renderer orchestration.
+- `renderer`: graphics device, six website shader passes, triple-buffered asynchronous cell readback, latest-value worker mailboxes, and authored route cameras.
+- `npm`: standalone public package and native executable launcher.
 
 Canonical profile/project/social records and camera presets live in the portfolio application's `src/data`. Astro reads those files directly. Blog Markdown remains under `src/content/blog`. The TUI build parses frontmatter, excludes `published: false`, and embeds posts newest first.
 
@@ -92,7 +94,6 @@ GPU glyph output is font-independent character data, but visual coverage will va
 cargo test --manifest-path apps/tui/Cargo.toml -p tui-core -p tui-renderer -p austindelic
 cargo clippy --manifest-path apps/tui/Cargo.toml -p tui-core -p tui-renderer -p austindelic --all-targets -- -D warnings
 cargo fmt --manifest-path apps/tui/Cargo.toml -p tui-core -p tui-renderer -p austindelic --check
-cargo check --manifest-path apps/tui/Cargo.toml -p tui-ssh
 uv run --with pyte apps/tui/scripts/smoke.py apps/tui/target/debug/austindelic /tmp/austindelic-smoke --gpu
 ```
 
