@@ -1,7 +1,9 @@
 name: Release terminal portfolio
 on:
   push:
+    branches: [main]
     tags: ['tui-v*']
+    paths: ['apps/tui/**', '.github/workflows/release-tui.yml']
   workflow_dispatch:
 permissions:
   contents: read

@@ -16,7 +16,7 @@ Use Tab and arrows to navigate, Enter to activate, `?` for help, and Ctrl-C to q
 
 This directory is a standalone npm distribution, outside the Bun workspace. Application code stays in the adjacent Rust crates. Native files and dependency notices are generated, not committed.
 
-The `release-tui.yml` workflow builds five targets, checks Cargo/npm/tag versions, generates license notices, creates one tarball, and tests that exact tarball on all five platforms. `tui-v0.1.0` corresponds to Cargo and npm version `0.1.0`. A manual workflow run builds and tests without publishing. Never publish a locally packed single-platform test archive.
+The `release-tui.yml` workflow automatically builds and tests when changes to `apps/tui/` or the release workflow land on `main`. It builds five targets, checks Cargo/npm/tag versions, generates license notices, creates one tarball, and tests that exact tarball on all five platforms. Download the `npm-package` artifact after the run passes. Main-branch and manual runs do not publish; publication requires a `tui-vX.Y.Z` tag and npm trusted publishing setup. `tui-v0.1.0` corresponds to Cargo and npm version `0.1.0`. Never publish a locally packed single-platform test archive.
 
 Before the first publication, confirm ownership/availability of the npm name `austindelic`, complete npm's initial package setup, and configure its trusted publisher for this GitHub repository and `release-tui.yml`. Subsequent tag releases use GitHub OIDC with npm provenance. No npm token is stored here.
 
