@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import publisher from '../scripts/publish.cjs';
+import { publishSnapshot } from './publish-snapshot.mjs';
 
 const mode = process.argv[2];
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
@@ -41,32 +41,7 @@ if (mode === 'plan') {
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `release=${plan.release}\n`);
 } else if (mode === 'publish' || mode === 'recover') {
   assert.equal(process.env.GITHUB_REF, 'refs/heads/main', 'Publication requires main');
-  const bundle = JSON.parse(readFileSync('packed/release.json'));
-  publisher.validateBundle('packed', bundle);
-  assert.ok(bundle.release, 'Verification-only artifact cannot be published');
-  assert.equal(git('rev-parse', 'HEAD'), bundle.sha, 'Checkout must match the tested source');
-  if (mode === 'recover') {
-    const tags = git('tag', '--list', 'tui-v*').split('\n').filter(Boolean);
-    const numeric = v => v.replace(/^tui-v/, '').split('.').map(Number);
-    const current = numeric(bundle.version);
-    for (const tag of tags.filter(t => /^tui-v\d+\.\d+\.\d+$/.test(t))) {
-      const parts = numeric(tag);
-      const index = parts.findIndex((part, i) => part !== current[i]);
-      assert.ok(index < 0 || parts[index] < current[index], 'A newer release exists; do not move registry latest tags backwards');
-    }
-    if (tags.includes(bundle.tag)) {
-      assert.equal(git('rev-parse', `${bundle.tag}^{commit}`), bundle.sha, 'Recovery requires the original release tag');
-      await publisher.publishAll('packed');
-    } else {
-      // Also activates an already-tested first release after bootstrap, without
-      // rebuilding packages whose bytes may already exist on npm.
-      assert.ok(await semanticRelease(options), 'Release plan is stale; cannot publish these artifacts');
-    }
-  } else {
-    const result = await semanticRelease(options);
-    assert.ok(result, 'No release selected; use recovery for an already-tagged release');
-  }
-  await githubRelease(bundle);
+  await publishSnapshot({ createRelease: githubRelease });
 } else {
   throw new Error('Usage: node apps/tui/release/run.mjs plan|publish|recover');
 }
