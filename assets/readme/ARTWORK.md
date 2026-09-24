@@ -61,8 +61,8 @@ Palette: charcoal `#0d1117`, warm white `#e6e3db`, amber `#ffa133`, and muted
 gray `#9da6b2`. All assets are static and served from this repository. The
 optional Spotify embed remains an external service.
 
-The display assets total 87,957 bytes; including the reusable source image and SVG,
-all image assets total 492,652 bytes. Rebuilding with the verified environment
+The display assets total 87,825 bytes; including the reusable source image and SVG,
+all image assets total 492,581 bytes. Rebuilding with the verified environment
 produces identical files.
 
 ## Layout verification
