@@ -1,0 +1,6 @@
+cloudflare_account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+# Import the existing Pages project instead of creating a duplicate.
+pages_project_name = "austindelic"
+github_owner = "austindelic"
+github_repo = "austindelic"
+production_branch = "main"

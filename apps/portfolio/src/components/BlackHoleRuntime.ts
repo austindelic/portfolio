@@ -65,8 +65,19 @@ import {
 	varyOrbit,
 } from "./BlackHoleOrbit";
 
+export type ExploreRenderSettings = {
+	asciiEnabled: boolean;
+	sourceScale: number;
+};
+
 export type RuntimeState = {
-	exploration?: { enter: () => boolean; exit: () => void; reset: () => void };
+	exploration?: {
+		enter: () => boolean;
+		exit: () => void;
+		reset: () => void;
+		getSettings: () => ExploreRenderSettings;
+		updateSettings: (next: Partial<ExploreRenderSettings>) => void;
+	};
 	resumeAnimation?: {
 		phase: AnimationPhase;
 		sequence: BlackHoleAnimationKeyframe[];
@@ -213,6 +224,9 @@ function startRendererSession(
 
 	let exploring = false;
 	let heldCameraPath: string | null = null;
+	let exploreAsciiEnabled = true;
+	// Keep the original sampling budget until the user moves the resolution slider.
+	let exploreSourceScale: number | undefined;
 	const acceptsInput = () => interactive || exploring;
 	const settings = resolveRenderSettings(renderSettings);
 	const runtimeProfile = detectRuntimeProfile();
@@ -776,7 +790,7 @@ function startRendererSession(
 		if (exploring)
 			return {
 				controls: state.controls,
-				asciiEnabled: settings.asciiEnabled,
+				asciiEnabled: exploreAsciiEnabled,
 				active: false,
 			};
 		if (!animationIsEnabled()) {
@@ -941,18 +955,23 @@ function startRendererSession(
 	};
 
 	const sourceDimension = (dimension: number, cell: number) =>
-		resolvedRendererMode === "ascii-cell"
-			? Math.min(
-					dimension,
-					Math.ceil(dimension / Math.max(2, cell)) *
-						asciiSampleSide(settings.qualityValue),
-				)
-			: asciiSourceDimension(
-					dimension,
-					Math.min(state.atlasConfig.cellSize.x, state.atlasConfig.cellSize.y),
-					settings.qualityValue,
-					settings.sceneScale,
-				);
+		exploring && exploreSourceScale !== undefined
+			? Math.max(1, Math.ceil(dimension * exploreSourceScale))
+			: resolvedRendererMode === "ascii-cell"
+				? Math.min(
+						dimension,
+						Math.ceil(dimension / Math.max(2, cell)) *
+							asciiSampleSide(settings.qualityValue),
+					)
+				: asciiSourceDimension(
+						dimension,
+						Math.min(
+							state.atlasConfig.cellSize.x,
+							state.atlasConfig.cellSize.y,
+						),
+						settings.qualityValue,
+						settings.sceneScale,
+					);
 	const createFallbackTargets = () => {
 		sceneWidth = allocatedTargetDimension(
 			sourceDimension(renderWidth, settings.cellWidth),
@@ -1051,7 +1070,7 @@ function startRendererSession(
 			prepassScale: 1,
 			bloomScale: settings.bloomScale,
 			sceneScale: settings.sceneScale,
-			asciiEnabled: lastAnimatedAsciiEnabled,
+			asciiEnabled: exploring ? exploreAsciiEnabled : lastAnimatedAsciiEnabled,
 			asciiCellSize: activeAtlas.cellSize,
 			renderWidth,
 			renderHeight,
@@ -1342,6 +1361,8 @@ function startRendererSession(
 				movementSpeed,
 				controls: { ...state.controls },
 			};
+			exploreAsciiEnabled = lastAnimatedAsciiEnabled;
+			exploreSourceScale = undefined;
 			exploring = true;
 			Object.assign(state.controls, {
 				timeScale: 2,
@@ -1351,6 +1372,24 @@ function startRendererSession(
 			requestRender();
 			return true;
 		},
+		getSettings: () => ({
+			asciiEnabled: exploreAsciiEnabled,
+			sourceScale:
+				exploreSourceScale ??
+				sourceDimension(renderWidth, settings.cellWidth) /
+					Math.max(1, renderWidth),
+		}),
+		updateSettings(next) {
+			if (!exploring || disposed || contextLost) return;
+			if (typeof next.asciiEnabled === "boolean")
+				exploreAsciiEnabled = next.asciiEnabled;
+			if (next.sourceScale !== undefined && Number.isFinite(next.sourceScale)) {
+				exploreSourceScale = Math.min(1, Math.max(0.01, next.sourceScale));
+				sizeDirty = true;
+			}
+			camera.asciiHistoryVersion = (camera.asciiHistoryVersion ?? 0) + 1;
+			requestRender();
+		},
 		reset: resetExploration,
 		exit() {
 			if (!explorationEntry) return;
@@ -1359,6 +1398,8 @@ function startRendererSession(
 			heldCameraPath = window.location.pathname;
 			Object.assign(state.controls, explorationEntry.controls);
 			exploring = false;
+			exploreSourceScale = undefined;
+			sizeDirty = true;
 			explorationEntry = null;
 			canvas.dispatchEvent(
 				new Event("black-hole-explore-end", { bubbles: true }),
@@ -1609,6 +1650,9 @@ export function mountBlackHoleRuntime(
 		enterExploration: () => state.exploration?.enter() ?? false,
 		exitExploration: () => state.exploration?.exit(),
 		resetExploration: () => state.exploration?.reset(),
+		getExploreRenderSettings: () => state.exploration?.getSettings(),
+		updateExploreRenderSettings: (next: Partial<ExploreRenderSettings>) =>
+			state.exploration?.updateSettings(next),
 		updateSettings(next: Partial<RuntimeOptions>) {
 			if (!disposed) {
 				options = { ...options, ...next };

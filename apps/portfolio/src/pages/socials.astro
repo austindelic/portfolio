@@ -7,68 +7,20 @@ import { Camera } from "pixelarticons/react/Camera.js";
 import { Music } from "pixelarticons/react/Music.js";
 import { Briefcase } from "pixelarticons/react/Briefcase.js";
 import { Mail } from "pixelarticons/react/Mail.js";
+import portfolio from "../data/portfolio.json";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const socials: Array<{
-	title: string;
-	icon: typeof Globe;
-	description?: string;
-	href: string;
-	badge?: string;
-}> = [
-	{
-		title: "Portfolio",
-		icon: Globe,
-		description: "austindelic.com",
-		href: "https://austindelic.com",
-	},
-	{
-		title: "GitHub",
-		icon: Code,
-		description: "@austindelic",
-		href: "https://github.com/austindelic",
-	},
-	{
-		title: "YouTube",
-		icon: Video,
-		description: "Austin Develops",
-		href: "https://youtube.com/@austindevelops",
-		badge: "new",
-	},
-	{
-		title: "Instagram",
-		icon: Camera,
-		description: "@austin.develops",
-		href: "https://instagram.com/austin.develops",
-	},
-	{
-		title: "TikTok",
-		icon: Music,
-		description: "@austin.develops",
-		href: "https://tiktok.com/@austin.develops",
-	},
-	{
-		title: "LinkedIn",
-		icon: Briefcase,
-		description: "Austin Delic",
-		href: "https://linkedin.com/in/austindelic",
-	},
-	{
-		title: "Email",
-		icon: Mail,
-		description: "austin@austindelic.com",
-		href: "mailto:austin@austindelic.com",
-	},
-];
+const socials = portfolio.socials;
+const icons = { Globe, Code, Video, Camera, Music, Briefcase, Mail };
 ---
 
 <BaseLayout navbarActiveItemID="socials">
   <section class="portfolio-section directory-panel" aria-labelledby="links-heading">
     <div class="section-label"><span>Social links</span><span>{String(socials.length).padStart(2, "0")}</span></div>
-    <h1 id="links-heading" class="page-title">Austin Delic<span class="text-primary">.</span></h1>
+    <h1 id="links-heading" class="page-title">{portfolio.profile.name}<span class="text-primary">.</span></h1>
     <ul class="ruled-list">
       {socials.map((item, index) => {
-        const Icon = item.icon;
+        const Icon = icons[item.icon as keyof typeof icons];
         return (
         <li><a class="social-row" href={item.href} target={item.href.startsWith("mailto:") ? undefined : "_blank"} rel={item.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}>
           <span class="row-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>

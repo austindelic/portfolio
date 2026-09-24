@@ -1,0 +1,18 @@
+                                                            
+ ┌────────────────────────────────────────────────────────┐ 
+ │  ⌂ Home  ≡ Blog  @ Socials  ↓ Resume  ◎ Explore        │ 
+ │ PERTH / 00:00:00                                       │ 
+ │                                                        │ 
+ │ Building Tactify                                       │ 
+ │ 2026-07-08                                             │ 
+ │ Notes on turning an accessibility problem into an AI   │ 
+ │ product that converts visual learning material into    │ 
+ │ tactile graphics and guided audio.                     │ 
+ │                                                        │ 
+ │ Tactify started as a simple frustration: a lot of      │ 
+ │ learning material assumes vision as the default        │ 
+ │ interface.                                             │ 
+ │                                                        │ 
+ └────────────────────────────────────────────────────────┘ 
+                                                            
+Tab focus  Enter open  j/k scroll  ? help  q quit  | Static 

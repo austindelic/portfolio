@@ -1,0 +1,4 @@
+# This hosted label postdates actionlint 1.7.7's bundled runner list.
+# https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+self-hosted-runner:
+  labels: [macos-15-intel]

@@ -17,7 +17,6 @@ async (page) => {
 		"/blog/still-and-desired-state/",
 		"/socials/",
 		"/404.html",
-		"/black-hole/",
 	]) {
 		await page.goto(origin + path, { waitUntil: "networkidle" });
 		await page.evaluate(() => document.fonts.ready);
@@ -52,7 +51,7 @@ async (page) => {
 		});
 	}
 	await client.detach();
-	const unexpectedPublicModules = results.filter(r => r.path !== "/black-hole/").flatMap(r => r.resources.filter(asset => /\.js(?:\?|$)/.test(asset.url) && !/\/(?:BlackHoleBackground\.|BlackHoleRuntime\.|ClientRouter\.)/.test(asset.url)).map(asset => ({path:r.path,url:asset.url})));
+	const unexpectedPublicModules = results.flatMap(r => r.resources.filter(asset => /\.js(?:\?|$)/.test(asset.url) && !/\/(?:BlackHoleBackground\.|BlackHoleRuntime\.|ClientRouter\.)/.test(asset.url)).map(asset => ({path:r.path,url:asset.url})));
 	const failures = results.filter(
 		(r) =>
 			!r.fontReady ||

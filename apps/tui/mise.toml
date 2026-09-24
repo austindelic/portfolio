@@ -1,21 +1,17 @@
 [tools]
-"cargo:trunk" = "latest"
 rust = "latest"
 
-[tasks.ssh]
-description = "Run the SSH portfolio server"
-run = "cargo run --bin tui"
-
-[tasks.web]
-description = "Run the browser TUI (trunk dev server)"
-run = "trunk serve"
-dir = "wasm"
+[tasks.dev]
+description = "Run the native terminal portfolio"
+run = "cargo run -p austindelic"
 
 [tasks.build]
-description = "Build all crates"
-run = "cargo build --release"
+description = "Build the native portfolio"
+run = "cargo build --release -p austindelic"
 
-[tasks.build-web]
-description = "Build the WASM app for production"
-run = "trunk build --release"
-dir = "wasm"
+[tasks.assets]
+description = "Sync canonical website assets"
+run = "node scripts/sync-assets.mjs"
+
+[tasks.check-assets]
+run = "node scripts/sync-assets.mjs --check"

@@ -33,9 +33,13 @@ test("exit preserves the complete explored pose; reset uses each session's entry
 		"canvas",
 		`let disposed = false, contextLost = false, exploring = false;
 		let heldCameraPath = null, movementSpeed = 2.5, lastTime = 0;
+		let exploreAsciiEnabled = true, exploreSourceScale, sizeDirty = false;
+		const lastAnimatedAsciiEnabled = true, renderWidth = 100;
+		const settings = { cellWidth: 6 };
+		const sourceDimension = () => 50;
 		const snapshotRuntime = () => {}, requestRender = () => {};
 		${exploration}
-		return () => ({ exploring, heldCameraPath });`,
+		return () => ({ exploring, heldCameraPath, exploreSourceScale, sizeDirty });`,
 	)(
 		camera,
 		state,
@@ -52,6 +56,11 @@ test("exit preserves the complete explored pose; reset uses each session's entry
 		up: [0, 0, 1],
 		universeSign: -1,
 	});
+	state.exploration.updateSettings({ asciiEnabled: false, sourceScale: 0.25 });
+	assert.deepEqual(state.exploration.getSettings(), {
+		asciiEnabled: false,
+		sourceScale: 0.25,
+	});
 	const explored = structuredClone(camera);
 	state.exploration.exit();
 	assert.deepEqual(
@@ -60,13 +69,22 @@ test("exit preserves the complete explored pose; reset uses each session's entry
 		"position, orientation and roll must survive exit",
 	);
 	assert.deepEqual(state.controls, controls);
-	assert.deepEqual(status(), { exploring: false, heldCameraPath: "/blog/one" });
+	assert.deepEqual(status(), {
+		exploring: false,
+		heldCameraPath: "/blog/one",
+		exploreSourceScale: undefined,
+		sizeDirty: true,
+	});
 	assert.equal(clears, 2);
 	assert.equal(state.exploration.enter(), true);
+	assert.deepEqual(state.exploration.getSettings(), {
+		asciiEnabled: true,
+		sourceScale: 0.5,
+	});
 	camera.position = [20, 30, 90];
 	camera.up = [0, 1, 0];
 	state.exploration.reset();
-	assert.deepEqual(camera, { ...explored, asciiHistoryVersion: 1 });
+	assert.deepEqual(camera, { ...explored, asciiHistoryVersion: 2 });
 	state.exploration.exit();
-	assert.deepEqual(camera, { ...explored, asciiHistoryVersion: 1 });
+	assert.deepEqual(camera, { ...explored, asciiHistoryVersion: 2 });
 });

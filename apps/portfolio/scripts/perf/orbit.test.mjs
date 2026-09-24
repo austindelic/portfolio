@@ -29,10 +29,15 @@ const configSource = await readFile(
 	new URL("../../src/config/black-hole-animation.ts", import.meta.url),
 	"utf8",
 );
-const configCode = ts.transpile(configSource, {
-	target: ts.ScriptTarget.ES2022,
-	module: ts.ModuleKind.ESNext,
-});
+const routeData = await readFile(
+	new URL("../../src/data/black-hole-routes.json", import.meta.url),
+	"utf8",
+);
+// The test imports transpiled source as a data URL, so inline its JSON dependency.
+const configCode = ts.transpile(
+	configSource.replace(/import routeData from "[^"\n]+";/, `const routeData = ${routeData};`),
+	{ target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+);
 const { BLACK_HOLE_ANIMATION_ROUTES: routes } = await import(
 	`data:text/javascript;base64,${Buffer.from(configCode).toString("base64")}`
 );
