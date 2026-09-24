@@ -37,16 +37,27 @@ fn main() -> Result<()> {
         cmd.args(["--renderer", "static"]);
         cmd.env("TERM", "xterm-256color");
         let mut reader = pair.master.try_clone_reader()?;
-        let mut writer = pair.master.take_writer()?;
-        let mut child = pair.slave.spawn_command(cmd)?;
-        drop(pair.slave);
+        let writer = Arc::new(Mutex::new(pair.master.take_writer()?));
         let output = Arc::new(Mutex::new(Vec::<u8>::new()));
         let capture = output.clone();
+        let replies = writer.clone();
         std::thread::spawn(move || {
             let mut bytes = [0; 8192];
+            let mut query = [0; 4];
             while let Ok(n) = reader.read(&mut bytes) {
                 if n == 0 {
                     break;
+                }
+                // ConPTY inherits the cursor and can block startup/teardown
+                // until its terminal host answers this (possibly split) query.
+                for byte in &bytes[..n] {
+                    query.rotate_left(1);
+                    query[3] = *byte;
+                    if query == *b"\x1b[6n" {
+                        let mut writer = replies.lock().unwrap();
+                        let _ = writer.write_all(b"\x1b[1;1R");
+                        let _ = writer.flush();
+                    }
                 }
                 let mut out = capture.lock().unwrap();
                 if out.len() + n > 1_000_000 {
@@ -55,11 +66,17 @@ fn main() -> Result<()> {
                 out.extend_from_slice(&bytes[..n]);
             }
         });
+        let mut child = pair.slave.spawn_command(cmd)?;
+        drop(pair.slave);
+        let send = |bytes: &[u8]| -> std::io::Result<()> {
+            let mut writer = writer.lock().unwrap();
+            writer.write_all(bytes)?;
+            writer.flush()
+        };
         let result = (|| -> Result<()> {
             wait_for(&output, "Austin")?;
             output.lock().unwrap().clear();
-            writer.write_all(b"\x1b[C\r")?;
-            writer.flush()?;
+            send(b"\x1b[C\r")?;
             wait_for(&output, "Blog posts")?;
             pair.master.resize(PtySize {
                 rows: 40,
@@ -68,11 +85,9 @@ fn main() -> Result<()> {
                 pixel_height: 0,
             })?;
             output.lock().unwrap().clear();
-            writer.write_all(b"?")?;
-            writer.flush()?;
+            send(b"?")?;
             wait_for(&output, "Tab")?;
-            writer.write_all(&[quit])?;
-            writer.flush()?;
+            send(&[quit])?;
             let deadline = Instant::now() + Duration::from_secs(8);
             loop {
                 if let Some(status) = child.try_wait()? {

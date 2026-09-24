@@ -94,6 +94,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with: { name: 'native-${{ matrix.npm }}', path: release }
       - name: Test the exact npm tarball in a real terminal
+        timeout-minutes: 2
         shell: bash
         run: |
           export NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
