@@ -1,14 +1,29 @@
 name: Check infrastructure and launcher
 on:
   pull_request:
-    paths: ['infra/**', 'apps/tui/npm/**', 'apps/tui/scripts/**', '.github/workflows/**']
+    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', '.github/workflows/**', '.gitattributes']
   push:
     branches: [main]
-    paths: ['infra/**', 'apps/tui/npm/**', 'apps/tui/scripts/**', '.github/workflows/**']
+    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', '.github/workflows/**', '.gitattributes']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  assets:
+    name: Asset sync (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Exercise checkout with automatic line-ending conversion
+        run: git config --global core.autocrlf true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: node apps/tui/scripts/sync-assets.mjs --check
+      - run: git diff --exit-code
   validate:
     runs-on: ubuntu-24.04
     steps:
