@@ -97,6 +97,9 @@ jobs:
         shell: bash
         run: |
           export NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            export NPM_CLI_JS="$(node -p "require('node:path').join(require('node:path').dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')")"
+          fi
           suffix=''; if [[ "$RUNNER_OS" == Windows ]]; then suffix='.exe'; fi
           chmod +x release/test/${{ matrix.npm }}/* || true
           node apps/tui/scripts/test-packed.cjs packed/*.tgz "release/test/${{ matrix.npm }}/pty-smoke$suffix"
