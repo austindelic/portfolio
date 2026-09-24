@@ -33,6 +33,16 @@ tofu test
 
 The test uses a mocked provider and a plan-only run, with no remote changes. Use `tofu init -reconfigure` before real state operations after backend-disabled checks. Provider versions/checksums are pinned in the dependency lockfile.
 
+After a deliberate provider version update, regenerate the lockfile for both GitHub's Linux AMD64 runner and Apple Silicon macOS. From the repository root:
+
+```sh
+tofu -chdir=infra providers lock \
+  -platform=linux_amd64 \
+  -platform=darwin_arm64
+```
+
+Commit the generated lockfile. Verify initialization with `-lockfile=readonly`, validation and mocked tests on both platforms, and confirm the checks leave the lockfile unchanged. Keep CI's read-only lockfile check enabled; a lockfile generated for only one platform can fail provider validation on another.
+
 State lives at `infra/state/terraform.tfstate` and is excluded from Git, alongside local variables and provider downloads. Back up the entire state directory to access-controlled encrypted storage after imports and applies. Avoid concurrent operations from separate copies of local state. Credentials belong in environment variables, never variable files or version control.
 
 After a website deployment, verify home, blog, articles, socials, assets, resume PDF, missing-page status and browser errors at the Pages URL and the existing public domain. Website changes can be rolled back through Cloudflare's deployment history. npm releases are independent of website infrastructure; see `apps/tui/npm/README.md` for publishing setup.
