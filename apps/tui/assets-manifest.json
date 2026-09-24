@@ -8,6 +8,7 @@
   "apps/portfolio/src/data/portfolio.json": "79780f55cb93efdecf262b84acb4c78037b26ec63ae43c9dca7537fedb2f6bd7",
   "apps/portfolio/public/resume.pdf": "5b40b5256eee99297cc9c54486f491091e227cffb085e16923114f269555a946",
   "apps/portfolio/src/content/blog/building-tactify/index.md": "81a7109ad32a22f4f1e5e27aee945cbf58835275b891c4afc47e18273938e2f1",
+  "apps/portfolio/src/content/blog/contracts-in-rust-and-cpp/index.md": "47929c0696b0df74a7028c3ae7632285bd33cfaa7fbe160a5a29a80c79ecf83e",
   "apps/portfolio/src/content/blog/example/index.md": "703a3c56f23d83d76ff3c068b61abbeb9371574ece234f258c0e88a2a8c2236b",
   "apps/portfolio/src/content/blog/production-systems-notes/index.md": "692a59d42775fe213294d544c8db49b60857234ee0b580de7fd957da70fa6fce",
   "apps/portfolio/src/content/blog/still-and-desired-state/index.md": "28df9b2af2fe59d1c8f067b9dfa1dc35e2430c285e0402b122c8049c0fde1fbb",
