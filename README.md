@@ -1,4 +1,4 @@
-<a href="https://austindelic.com"><img src="./assets/readme/masthead.webp" width="1800" alt="Austin Delic — software engineer in Perth, Australia. Artwork captured from my ASCII black-hole renderer." /></a>
+<a href="https://austindelic.com"><img src="./assets/readme/masthead-rendered.webp" width="1800" alt="Austin Delic — software engineer in Perth, Australia. Artwork captured from my ASCII black-hole renderer." /></a>
 
 I'm Austin, a software engineer in Perth and Founding Engineer at **The Next Something**.
 
@@ -16,7 +16,7 @@ A website and a native terminal app, built around an interactive ASCII black hol
 
 [Explore the website ↗](https://austindelic.com) · [Terminal source](./apps/tui/) · [Shared shaders](./packages/black-hole/)
 
-<h3><a href="https://github.com/austindelic/still"><img src="./assets/readme/still.webp" width="1800" alt="02 / Still" /></a></h3>
+<h3><a href="https://github.com/austindelic/still"><img src="./assets/readme/still-environment.webp" width="1800" alt="02 / Still" /></a></h3>
 
 A project environment manager that makes setup explicit: typed configuration, installation plans, lockfiles, and trust checks when your config changes.
 

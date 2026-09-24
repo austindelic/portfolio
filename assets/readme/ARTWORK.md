@@ -22,6 +22,9 @@ The Still illustration represents connected environment layers. Tactify uses an
 abstract dot diagram and audio waveform. These are geometric illustrations,
 not screenshots of those products or Braille text.
 
+The masthead and Still strip use new filenames to avoid cached copies of the
+previous images on GitHub. Still connectors stop at the final card.
+
 ## Rebuild
 
 Run from the repository root with Python and Pillow available:
@@ -37,8 +40,8 @@ the Pillow build must support WOFF2. It does not add a dependency to the app.
 `render.py` is the editable source for placement, typography, colors, geometric
 illustrations, and the four standalone SVG icons. It produces:
 
-- `masthead.webp` — 1800 × 450.
-- `portfolio.webp`, `still.webp`, `tactify.webp` — 1800 × 220 each.
+- `masthead-rendered.webp` — 1800 × 450.
+- `portfolio.webp`, `still-environment.webp`, `tactify.webp` — 1800 × 220 each.
 - `browser.svg`, `terminal.svg`, `systems.svg`, `tactile.svg` — transparent 24px icons.
 
 Departure Mono is rasterized with the actual font, so GitHub does not need to
@@ -49,8 +52,8 @@ Palette: charcoal `#0d1117`, warm white `#e6e3db`, amber `#ffa133`, and muted
 gray `#9da6b2`. All assets are static and served from this repository. The
 optional Spotify embed remains an external service.
 
-The display assets total 190,531 bytes; including the reusable source image,
-all image assets total 593,507 bytes. Rebuilding with the verified environment
+The display assets total 190,355 bytes; including the reusable source image,
+all image assets total 593,331 bytes. Rebuilding with the verified environment
 produces identical files.
 
 ## Layout verification
