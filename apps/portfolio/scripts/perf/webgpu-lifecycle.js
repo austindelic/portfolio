@@ -140,9 +140,7 @@ async (page) => {
 			});
 			for (const path of [
 				"/blog/",
-				"/blog/production-systems-notes/",
-				"/blog/building-tactify/",
-				"/blog/still-and-desired-state/",
+				"/blog/site-and-terminal/",
 				"/socials/",
 				"/",
 			]) {

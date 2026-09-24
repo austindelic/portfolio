@@ -134,7 +134,7 @@
 	}
 
 	.portfolio-theme .portfolio-section {
-		background: rgb(20 20 20 / 65%);
+		background: rgb(20 20 20 / 94%);
 		text-shadow: 0 1px 2px #000;
 	}
 }
@@ -357,21 +357,21 @@ body::-webkit-scrollbar {
 	}
 }
 
-/* Gruvbox Material Dark code surfaces */
+/* Ayu Dark code surfaces, matching Shiki’s bundled theme. */
 :root {
-	--code-bg: #1d2021;
-	--code-bg-soft: #282828;
-	--code-fg: #d4be98;
-	--code-muted: #928374;
-	--code-border: #504945;
-	--code-accent: #a9b665;
+	--code-bg: #0b0e14;
+	--code-bg-soft: #0b0e14;
+	--code-fg: #bfbdb6;
+	--code-muted: #626a73;
+	--code-border: #232b36;
+	--code-accent: #e6b450;
 }
 
 .astro-code,
 pre {
 	border: 1px solid var(--code-border);
 	border-radius: 0.5rem;
-	background: var(--code-bg) !important;
+	background: var(--code-bg);
 	color: var(--code-fg);
 	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
 }
@@ -382,7 +382,7 @@ pre {
 }
 
 :not(pre) > code {
-	border: 1px solid rgb(80 73 69 / 0.7);
+	border: 1px solid var(--code-border);
 	border-radius: 0.25rem;
 	background: var(--code-bg-soft);
 	color: var(--code-accent);
@@ -416,12 +416,6 @@ pre {
 	--accent: #ffa133;
 	--accent-foreground: #222222;
 	--destructive: #f08a7c;
-	--code-bg: #222222;
-	--code-bg-soft: #2d2d29;
-	--code-fg: #c0c0c0;
-	--code-muted: #a0a08b;
-	--code-border: #606052;
-	--code-accent: #ffa133;
 	--line: #8a8a6f;
 	color-scheme: dark;
 }
@@ -710,16 +704,16 @@ pre {
 	right: 0;
 	border-right: 1px solid transparent;
 }
-:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible)::before,
-:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible)::after {
+a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible)::before,
+a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible)::after {
 	border-color: var(--primary);
 }
-.project-row:is(:hover, :focus-visible) .row-category {
+a.project-row:is(:hover, :focus-visible) .row-category {
 	background: var(--primary);
 	border-color: var(--primary);
 	color: #222;
 }
-:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
+a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
 	background: #2a2a26;
 }
 .small-badge {
@@ -996,3 +990,69 @@ body.bh-exploring { overflow: hidden; }
 #explore-settings-content input[type="range"] { width: 100%; }
 [data-explore-reset] { border: 1px solid var(--border); }
 .bh-explore button:hover { background: #ffffff0d; }
+
+/* Give the writing room without changing the terminal-inspired shell. */
+.portfolio-theme .portfolio-article {
+	background: rgb(20 20 20 / 94%);
+}
+.page-intro {
+	margin: 8px 0 20px;
+	color: var(--muted-foreground);
+	line-height: 1.7;
+}
+.page-intro a {
+	color: var(--primary);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.portfolio-article .article-deck {
+	color: var(--muted-foreground);
+	margin: 16px 0 24px;
+	font-size: 15px;
+}
+.portfolio-article img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border: 1px solid var(--border);
+	background: #000;
+}
+.portfolio-article .article-hero {
+	margin: 24px 0 32px;
+}
+.portfolio-article figcaption,
+.portfolio-article p:has(> em:only-child) {
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--muted-foreground);
+	margin-top: 10px;
+}
+.portfolio-article p:has(> img) {
+	margin-top: 24px;
+}
+.portfolio-article h2 {
+	margin-top: 36px;
+}
+.portfolio-theme pre {
+	border: 1px solid #232b36;
+	padding: 18px;
+	margin: 20px 0;
+	line-height: 1.8;
+	tab-size: 2;
+}
+.portfolio-theme :not(pre) > code {
+	background: #0b0e14;
+	color: #e6b450;
+	border: 1px solid #232b36;
+	padding: 1px 4px;
+}
+.portfolio-theme pre code {
+	background: transparent;
+	padding: 0;
+}
+@media (max-width: 767px) {
+	.post-row {
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+}

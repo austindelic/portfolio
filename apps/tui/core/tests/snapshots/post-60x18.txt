@@ -3,16 +3,16 @@
  │  ⌂ Home  ≡ Blog  @ Socials  ↓ Resume  ◎ Explore        │ 
  │ PERTH / 00:00:00                                       │ 
  │                                                        │ 
- │ Building Tactify                                       │ 
- │ 2026-07-08                                             │ 
- │ Notes on turning an accessibility problem into an AI   │ 
- │ product that converts visual learning material into    │ 
- │ tactile graphics and guided audio.                     │ 
+ │ Rendering a Black Hole in the Browser and Terminal     │ 
+ │ 2026-09-25                                             │ 
+ │ How the Astro site and Rust terminal app share their   │ 
+ │ content, shaders and black hole.                       │ 
  │                                                        │ 
- │ Tactify started as a simple frustration: a lot of      │ 
- │ learning material assumes vision as the default        │ 
- │ interface.                                             │ 
- │                                                        │ 
+ │ This portfolio has two interfaces: an Astro website    │ 
+ │ and a native Rust terminal app. They share the content │ 
+ │ and black-hole shaders. The terminal version renders   │ 
+ │ the scene as coloured characters, with Ratatui drawing │ 
+ │ the interface over it.                                 │ 
  └────────────────────────────────────────────────────────┘ 
                                                             
 Tab focus  Enter open  j/k scroll  ? help  q quit  | Static 

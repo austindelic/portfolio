@@ -14,7 +14,7 @@ A website and a native terminal app, built around an interactive ASCII black hol
 
 **Astro · React · Rust · Ratatui · wgpu**
 
-[Explore the website ↗](https://austindelic.com) · [Terminal source](./apps/tui/) · [Shared shaders](./packages/black-hole/)
+[Explore the website ↗](https://austindelic.com) · [How the site and terminal fit together ↗](https://austindelic.com/blog/site-and-terminal/) · [Terminal source](./apps/tui/) · [Shared shaders](./packages/black-hole/)
 
 <h3><a href="https://github.com/austindelic/still"><img src="./assets/readme/still-environment.webp" width="1800" alt="02 / Still" /></a></h3>
 
@@ -22,15 +22,13 @@ A project environment manager that makes setup explicit: typed configuration, in
 
 **Rust · CLI + TUI · TOML**
 
-[View source ↗](https://github.com/austindelic/still) · [Why I'm building it ↗](https://austindelic.com/blog/still-and-desired-state/)
+[View source ↗](https://github.com/austindelic/still)
 
-<h3><a href="https://austindelic.com/blog/building-tactify/"><img src="./assets/readme/tactify.webp" width="1800" alt="03 / Tactify" /></a></h3>
+<h3><img src="./assets/readme/tactify.webp" width="1800" alt="03 / Tactify" /></h3>
 
 Turns visual learning material into tactile SVG graphics and guided audio for blind and low-vision users. Started at Perth Hackerhouse.
 
 **Next.js · Go · SVG · Audio**
-
-[Read the build notes ↗](https://austindelic.com/blog/building-tactify/)
 
 ## <img src="./assets/readme/terminal.svg" width="24" height="24" alt="" /> Run the portfolio
 

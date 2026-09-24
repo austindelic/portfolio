@@ -7,7 +7,7 @@ async (page) => {
 	const views = [
 		["/", 140],
 		["/blog", 150],
-		["/blog/building-tactify", 160],
+		["/blog/site-and-terminal", 160],
 		["/socials", 160],
 		["/404", 150],
 	];

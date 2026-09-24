@@ -291,7 +291,7 @@ async (page) => {
 			if (scenario.name === "navigation")
 				for (const [path, name] of [
 					["/blog/", "blog"],
-					["/blog/building-tactify/", "post"],
+					["/blog/site-and-terminal/", "post"],
 					["/socials/", "socials"],
 					["/", "home"],
 				]) {

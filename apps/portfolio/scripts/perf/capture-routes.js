@@ -90,7 +90,7 @@ async (page) => {
 	await page.evaluate(() => window.__stepFrames(420));
 	for (const [selector, route] of [
 		["#blog", "blog"],
-		['a[href="/blog/building-tactify/"]', "post"],
+		['a[href="/blog/site-and-terminal/"]', "post"],
 		["#socials", "socials"],
 		["#home", "home"],
 	]) {

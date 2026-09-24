@@ -1,9 +1,7 @@
 ---
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import { ArrowLeft } from "pixelarticons/react/ArrowLeft.js";
-import { Picture } from "astro:assets";
-import dayjs from "dayjs";
-import localizedFormat from "dayjs/plugin/localizedFormat";
+
 import BaseLayout from "./BaseLayout.astro";
 import "../styles/global.css";
 export interface Props {
@@ -11,13 +9,14 @@ export interface Props {
 	description: string;
 	publishDate: Date;
 	updatedDate?: string;
-	heroImage?: any;
+	heroImage?: string;
+	heroAlt?: string;
 }
 
-const { title, description, publishDate, updatedDate, heroImage } = Astro.props;
+const { title, description, publishDate, updatedDate, heroImage, heroAlt } = Astro.props;
 
-dayjs.extend(localizedFormat);
-const displayDate = dayjs(publishDate).format("ll");
+const dateFormat = new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", year: "numeric" });
+const displayDate = dateFormat.format(publishDate);
 ---
 
 <BaseLayout
@@ -28,22 +27,17 @@ const displayDate = dayjs(publishDate).format("ll");
 >
   <article class="portfolio-article portfolio-section">
     <div class="section-label"><span>Writing</span><a href="/blog"><ArrowLeft className="ui-icon" aria-hidden="true" /> Back to posts</a></div>
-    {
-      heroImage && (
-        <Picture
-          widths={[400, 800]}
-          src={heroImage}
-          alt={title}
-          class="w-full mb-6 rounded-sm"
-        />
-      )
-    }
     <h1 class="page-title">{title}</h1>
     <dl class="article-meta">
       <div><dt>Published</dt><dd><time datetime={new Date(publishDate).toISOString()}>{displayDate}</time></dd></div>
-      {updatedDate && <div><dt>Updated</dt><dd><time datetime={new Date(updatedDate).toISOString()}>{dayjs(updatedDate).format("ll")}</time></dd></div>}
+      {updatedDate && <div><dt>Updated</dt><dd><time datetime={new Date(updatedDate).toISOString()}>{dateFormat.format(new Date(updatedDate))}</time></dd></div>}
     </dl>
-    <slot class="my-12" />
+    <p class="article-deck">{description}</p>
+    {heroImage && <figure class="article-hero">
+      <img src={heroImage} alt={heroAlt ?? title} width="1440" height="960" fetchpriority="high" />
+      <figcaption>The browser version. The same content is bundled into the terminal app.</figcaption>
+    </figure>}
+    <slot />
   </article>
 </BaseLayout>
 <style>

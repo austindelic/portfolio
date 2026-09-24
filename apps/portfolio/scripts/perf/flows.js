@@ -88,9 +88,7 @@ async (page) => {
 	for (let round = 0; round < 3; round++)
 		for (const route of [
 			"/blog/",
-			"/blog/building-tactify/",
-			"/blog/production-systems-notes/",
-			"/blog/still-and-desired-state/",
+			"/blog/site-and-terminal/",
 			"/socials/",
 			"/",
 		]) {

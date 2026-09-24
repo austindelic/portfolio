@@ -3,38 +3,38 @@
                       │  ⌂ Home  ≡ Blog  @ Socials  ↓ Resume  ◎ Explore                          │                      
                       │ PERTH / 00:00:00                                                         │                      
                       │                                                                          │                      
-                      │ Building Tactify                                                         │                      
-                      │ 2026-07-08                                                               │                      
-                      │ Notes on turning an accessibility problem into an AI product that        │                      
-                      │ converts visual learning material into tactile graphics and guided       │                      
-                      │ audio.                                                                   │                      
+                      │ Rendering a Black Hole in the Browser and Terminal                       │                      
+                      │ 2026-09-25                                                               │                      
+                      │ How the Astro site and Rust terminal app share their content, shaders    │                      
+                      │ and black hole.                                                          │                      
                       │                                                                          │                      
-                      │ Tactify started as a simple frustration: a lot of learning material      │                      
-                      │ assumes vision as the default interface.                                 │                      
+                      │ This portfolio has two interfaces: an Astro website and a native         │                      
+                      │ Rust terminal app. They share the content and black-hole shaders. The    │                      
+                      │ terminal version renders the scene as coloured characters, with Ratatui  │                      
+                      │ drawing the interface over it.                                           │                      
                       │                                                                          │                      
-                      │ Worksheets, diagrams, charts, and classroom handouts often carry the     │                      
-                      │ real explanation in layout, arrows, shape, labels, and visual grouping.  │                      
-                      │ If you cannot inspect that visual structure directly, the material is    │                      
-                      │ not just inconvenient. It is incomplete.                                 │                      
+                      │ The website                                                              │                      
                       │                                                                          │                      
-                      │ I wanted to explore whether AI could help translate that visual          │                      
-                      │ structure into something more tactile and navigable. Not just "describe  │                      
-                      │ this image", but turn the image into a set of artifacts someone could    │                      
-                      │ actually use: simplified tactile-ready SVG graphics and guided audio     │                      
-                      │ narration that explains how to explore them.                             │                      
+                      │ Astro builds the profile, projects and Markdown posts into static pages. │                      
+                      │ The black hole runs separately in the browser. Open explore to move the  │                      
+                      │ camera without the page covering the scene, or leave it running behind   │                      
+                      │ the content.                                                             │                      
                       │                                                                          │                      
-                      │ The first version of Tactify is built around that pipeline.              │                      
+                      │ The site uses Departure Mono, a black and orange interface, and Ayu Dark │                      
+                      │ for code. On mobile, the background is a still image, so reading a post  │                      
+                      │ doesn't start the GPU renderer.                                          │                      
                       │                                                                          │                      
-                      │ An uploaded visual document moves through several stages:                │                      
+                      │ The terminal version                                                     │                      
                       │                                                                          │                      
-                      │   image -> simplify -> vectorize -> script -> audio -> experience        │                      
+                      │ The native app uses wgpu for graphics, Ratatui for layout and Crossterm  │                      
+                      │ for input. The GPU renders offscreen. Its output becomes terminal        │                      
+                      │ characters and RGB colours rather than pixels in a window.               │                      
                       │                                                                          │                      
+                      │ [1] A live GPU render in the terminal’s Explore view at 160 columns by   │                      
+                      │ 50 rows, showing the complete black-hole shadow and bright accretion     │                      
+                      │ disc without the portfolio panel.                                        │                      
                       │                                                                          │                      
-                      │ The product surface is a Next.js and React workspace for upload,         │                      
-                      │ review, and playback. The backend is Go, with typed API contracts and a  │                      
-                      │ processing flow that can treat the work as more than a single request-   │                      
-                      │ response action. That matters because document transformation has a lot  │                      
-                      │ of failure points: image quality, text density, diagram complexity, AI   │                      
+                      │ The native GPU renderer in Explore, captured at 160×50 cells using       │                      
                       └──────────────────────────────────────────────────────────────────────────┘                      
                                                                                                                         
 Tab focus  Enter open  j/k scroll  ? help  q quit  | Static background                                                  

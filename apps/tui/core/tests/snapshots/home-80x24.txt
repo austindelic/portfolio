@@ -5,16 +5,16 @@
  │                                                                            │ 
  │ 01 / ABOUT                         Perth, Australia                        │ 
  │ Austin Delic.                                                              │ 
- │ Software engineer / builder in Perth.                                      │ 
+ │ Software engineer in Perth.                                                │ 
  │                                                                            │ 
- │ I build production software across web, mobile, backend systems, cloud     │ 
- │ infrastructure, and AI product surfaces. Recent work spans healthcare      │ 
- │ payments platforms, accessibility tooling, Rust developer infrastructure,  │ 
- │ and full-stack client products.                                            │ 
+ │ I build web and mobile apps, work on the backend, and write tools in Rust. │ 
+ │ My projects include Tactify, which turns visual learning material into     │ 
+ │ tactile graphics and audio, and Still, a project environment manager. This │ 
+ │ site has a terminal version too.                                           │ 
  │                                                                            │ 
  │ Location Perth, Australia                                                  │ 
- │ Work     Production full-stack engineering, AI products, systems tooling   │ 
- │ Focus    End-to-end ownership, reliable delivery, useful abstractions      │ 
+ │ Work     Web, mobile and backend development                               │ 
+ │ Focus    Accessibility and developer tools                                 │ 
  │   @ Contact  austin@austindelic.com                                        │ 
  │   Copy email                                                               │ 
  │ Stack    angular / azure / dotnet / go / next / postgres / python / rust / │ 
