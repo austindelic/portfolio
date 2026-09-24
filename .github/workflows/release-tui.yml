@@ -2,13 +2,56 @@ name: Release terminal portfolio
 on:
   push:
     branches: [main]
-    tags: ['tui-v*']
-    paths: ['apps/tui/**', 'packages/black-hole/**', '.github/workflows/release-tui.yml', '.gitattributes']
+    paths:
+      - 'apps/tui/**'
+      - 'packages/black-hole/**'
+      - '.github/workflows/release-tui.yml'
+      - '.gitattributes'
+      - 'apps/portfolio/src/data/portfolio.json'
+      - 'apps/portfolio/src/content/blog/**'
+      - 'apps/portfolio/public/resume.pdf'
+      - 'apps/portfolio/public/fonts/DepartureMono-Regular.woff2'
+      - 'apps/portfolio/src/lib/ascii-analysis.ts'
+      - 'apps/portfolio/src/components/BlackHoleCore.ts'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Verify only, publish after verification, or resume a tested release
+        type: choice
+        options: [verify, publish, recover]
+        default: verify
+      recovery_run_id:
+        description: Original workflow run ID (recover only)
+        type: string
+concurrency:
+  group: tui-release
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
+  plan:
+    if: inputs.mode != 'recover'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # semantic-release also checks push access during dry-run
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - run: npm ci --prefix apps/tui/release
+      - run: npm test --prefix apps/tui/release
+      - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs
+      - id: plan
+        run: node apps/tui/release/run.mjs plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with: { name: release-plan, path: release-plan.json, if-no-files-found: error }
   native:
+    needs: plan
     strategy:
       fail-fast: false
       matrix:
@@ -26,8 +69,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '22' }
+        with: { node-version: '24' }
       - run: node --test packages/black-hole/tests/*.test.mjs
+      - uses: actions/download-artifact@v4
+        with: { name: release-plan }
+      - run: node apps/tui/release/version.cjs
       - run: node apps/tui/scripts/sync-assets.mjs --check
       - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs
       - name: Build Linux on Debian 12 for a consistent glibc baseline
@@ -50,30 +96,33 @@ jobs:
           path: release/
           if-no-files-found: error
   package:
-    needs: native
+    needs: [plan, native]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '22' }
+        with: { node-version: '24' }
       - uses: actions/download-artifact@v4
         with: { pattern: 'native-*', path: release, merge-multiple: true }
-      - name: Assemble the single public package
-        env:
-          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/tui-v') && github.ref_name || '' }}
+      - uses: actions/download-artifact@v4
+        with: { name: release-plan }
+      - run: node apps/tui/release/version.cjs
+      - name: Assemble both registries from identical native binaries
         run: |
-          mkdir -p apps/tui/npm/native
-          cp -R release/native/. apps/tui/npm/native/
-          find apps/tui/npm/native -type f -name austindelic -exec chmod +x {} \;
           rustup toolchain install 1.96.1 --profile minimal
           rustup default 1.96.1
           cargo fetch --locked --manifest-path apps/tui/Cargo.toml
           python3 apps/tui/scripts/notices.py
-          node apps/tui/scripts/check-npm-package.cjs
-          mkdir -p packed
-          npm pack ./apps/tui/npm --pack-destination packed
+          NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
+          export NPM_CLI_JS
+          for registry in npm github; do
+            PACK_REGISTRY="$registry" node apps/tui/scripts/pack.cjs "packed/$registry"
+            node apps/tui/scripts/check-npm-package.cjs "packed/$registry"
+            node apps/tui/scripts/test-platform-selection.cjs "packed/$registry"
+          done
+          node apps/tui/release/bundle.mjs
       - uses: actions/upload-artifact@v4
-        with: { name: npm-package, path: 'packed/*.tgz', if-no-files-found: error }
+        with: { name: npm-package, path: 'packed/', if-no-files-found: error }
   packed-test:
     needs: package
     strategy:
@@ -89,22 +138,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '22' }
+        with: { node-version: '24' }
       - uses: actions/download-artifact@v4
         with: { name: npm-package, path: packed }
       - uses: actions/download-artifact@v4
         with: { name: 'native-${{ matrix.npm }}', path: release }
-      - name: Test the exact npm tarball in a real terminal
-        timeout-minutes: 2
+      - name: Test the exact npm tarballs in a real terminal
+        timeout-minutes: 5
         shell: bash
         run: |
-          export NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
+          NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
           if [[ "$RUNNER_OS" == Windows ]]; then
-            export NPM_CLI_JS="$(node -p "require('node:path').join(require('node:path').dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')")"
+            NPM_CLI_JS="$(node -p "require('node:path').join(require('node:path').dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')")"
           fi
+          export NPM_CLI_JS
           suffix=''; if [[ "$RUNNER_OS" == Windows ]]; then suffix='.exe'; fi
           chmod +x release/test/${{ matrix.npm }}/* || true
-          node apps/tui/scripts/test-packed.cjs packed/*.tgz "release/test/${{ matrix.npm }}/pty-smoke$suffix"
+          for registry in npm github; do
+            node apps/tui/scripts/test-packed.cjs "packed/$registry" "release/test/${{ matrix.npm }}/pty-smoke$suffix"
+          done
       - name: Install Linux software Vulkan
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libvulkan1 libwayland-client0
@@ -117,17 +169,83 @@ jobs:
         run: |
           suffix=''; if [[ "$RUNNER_OS" == Windows ]]; then suffix='.exe'; fi
           "release/test/${{ matrix.npm }}/probe$suffix"
-  publish-npm:
-    if: startsWith(github.ref, 'refs/tags/tui-v')
+  tested-bundle:
     needs: packed-test
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      id-token: write
     steps:
-      - uses: actions/setup-node@v4
-        with: { node-version: '24', registry-url: 'https://registry.npmjs.org' }
       - uses: actions/download-artifact@v4
         with: { name: npm-package, path: packed }
-      - run: npm install --global npm@11
-      - run: npm publish packed/*.tgz --access public --provenance
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tested-release
+          path: packed/
+          retention-days: 90
+          if-no-files-found: error
+  publish:
+    needs: [plan, tested-bundle]
+    if: >-
+      github.ref == 'refs/heads/main' && needs.plan.outputs.release == 'true' &&
+      vars.TUI_RELEASE_ENABLED == 'true' &&
+      (github.event_name == 'push' || inputs.mode == 'publish')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - run: npm ci --prefix apps/tui/release
+      - uses: actions/download-artifact@v4
+        with: { name: tested-release, path: packed }
+      - name: Publish tested archives and create the GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
+          export NPM_CLI_JS
+          export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/tui-npmrc"
+          # shellcheck disable=SC2016 # npm expands this variable when reading its config
+          printf '%s\n' '//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}' > "$NPM_CONFIG_USERCONFIG"
+          node apps/tui/release/run.mjs publish
+  recover:
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'recover' && vars.TUI_RELEASE_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - uses: actions/download-artifact@v4
+        with:
+          name: tested-release
+          path: packed
+          run-id: ${{ inputs.recovery_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - id: original
+        run: node apps/tui/release/recover.mjs
+        env:
+          RECOVERY_RUN_ID: ${{ inputs.recovery_run_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.original.outputs.sha }}
+          fetch-depth: 0
+          clean: false
+      - run: npm ci --prefix apps/tui/release
+      - name: Resume original version without rebuilding
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
+          export NPM_CLI_JS
+          export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/tui-npmrc"
+          # shellcheck disable=SC2016 # npm expands this variable when reading its config
+          printf '%s\n' '//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}' > "$NPM_CONFIG_USERCONFIG"
+          node apps/tui/release/run.mjs recover

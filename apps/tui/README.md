@@ -106,3 +106,13 @@ See [VALIDATION.md](VALIDATION.md) for measured results and remaining verificati
 ## License
 
 Copyright (c) Austin Delic. [MIT](LICENSE). Shader sources retain the website's source notices.
+
+## Distribution size
+
+The launcher uses exact-version optional packages for the five supported targets. npm installs only the matching binary, including with install scripts disabled. The release workflow measures the previous all-platform layout, validates all six tarballs, and tests OS/CPU filtering against an isolated local registry. Native execution still runs on each target's own runner.
+
+Run `python3 apps/tui/scripts/compare-builds.py` from the repository root to compare the default release baseline against thin/full LTO at optimization levels 3, s, and z. On macOS/Linux with GPU access, pass the baseline and candidate paths to `python3 apps/tui/scripts/benchmark.py`. This records seven startup samples and three throughput/input-latency samples per build; select the smallest build within 10% of the baseline. Compiler comparisons abort if application sources change during the study.
+
+`packed/<registry>/sizes.json` records native bytes, npm compressed bytes, installed bytes, and artifact integrity. `packed/<registry>/comparison.json` includes baseline comparisons. Copy accepted `size`, `unpackedSize`, and `executableBytes` measurements for each package into `scripts/size-budgets.json`; the release check permits at most 5% growth. Missing budgets are reported on main/manual runs and block publication. Do not set unmeasured platform budgets. A first complete five-platform run is needed before publishing.
+
+For local packaging, generate notices, place the executable under `release/native/<target>/`, set `NPM_CLI_JS` to npm's `bin/npm-cli.js`, and run `NPM_TARGET=<target> node apps/tui/scripts/pack.cjs <output-directory>`. This produces development-only artifacts. Full release assembly omits `NPM_TARGET` and requires all five native/baseline binaries and measurement files from `release-build.sh`.

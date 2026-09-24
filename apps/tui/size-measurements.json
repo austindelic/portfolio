@@ -1,0 +1,417 @@
+{
+  "date": "2026-09-24",
+  "platform": "darwin-arm64",
+  "rust": "1.96.1",
+  "selected": "fat-z",
+  "builds": [
+    {
+      "name": "baseline",
+      "bytes": 7809632,
+      "gzipBytes": 2815713,
+      "buildSeconds": 0.9,
+      "sourceHash": "eff3fb65f586d5cf7030981d26de2ba5b7b2da3c3f1859dabbe91f62cd165094"
+    },
+    {
+      "name": "thin-3",
+      "bytes": 5673936,
+      "gzipBytes": 2370903,
+      "buildSeconds": 27.8,
+      "sourceHash": "eff3fb65f586d5cf7030981d26de2ba5b7b2da3c3f1859dabbe91f62cd165094"
+    },
+    {
+      "name": "thin-s",
+      "bytes": 4915360,
+      "gzipBytes": 2030581,
+      "buildSeconds": 21.2,
+      "sourceHash": "eff3fb65f586d5cf7030981d26de2ba5b7b2da3c3f1859dabbe91f62cd165094"
+    },
+    {
+      "name": "thin-z",
+      "bytes": 4146944,
+      "gzipBytes": 1926207,
+      "buildSeconds": 12.5,
+      "sourceHash": "eff3fb65f586d5cf7030981d26de2ba5b7b2da3c3f1859dabbe91f62cd165094"
+    },
+    {
+      "name": "fat-3",
+      "bytes": 5125632,
+      "gzipBytes": 2192368,
+      "buildSeconds": 42.7,
+      "sourceHash": "eff3fb65f586d5cf7030981d26de2ba5b7b2da3c3f1859dabbe91f62cd165094"
+    },
+    {
+      "name": "fat-s",
+      "bytes": 4134720,
+      "gzipBytes": 1801582,
+      "buildSeconds": 32.0,
+      "sourceHash": "eff3fb65f586d5cf7030981d26de2ba5b7b2da3c3f1859dabbe91f62cd165094"
+    },
+    {
+      "name": "fat-z",
+      "bytes": 3333344,
+      "gzipBytes": 1621120,
+      "buildSeconds": 26.4,
+      "sourceHash": "eff3fb65f586d5cf7030981d26de2ba5b7b2da3c3f1859dabbe91f62cd165094"
+    }
+  ],
+  "benchmark": {
+    "medians": {
+      "baseline": {
+        "startupMs": 7.594375000000042,
+        "fps": 29.89558255398287,
+        "inputMs": 11.792917,
+        "passes": true
+      },
+      "fat-z": {
+        "startupMs": 7.5075419999990345,
+        "fps": 29.798978640007114,
+        "inputMs": 12.116,
+        "passes": true
+      },
+      "fat-s": {
+        "startupMs": 7.048250000000422,
+        "fps": 29.715655939971917,
+        "inputMs": 11.775832999999999,
+        "passes": true
+      },
+      "thin-z": {
+        "startupMs": 8.324374999999051,
+        "fps": 29.713734680608116,
+        "inputMs": 12.016957999999999,
+        "passes": true
+      }
+    },
+    "samples": {
+      "baseline": [
+        {
+          "startupMs": 6.745000000002221,
+          "fps": 29.89558255398287,
+          "inputMs": 11.794334
+        },
+        {
+          "startupMs": 7.842249999995943,
+          "fps": 29.908911734112575,
+          "inputMs": 11.792917
+        },
+        {
+          "startupMs": 14.13870899999381,
+          "fps": 29.61199310594865,
+          "inputMs": 11.479417
+        }
+      ],
+      "fat-z": [
+        {
+          "startupMs": 7.258458999999107,
+          "fps": 29.798978640007114,
+          "inputMs": 12.250957999999999
+        },
+        {
+          "startupMs": 8.66466700000501,
+          "fps": 29.714780006773296,
+          "inputMs": 12.116
+        },
+        {
+          "startupMs": 13.438166999989676,
+          "fps": 29.82290597799664,
+          "inputMs": 11.982083
+        }
+      ],
+      "fat-s": [
+        {
+          "startupMs": 5.67804199999955,
+          "fps": 29.81446312128088,
+          "inputMs": 11.775832999999999
+        },
+        {
+          "startupMs": 8.119708000009496,
+          "fps": 29.715655939971917,
+          "inputMs": 11.773458
+        },
+        {
+          "startupMs": 6.330750000017815,
+          "fps": 29.71337076725295,
+          "inputMs": 11.869291
+        }
+      ],
+      "thin-z": [
+        {
+          "startupMs": 7.7043330000066135,
+          "fps": 29.795291226662766,
+          "inputMs": 12.023166
+        },
+        {
+          "startupMs": 13.19529199999181,
+          "fps": 29.713734680608116,
+          "inputMs": 12.016957999999999
+        },
+        {
+          "startupMs": 6.660250000010137,
+          "fps": 29.704055717507533,
+          "inputMs": 12.004291
+        }
+      ]
+    },
+    "startupSamples": {
+      "baseline": [
+        8.134791000001584,
+        7.594375000000042,
+        7.622959000002538,
+        6.659040999998922,
+        7.05429200000296,
+        8.050666999999123,
+        6.38033299999563
+      ],
+      "fat-z": [
+        6.955291000000585,
+        7.5075419999990345,
+        7.078833000001339,
+        7.0289170000030765,
+        9.158709000001153,
+        9.100249999999477,
+        7.78966699999728
+      ],
+      "fat-s": [
+        5.790457999999887,
+        27.172957999999525,
+        7.589791999997431,
+        16.832667000002743,
+        6.100458999998892,
+        7.048250000000422,
+        6.788542000002451
+      ],
+      "thin-z": [
+        8.28325000000163,
+        8.324374999999051,
+        8.0007920000007,
+        9.40266699999981,
+        9.024000000000143,
+        7.654999999999745,
+        8.557457999998519
+      ]
+    }
+  },
+  "packages": {
+    "npm": [
+      {
+        "registry": "npm",
+        "manifest": {
+          "name": "austindelic-darwin-arm64",
+          "version": "0.1.0",
+          "description": "Austin Delic's interactive terminal portfolio",
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/austindelic/austindelic.git",
+            "directory": "apps/tui/npm"
+          },
+          "os": [
+            "darwin"
+          ],
+          "cpu": [
+            "arm64"
+          ],
+          "files": [
+            "bin/",
+            "LICENSE",
+            "THIRD_PARTY_NOTICES.md",
+            "README.md"
+          ],
+          "publishConfig": {
+            "access": "public",
+            "registry": "https://registry.npmjs.org/"
+          }
+        },
+        "name": "austindelic-darwin-arm64",
+        "version": "0.1.0",
+        "filename": "austindelic-darwin-arm64-0.1.0.tgz",
+        "integrity": "sha512-+zPcSyOLeEnfujaJAyFqRvYdraOgeX+CfCi0VfvwgK2jtmo1zcS0Q7P2oXjTFkBPqKgjF8eQtp9wYCdTfpJMhg==",
+        "size": 1674369,
+        "unpackedSize": 3996496,
+        "executableBytes": 3333344
+      },
+      {
+        "registry": "npm",
+        "manifest": {
+          "name": "austindelic",
+          "version": "0.1.0",
+          "description": "Austin Delic's interactive terminal portfolio",
+          "license": "MIT",
+          "author": "Austin Delic",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/austindelic/austindelic.git",
+            "directory": "apps/tui/npm"
+          },
+          "homepage": "https://austindelic.com",
+          "bin": {
+            "austindelic": "bin/cli.cjs"
+          },
+          "engines": {
+            "node": ">=22"
+          },
+          "os": [
+            "darwin",
+            "linux",
+            "win32"
+          ],
+          "cpu": [
+            "arm64",
+            "x64"
+          ],
+          "files": [
+            "bin/",
+            "README.md",
+            "LICENSE"
+          ],
+          "publishConfig": {
+            "access": "public",
+            "registry": "https://registry.npmjs.org/"
+          },
+          "optionalDependencies": {
+            "austindelic-darwin-arm64": "0.1.0",
+            "austindelic-darwin-x64": "0.1.0",
+            "austindelic-linux-arm64": "0.1.0",
+            "austindelic-linux-x64": "0.1.0",
+            "austindelic-win32-x64": "0.1.0"
+          }
+        },
+        "name": "austindelic",
+        "version": "0.1.0",
+        "filename": "austindelic-0.1.0.tgz",
+        "integrity": "sha512-uDMFe8TuVGa5TzepKDMgSQ0lU+iAFyTBSi7D1LFB9/WYLv/yPJMI3tVDFPc6/5VRxidROsB7fq8p6pOv6nPlaQ==",
+        "size": 4177,
+        "unpackedSize": 8932,
+        "executableBytes": 0
+      }
+    ],
+    "github": [
+      {
+        "registry": "github",
+        "manifest": {
+          "name": "@austindelic/austindelic-darwin-arm64",
+          "version": "0.1.0",
+          "description": "Austin Delic's interactive terminal portfolio",
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/austindelic/austindelic.git",
+            "directory": "apps/tui/npm"
+          },
+          "os": [
+            "darwin"
+          ],
+          "cpu": [
+            "arm64"
+          ],
+          "files": [
+            "bin/",
+            "LICENSE",
+            "THIRD_PARTY_NOTICES.md",
+            "README.md"
+          ],
+          "publishConfig": {
+            "access": "public",
+            "registry": "https://npm.pkg.github.com/"
+          }
+        },
+        "name": "@austindelic/austindelic-darwin-arm64",
+        "version": "0.1.0",
+        "filename": "austindelic-austindelic-darwin-arm64-0.1.0.tgz",
+        "integrity": "sha512-J71IvtOVVICB8WaSPup6lOtCmq/S/yjFfuR22YuANHKtEVPz9vJqpTGb3BG/afrSKFYUERsEJCog1V2YT6l7Uw==",
+        "size": 1674373,
+        "unpackedSize": 3996522,
+        "executableBytes": 3333344
+      },
+      {
+        "registry": "github",
+        "manifest": {
+          "name": "@austindelic/austindelic",
+          "version": "0.1.0",
+          "description": "Austin Delic's interactive terminal portfolio",
+          "license": "MIT",
+          "author": "Austin Delic",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/austindelic/austindelic.git",
+            "directory": "apps/tui/npm"
+          },
+          "homepage": "https://austindelic.com",
+          "bin": {
+            "austindelic": "bin/cli.cjs"
+          },
+          "engines": {
+            "node": ">=22"
+          },
+          "os": [
+            "darwin",
+            "linux",
+            "win32"
+          ],
+          "cpu": [
+            "arm64",
+            "x64"
+          ],
+          "files": [
+            "bin/",
+            "README.md",
+            "LICENSE"
+          ],
+          "publishConfig": {
+            "access": "public",
+            "registry": "https://npm.pkg.github.com/"
+          },
+          "optionalDependencies": {
+            "@austindelic/austindelic-darwin-arm64": "0.1.0",
+            "@austindelic/austindelic-darwin-x64": "0.1.0",
+            "@austindelic/austindelic-linux-arm64": "0.1.0",
+            "@austindelic/austindelic-linux-x64": "0.1.0",
+            "@austindelic/austindelic-win32-x64": "0.1.0"
+          }
+        },
+        "name": "@austindelic/austindelic",
+        "version": "0.1.0",
+        "filename": "austindelic-austindelic-0.1.0.tgz",
+        "integrity": "sha512-WsW10xhF78rVfDDYmCho5Vi128kGryXy9/ANLIguY0ASiX+myGlbnlEcVSbfjO0RaymZSzF3n+BRKf7yhrRMYQ==",
+        "size": 4182,
+        "unpackedSize": 9010,
+        "executableBytes": 0
+      }
+    ]
+  },
+  "sourceHashScope": "cli/, core/, renderer/ contents (study script version)",
+  "verification": {
+    "rustTests": 18,
+    "explicitGpuTests": 1,
+    "launcherTests": 6,
+    "nativePlatform": "darwin-arm64",
+    "packageVariants": [
+      "npm",
+      "github"
+    ],
+    "platformSelection": "five OS/CPU combinations for each registry, synthetic foreign binaries",
+    "terminalLifecycle": [
+      "normal exit",
+      "Ctrl-C",
+      "SIGTERM",
+      "no-GPU fallback",
+      "live Metal",
+      "Explore resolution controls"
+    ],
+    "unverifiedNativePlatforms": [
+      "darwin-x64",
+      "linux-arm64",
+      "linux-x64",
+      "win32-x64"
+    ]
+  },
+  "isolatedPrVerification": {
+    "base": "shared-shader PR on a9dfeb6",
+    "rustTests": 15,
+    "releaseTests": 11,
+    "launcherTests": 6,
+    "nativeBytes": 3333328,
+    "npmDownloadBytes": 1677758,
+    "githubDownloadBytes": 1677752,
+    "excluded": "concurrent Explore resolution controls and unmerged Windows startup diagnostics"
+  }
+}

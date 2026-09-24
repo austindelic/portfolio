@@ -14,7 +14,7 @@ The terminal portfolio is distributed only through npm and runs on the visitor's
 
 ## Release gates
 
-- Run the complete five-platform release workflow and test the single assembled tarball on every target. Local development archives containing only one target must not be published.
+- Run the complete five-platform release workflow and test the assembled platform packages and launcher on every target. Local development archives containing only one target must not be published.
 - Verify Windows WARP and physical GPU execution, platform browser/resume/clipboard actions, and terminal behavior on Windows and Intel macOS.
 - Complete fixed-camera browser/terminal visual comparison, injected GPU device-loss recovery and longer sustained rendering measurements.
 - Set up npm package ownership and trusted publishing. No npm package has been published during implementation.
@@ -28,3 +28,36 @@ Native route transitions use spherical easing over shared camera presets rather 
 - Five Node launcher tests pass. The rebuilt macOS ARM64 development tarball passes npm exec version and PTY navigation, help, resize, q and Ctrl-C checks.
 - OpenTofu initialization, schema validation and the Cloudflare-only mocked plan pass. The provider lockfile no longer includes Hetzner, and no server or DNS resources remain in the configuration.
 - Release and infrastructure workflow lint passes. npm publication depends only on the five-platform package tests; container publishing and server tests have been removed.
+
+
+## Distribution size optimization — 24 September 2026
+
+Measured on macOS ARM64 with Rust 1.96.1. Full samples and package metadata are in `size-measurements.json`; measurements are local, not cross-platform performance guarantees.
+
+| Release settings | Executable bytes | gzip bytes |
+| --- | ---: | ---: |
+| Default baseline | 7,809,632 | 2,815,713 |
+| Thin LTO, level 3 | 5,673,936 | 2,370,903 |
+| Thin LTO, level s | 4,915,360 | 2,030,581 |
+| Thin LTO, level z | 4,146,944 | 1,926,207 |
+| Full LTO, level 3 | 5,125,632 | 2,192,368 |
+| Full LTO, level s | 4,134,720 | 1,801,582 |
+| Full LTO, level z (selected) | 3,333,344 | 1,621,120 |
+
+Every optimized candidate uses one code-generation unit and stripped symbols. Panic unwinding remains enabled. The selected executable is 57.3% smaller. Unused calendar/macros and Markdown HTML-output dependency features were removed; layout caching and graphics backends remain enabled.
+
+The final same-source comparison used seven startup samples and three ten-second GPU/input samples per build, with identical terminal dimensions and a 30 FPS target. Selected-build medians versus baseline: startup 7.51 vs 7.59 ms; throughput 29.80 vs 29.90 FPS; per-run maximum input latency 12.12 vs 11.79 ms. All three measures satisfy the 10% allowance. Earlier three-sample startup timings were noisy; the expanded sample is retained in the measurement file.
+
+Exact duplicate license texts are shared by reference. All 534 original notice blocks remain represented verbatim by 176 distinct texts; notices shrink from 2,760,788 to 661,410 bytes.
+
+Both scoped and unscoped package-selection matrices passed for all five OS/CPU combinations using synthetic binaries: these verify npm selection and downloading, not execution of foreign native code. Real macOS ARM64 tarballs are measured separately. The launcher is approximately 4.2 KB compressed; launcher plus host package is approximately 1.68 MB downloaded and 4.01 MB unpacked.
+
+Fixed size budgets are populated only for the locally measured launcher and macOS ARM64 package, taking the larger scoped/unscoped measurement. Every published package must have a budget and stay within 105% of it. The first complete CI run must supply accepted Linux, Windows and Intel macOS sizes before publication. CI generates per-platform native baselines and compares an actual reconstructed all-platform npm archive; no aggregate five-platform savings are claimed from local fixtures.
+
+No packages were published by the size-optimization task.
+
+Final verification: 18 Rust tests plus the explicitly enabled Metal resolution test pass; six launcher tests pass; both real macOS package variants pass clean installation, version/help, navigation, resize, q and Ctrl-C through native/launcher/npm entry points. The full smoke harness passes static, Ctrl-C, SIGTERM, no-GPU fallback and live Metal Explore/resolution controls, including terminal restoration. Clippy, formatting, canonical asset checks, workflow/shell lint and whitespace checks pass. Foreign-platform native execution remains pending CI.
+
+PR isolation note: the detailed September 24 performance study above was captured in the shared development checkout, including concurrent Explore resolution controls. Those unrelated controls and the unmerged Windows startup diagnostics are excluded from the size/release PR. The isolated PR checkout is rechecked separately below; the earlier study remains historical evidence, not a claim that its executable is byte-identical to this PR build.
+
+Isolated PR verification (25 September): 15 Rust tests, six launcher tests and all 11 release-tool tests pass. Clippy, formatting, canonical asset sync, workflow lint and whitespace checks pass. A fresh optimized macOS ARM64 build is 3,333,328 bytes. Its npm download is 1,677,758 bytes including the launcher (GitHub variant: 1,677,752). Both exact package variants pass version/help and native/launcher/npm terminal navigation, resizing and q/Ctrl-C checks. Existing accepted size budgets cover both artifacts. This PR retains main's camera behavior without including the separate local resolution controls.

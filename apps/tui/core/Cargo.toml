@@ -7,7 +7,7 @@ edition = "2021"
 ratatui = { version = "0.30.0", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-pulldown-cmark = "0.13"
+pulldown-cmark = { version = "0.13", default-features = false }
 textwrap = "0.16"
 unicode-width = "0.2"
 

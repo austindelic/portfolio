@@ -1,0 +1,12 @@
+{
+  "austindelic-darwin-arm64": {
+    "size": 1674373,
+    "unpackedSize": 3996522,
+    "executableBytes": 3333344
+  },
+  "austindelic": {
+    "size": 4545,
+    "unpackedSize": 9936,
+    "executableBytes": 0
+  }
+}
