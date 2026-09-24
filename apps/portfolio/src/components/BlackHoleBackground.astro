@@ -4,6 +4,9 @@ const props: Props = Astro.props;
 ---
 <div data-black-hole-background data-settings={JSON.stringify(props)} transition:persist="black-hole-background" class={`relative h-full w-full bg-black ${props.className ?? ""}`}>
   <img src="/images/black-hole-mobile.webp" width="1200" height="1200" alt="" aria-hidden="true" fetchpriority="high" class="bh-background-still absolute inset-0 h-full w-full object-cover pointer-events-none" />
+  <noscript>
+    <img src="/images/black-hole-mobile.webp" width="1200" height="1200" alt="" aria-hidden="true" class="absolute inset-0 h-full w-full object-cover pointer-events-none" />
+  </noscript>
   <canvas class="bh-background-live block h-full w-full bg-black pointer-events-none" aria-hidden="true"></canvas>
   <div data-black-hole-error hidden class="absolute inset-x-4 bottom-4 border border-red-500/60 bg-black/85 p-3 font-mono text-xs text-red-200"></div>
 </div>
@@ -30,6 +33,7 @@ function stopBackground() {
 	runtime = undefined;
 	if (host) {
 		delete host.dataset.bhLive;
+		delete host.dataset.bhFallback;
 		const error = host.querySelector<HTMLElement>("[data-black-hole-error]")!;
 		error.hidden = true;
 		// A canvas cannot switch context types after disposal. Start fresh if
@@ -63,6 +67,7 @@ async function syncBackground() {
 	}
 	if (loading) return;
 	loading = true;
+	delete host.dataset.bhFallback;
 	const current = ++generation;
 	const target = host;
 	try {
@@ -84,10 +89,16 @@ async function syncBackground() {
 			if (current !== generation) return;
 			error.textContent = message ?? "";
 			error.hidden = !message;
-			if (message) delete target.dataset.bhLive;
+			if (message) {
+				delete target.dataset.bhLive;
+				target.dataset.bhFallback = "true";
+			}
 		});
 		options.onReady = () => {
-			if (current === generation) target.dataset.bhLive = "true";
+			if (current === generation) {
+				delete target.dataset.bhFallback;
+				target.dataset.bhLive = "true";
+			}
 		};
 		runtime = mountBlackHoleRuntime(
 			target.querySelector("canvas")!,
@@ -96,7 +107,10 @@ async function syncBackground() {
 		);
 		previousRoute = location.pathname;
 	} catch (error) {
-		// The server-rendered still remains visible if the desktop chunk fails.
+		if (current === generation && host === target && target.isConnected) {
+			delete target.dataset.bhLive;
+			target.dataset.bhFallback = "true";
+		}
 		console.error("Could not load black hole background", error);
 	} finally {
 		if (current === generation) loading = false;
@@ -122,12 +136,11 @@ window.addEventListener("pageshow", syncBackground);
 </script>
 
 <style>
- .bh-background-live { visibility: hidden; }
+ .bh-background-live, .bh-background-still { visibility: hidden; }
  [data-bh-live="true"] .bh-background-live { visibility: visible; }
- [data-bh-live="true"] .bh-background-still { visibility: hidden; }
+ [data-bh-fallback="true"] .bh-background-still { visibility: visible; }
  @media (pointer: coarse), (max-width: 768px), (max-height: 768px) {
    .bh-background-live { display: none; }
-   [data-bh-live="true"] .bh-background-still { visibility: visible; }
-   .bh-background-still { object-position: center; }
+   .bh-background-still { visibility: visible; object-position: center; }
  }
 </style>
