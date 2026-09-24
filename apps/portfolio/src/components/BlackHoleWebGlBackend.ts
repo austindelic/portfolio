@@ -1,11 +1,11 @@
-import asciiSource from "../shaders/black-hole/ascii.glsl?raw";
-import bloomSource from "../shaders/black-hole/bloom.glsl?raw";
-import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
-import bufferBSource from "../shaders/black-hole/buffer-b.glsl?raw";
-import bufferCSource from "../shaders/black-hole/buffer-c.glsl?raw";
-import bufferDSource from "../shaders/black-hole/buffer-d.glsl?raw";
-import cellSource from "../shaders/black-hole/cell.glsl?raw";
-import imageSource from "../shaders/black-hole/image.glsl?raw";
+import asciiSource from "@repo/black-hole/shaders/ascii.glsl?raw";
+import bloomSource from "@repo/black-hole/shaders/bloom.glsl?raw";
+import bufferASource from "@repo/black-hole/shaders/buffer-a.glsl?raw";
+import bufferBSource from "@repo/black-hole/shaders/buffer-b.glsl?raw";
+import bufferCSource from "@repo/black-hole/shaders/buffer-c.glsl?raw";
+import bufferDSource from "@repo/black-hole/shaders/buffer-d.glsl?raw";
+import cellSource from "@repo/black-hole/shaders/cell.glsl?raw";
+import imageSource from "@repo/black-hole/shaders/image.glsl?raw";
 import type {
 	BackendFrame,
 	BackendOptions,

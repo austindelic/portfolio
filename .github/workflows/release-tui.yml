@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     tags: ['tui-v*']
-    paths: ['apps/tui/**', '.github/workflows/release-tui.yml', '.gitattributes']
+    paths: ['apps/tui/**', 'packages/black-hole/**', '.github/workflows/release-tui.yml', '.gitattributes']
   workflow_dispatch:
 permissions:
   contents: read
@@ -27,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
+      - run: node --test packages/black-hole/tests/*.test.mjs
       - run: node apps/tui/scripts/sync-assets.mjs --check
       - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs
       - name: Build Linux on Debian 12 for a consistent glibc baseline

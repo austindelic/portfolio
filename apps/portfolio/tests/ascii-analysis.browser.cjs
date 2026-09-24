@@ -1,8 +1,8 @@
 // Run via Playwright CLI: run-code --filename=apps/portfolio/tests/ascii-analysis.browser.cjs
 async function testAsciiAnalysis(page) {
 	return await page.evaluate(async () => {
-		const { default: source } = await import(
-			"/src/shaders/black-hole/ascii-analysis.glsl?raw"
+		const { analysis: source, ascii, analysisWgsl } = await import(
+			"/tests/shader-fixtures.ts"
 		);
 		const gl = document.createElement("canvas").getContext("webgl2");
 		if (!gl) throw Error("WebGL2 unavailable");
@@ -288,9 +288,7 @@ ${source}`,
 			"occupancy uses samples above local threshold",
 		);
 
-		const { default: compositeSource } = await import(
-			"/src/shaders/black-hole/ascii.glsl?raw"
-		);
+		const compositeSource = ascii;
 		const composite = gl.createProgram();
 		gl.attachShader(
 			composite,
@@ -377,9 +375,7 @@ ${source}`,
 		if (!adapter) throw Error("WebGPU unavailable for parity checks");
 		const device = await adapter.requestDevice();
 		device.pushErrorScope("validation");
-		const { default: wgsl } = await import(
-			"/src/shaders/black-hole/ascii-analysis.wgsl?raw"
-		);
+		const wgsl = analysisWgsl;
 		const params = `struct Params {time_exposure_quality_glyph:vec4<f32>,shadow:vec4<f32>,mid:vec4<f32>,highlight:vec4<f32>,source_dims:vec4<f32>,canvas_dims:vec4<f32>,cell_size:vec4<f32>,camera_position:vec4<f32>,camera_right:vec4<f32>,camera_up:vec4<f32>,camera_forward:vec4<f32>};`;
 		const pipeline = await device.createComputePipelineAsync({
 			layout: "auto",
