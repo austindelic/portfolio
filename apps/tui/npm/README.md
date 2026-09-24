@@ -12,6 +12,8 @@ Metal, Vulkan and DirectX 12 render locally into terminal characters. If graphic
 
 Use Tab and arrows to navigate, Enter to activate, `?` for help, and Ctrl-C to quit. Explore uses WASD, IJKL or mouse dragging. Outside Explore, `q` also quits. Resize your terminal freely. URLs and the embedded resume open using your operating system's default application; copying email uses the system clipboard. A true-colour terminal gives the intended appearance. Departure Mono is optional.
 
+Use `npx austindelic --terminal-background` (or `npx austindelic -t`) to use your terminal’s configured background instead of pure black. Artwork, animation, text colours, and orange selection highlights are preserved. Pure black remains the default.
+
 ## Releasing from the repository
 
 This directory is a standalone npm distribution, outside the Bun workspace. Application code stays in the adjacent Rust crates. Native files and dependency notices are generated, not committed.

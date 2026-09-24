@@ -35,8 +35,11 @@ austindelic --renderer gpu             # fail clearly if graphics cannot initial
 austindelic --renderer static          # never initialize the GPU
 austindelic --no-animation             # render on demand; no autonomous motion
 austindelic --ascii                    # ASCII borders and labels
+austindelic --terminal-background      # use your terminal background (short form: -t)
 austindelic --cell-aspect 0.5           # character width / height
 ```
+
+Pure black remains the default background. `--terminal-background` (or `-t`) uses your terminal’s configured background while preserving artwork, animation, text colours, and orange selection highlights.
 
 The terminal's reported pixel dimensions determine cell aspect where available; otherwise it defaults to 0.5. FPS accepts 1–60, aspect accepts 0.2–2.0. Minimum size is 60 columns × 18 rows. Home moves to the right at 120 columns. Smaller screens scroll full-width content. The animation grid is capped at 240×80 cells.
 

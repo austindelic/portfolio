@@ -35,6 +35,9 @@ struct Args {
     fps: u32,
     #[arg(long)]
     no_animation: bool,
+    /// Use the terminal's configured background instead of pure black.
+    #[arg(short = 't', long)]
+    terminal_background: bool,
     #[arg(long)]
     ascii: bool,
     /// Character width / height (e.g. 0.5); auto-detected when reported by the terminal.
@@ -171,6 +174,7 @@ impl Explore {
 fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     let mut app = PortfolioApp::new(args.ascii);
+    app.terminal_background = args.terminal_background;
     let fallback = portfolio::fallback();
     let mut background = fallback.clone();
     let worker = (args.renderer != RendererMode::Static).then(|| Worker::start(args.fps));
@@ -474,6 +478,21 @@ fn perform(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn terminal_background_arguments() {
+        assert!(
+            !Args::try_parse_from(["austindelic"])
+                .unwrap()
+                .terminal_background
+        );
+        for flag in ["-t", "--terminal-background"] {
+            assert!(
+                Args::try_parse_from(["austindelic", flag])
+                    .unwrap()
+                    .terminal_background
+            );
+        }
+    }
     #[test]
     fn render_resolution() {
         assert_eq!(render_grid(240, 80, 120), (120, 40));

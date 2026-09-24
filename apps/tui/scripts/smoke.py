@@ -5,6 +5,9 @@ import pyte
 binary=str(Path(sys.argv[1]).resolve())
 out=Path(sys.argv[2] if len(sys.argv)>2 else '/tmp/austindelic-smoke');out.mkdir(parents=True,exist_ok=True)
 def run_case(name,args,exit_key=b'q',gpu=False):
+    terminal_background = '-t' in args or '--terminal-background' in args
+    # Model a non-black terminal default in the captured preview.
+    default_bg = '#182533' if terminal_background else '#000000'
     master,slave=pty.openpty();original=termios.tcgetattr(slave)
     fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',40,120,0,0))
     screen=pyte.Screen(120,40);stream=pyte.ByteStream(screen);raw=bytearray()
@@ -28,13 +31,20 @@ sys.exit(code)
                 raw.extend(data);stream.feed(data)
     def text():return '\n'.join(screen.display)
     def key(k,seconds=.25):os.write(master,k);pump(seconds)
+    def check_background():
+        expected = 'default' if terminal_background else '000000'
+        assert screen.buffer[0][0].bg == expected, screen.buffer[0][0]
+        for row in screen.buffer.values():
+            for cell in row.values():
+                assert cell.bg in (expected, 'ffa133'), cell
     def capture(label):
+        check_background()
         (out/f'{name}-{label}.txt').write_text(text())
         lines=[]
         for y in range(screen.lines):
             parts=[]
             for x in range(screen.columns):
-                c=screen.buffer[y][x];fg='#'+c.fg if len(c.fg)==6 else '#c0c0c0';bg='#'+c.bg if len(c.bg)==6 else '#000000'
+                c=screen.buffer[y][x];fg='#'+c.fg if len(c.fg)==6 else '#c0c0c0';bg='#'+c.bg if len(c.bg)==6 else default_bg
                 parts.append(f'<span style="color:{fg};background:{bg}">{html.escape(c.data)}</span>')
             lines.append(''.join(parts))
         (out/f'{name}-{label}.html').write_text('<!doctype html><style>@font-face{font-family:Departure;src:url(http://127.0.0.1:4321/fonts/DepartureMono-Regular.woff2)}body{margin:0;background:#000}pre{font-family:Departure,monospace;font-size:14px;line-height:22px;margin:16px;white-space:pre}</style><pre>'+ '\n'.join(lines)+'</pre>')
@@ -49,9 +59,10 @@ sys.exit(code)
         key(b'\x1b[F');key(b'\x1b[H');key(b'\x1b');assert 'Blog posts' in text(),text()
         key(b'\x1b[C'*3+b'\r');assert 'SOCIAL LINKS' in text(),text();capture('socials')
         key(b'\x1b[C'*4+b'\r',1);assert 'EXPLORE' in text(),text();capture('explore')
-        key(b'wijdqerf[]-=,. ',.4);key(b'?',.2);assert 'Ctrl-C' in text();key(b'\x1b',.2);key(b'\x1b',.2)
+        key(b'wijdqerf[]-=,. ',.4);key(b'?',.2);assert 'Ctrl-C' in text();check_background();key(b'\x1b',.2);key(b'\x1b',.2)
         for w,h in [(60,18),(30,10),(80,24),(160,50),(120,40)]:
             screen.resize(h,w);fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',h,w,0,0));os.kill(proc.pid,signal.SIGWINCH);pump(.25)
+            check_background()
             if w==30:assert 'Resize terminal' in text(),text()
         if exit_key is None:os.kill(proc.pid,signal.SIGTERM);pump(.4)
         else:key(exit_key,.4)
@@ -63,6 +74,8 @@ sys.exit(code)
         if proc.poll() is None:proc.kill();proc.wait()
         (out/f'{name}.ansi').write_bytes(raw);os.close(master);os.close(slave)
 run_case('static',['--renderer','static','--ascii'])
+run_case('terminal-background',['--renderer','static','--terminal-background'])
+run_case('terminal-background-short',['--renderer','static','-t'])
 run_case('ctrl-c',['--renderer','static'],b'\x03')
 run_case('sigterm',['--renderer','static'],None)
 if '--gpu' in sys.argv:run_case('gpu',['--renderer','gpu'],gpu=True)

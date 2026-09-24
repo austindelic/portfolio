@@ -148,6 +148,7 @@ pub struct PortfolioApp {
     pub content: Content,
     pub posts: Vec<Post>,
     pub ascii: bool,
+    pub terminal_background: bool,
     pub help: bool,
     pub status: String,
     pub renderer_status: String,
@@ -176,6 +177,7 @@ impl PortfolioApp {
             posts: serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/posts.json")))
                 .expect("validated bundled posts"),
             ascii,
+            terminal_background: false,
             help: false,
             status: String::new(),
             renderer_status: "Static background".into(),
@@ -439,13 +441,18 @@ impl PortfolioApp {
     }
     pub fn render(&mut self, frame: &mut Frame, background: &CellFrame) {
         let area = frame.area();
+        let bg = if self.terminal_background {
+            Color::Reset
+        } else {
+            BG
+        };
         self.hits.clear();
-        frame.render_widget(Block::default().style(Style::default().bg(BG)), area);
+        frame.render_widget(Block::default().style(Style::default().bg(bg)), area);
         paint_background(frame, background);
         if area.width < 60 || area.height < 18 {
             frame.render_widget(
                 Paragraph::new("Resize terminal to at least 60 x 18\nq / Ctrl-C: quit")
-                    .style(Style::default().fg(FG).bg(BG)),
+                    .style(Style::default().fg(FG).bg(bg)),
                 area,
             );
             return;
@@ -470,7 +477,7 @@ impl PortfolioApp {
                     )),
                     Line::from(clean(&help, self.ascii)),
                 ])
-                .style(Style::default().fg(FG).bg(BG)),
+                .style(Style::default().fg(FG).bg(bg)),
                 box_area,
             );
         } else {
@@ -491,7 +498,7 @@ impl PortfolioApp {
                     .borders(Borders::ALL)
                     .border_set(border(self.ascii))
                     .border_style(Style::default().fg(BORDER))
-                    .style(Style::default().bg(BG)),
+                    .style(Style::default().bg(bg)),
                 panel,
             );
             let labels = if self.ascii {
@@ -507,7 +514,7 @@ impl PortfolioApp {
                     Paragraph::new(format!(" {label} ")).style(if self.focus == i {
                         Style::default().fg(SELECTED_FG).bg(ACCENT)
                     } else {
-                        Style::default().fg(FG).bg(BG)
+                        Style::default().fg(FG).bg(bg)
                     }),
                     rect,
                 );
@@ -526,7 +533,7 @@ impl PortfolioApp {
                 secs % 60
             );
             frame.render_widget(
-                Paragraph::new(clock).style(Style::default().fg(MUTED).bg(BG)),
+                Paragraph::new(clock).style(Style::default().fg(MUTED).bg(bg)),
                 Rect::new(x + 2, 3, width - 4, 1),
             );
             let body = Rect::new(x + 2, 5, width - 4, panel.height.saturating_sub(5));
@@ -569,7 +576,7 @@ impl PortfolioApp {
                     Kind::Muted => MUTED,
                     _ => FG,
                 };
-                let mut style = Style::default().fg(color).bg(BG);
+                let mut style = Style::default().fg(color).bg(bg);
                 if matches!(kind, Kind::Heading) {
                     style = style.add_modifier(Modifier::BOLD);
                 }
@@ -592,7 +599,7 @@ impl PortfolioApp {
         };
         frame.render_widget(Clear, Rect::new(0, area.height - 1, area.width, 1));
         frame.render_widget(
-            Paragraph::new(clean(&footer, self.ascii)).style(Style::default().fg(MUTED).bg(BG)),
+            Paragraph::new(clean(&footer, self.ascii)).style(Style::default().fg(MUTED).bg(bg)),
             Rect::new(0, area.height - 1, area.width, 1),
         );
         if self.help {
@@ -616,7 +623,7 @@ Esc / ? / Enter closes help"
             };
             frame.render_widget(
                 Paragraph::new(help)
-                    .style(Style::default().fg(FG).bg(BG))
+                    .style(Style::default().fg(FG).bg(bg))
                     .block(
                         Block::bordered()
                             .border_set(border(self.ascii))
@@ -758,6 +765,7 @@ pub fn clean(text: &str, ascii: bool) -> String {
     }
     out
 }
+/// Paint artwork glyphs while preserving the background already set on the frame.
 pub fn paint_background(frame: &mut Frame, bg: &CellFrame) {
     if bg.width == 0 || bg.height == 0 {
         return;
@@ -770,8 +778,7 @@ pub fn paint_background(frame: &mut Frame, bg: &CellFrame) {
             if let Some(c) = bg.cells.get((sy * u32::from(bg.width) + sx) as usize) {
                 frame.buffer_mut()[(x, y)]
                     .set_char(c.glyph)
-                    .set_fg(Color::Rgb(c.rgb[0], c.rgb[1], c.rgb[2]))
-                    .set_bg(BG);
+                    .set_fg(Color::Rgb(c.rgb[0], c.rgb[1], c.rgb[2]));
             }
         }
     }
@@ -964,23 +971,39 @@ mod tests {
         assert_eq!(b[(0, 0)].symbol(), "X");
         assert_eq!(b[(0, 0)].fg, Color::Rgb(255, 0, 0));
         assert_ne!(b[(45, 6)].fg, Color::Rgb(255, 0, 0));
-        // Inspect actual composed cells, including cleared overlays and blank padding.
-        // The only non-black backgrounds are the existing orange selections.
-        for page in [
-            Page::Home,
-            Page::Blog,
-            Page::Post(0),
-            Page::Socials,
-            Page::Explore,
-        ] {
-            app.navigate(page);
-            for help in [false, true] {
-                app.help = help;
-                terminal.draw(|f| app.render(f, &bg)).unwrap();
-                for cell in &terminal.backend().buffer().content {
-                    assert!(matches!(cell.bg, Color::Rgb(0, 0, 0) | ACCENT));
-                    if cell.bg == ACCENT {
-                        assert_eq!(cell.fg, Color::Rgb(34, 34, 34));
+        // Inspect composed cells, including cleared overlays and blank padding.
+        for terminal_background in [false, true] {
+            app.terminal_background = terminal_background;
+            let expected_bg = if terminal_background {
+                Color::Reset
+            } else {
+                BG
+            };
+            for (w, h) in [(30, 10), (60, 18), (80, 24), (120, 40)] {
+                let mut terminal = Terminal::new(TestBackend::new(w, h)).unwrap();
+                for page in [
+                    Page::Home,
+                    Page::Blog,
+                    Page::Post(0),
+                    Page::Socials,
+                    Page::Explore,
+                ] {
+                    app.navigate(page);
+                    for help in [false, true] {
+                        app.help = help;
+                        terminal.draw(|f| app.render(f, &bg)).unwrap();
+                        let buffer = terminal.backend().buffer();
+                        assert_eq!(buffer[(0, 0)].bg, expected_bg);
+                        if w >= 60 {
+                            assert_eq!(buffer[(0, 0)].symbol(), "X");
+                            assert_eq!(buffer[(0, 0)].fg, Color::Rgb(255, 0, 0));
+                        }
+                        for cell in &buffer.content {
+                            assert!(cell.bg == expected_bg || cell.bg == ACCENT);
+                            if cell.bg == ACCENT {
+                                assert_eq!(cell.fg, SELECTED_FG);
+                            }
+                        }
                     }
                 }
             }
