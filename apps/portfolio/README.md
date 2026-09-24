@@ -141,3 +141,7 @@ MIT
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!
+
+## Shared graphics
+
+Black-hole shaders and camera presets live in [`packages/black-hole`](../../packages/black-hole/README.md), imported through `@repo/black-hole`. Run dependency installation from the repository root. Shader generation is explicit; normal builds use committed WGSL and validate its source hashes.

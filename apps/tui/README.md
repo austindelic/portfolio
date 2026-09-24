@@ -68,14 +68,14 @@ Explore is entered through the navigation bar. In static mode it displays the fa
 - `renderer`: graphics device, six website shader passes, triple-buffered asynchronous cell readback, latest-value worker mailboxes, and authored route cameras.
 - `npm`: standalone public package and native executable launcher.
 
-Canonical profile/project/social records and camera presets live in the portfolio application's `src/data`. Astro reads those files directly. Blog Markdown remains under `src/content/blog`. The TUI build parses frontmatter, excludes `published: false`, and embeds posts newest first.
+Shared shaders, their uniform layout, and camera presets live in `packages/black-hole`. Canonical profile/project/social records remain in the portfolio application's `src/data`. Astro imports graphics assets from `@repo/black-hole` and reads content directly. Blog Markdown remains under `src/content/blog`. The TUI build parses frontmatter, excludes `published: false`, and embeds posts newest first.
 
 ```sh
 node apps/tui/scripts/sync-assets.mjs
 node apps/tui/scripts/sync-assets.mjs --check
 ```
 
-Sync copies website content, resume, shaders, uniform layout, and routes into package assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
+Sync copies shared graphics assets and website content/resume into embedded TUI assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
 
 Departure Mono metrics were generated from the actual website rasterizer in Chromium. To recalibrate after changing the font, glyph set, or rasterizer, start the Astro dev server at `http://127.0.0.1:4321` and run:
 

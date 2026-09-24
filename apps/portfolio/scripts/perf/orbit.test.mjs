@@ -30,7 +30,7 @@ const configSource = await readFile(
 	"utf8",
 );
 const routeData = await readFile(
-	new URL("../../src/data/black-hole-routes.json", import.meta.url),
+	new URL("../../../../packages/black-hole/routes.json", import.meta.url),
 	"utf8",
 );
 // The test imports transpiled source as a data URL, so inline its JSON dependency.

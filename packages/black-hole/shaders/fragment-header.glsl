@@ -1,0 +1,37 @@
+#version 300 es
+precision highp float;
+precision highp int;
+
+uniform vec3 iResolution;
+uniform float iTime;
+uniform float iTimeDelta;
+uniform int iFrame;
+uniform vec4 iMouse;
+uniform vec3 iChannelResolution[4];
+uniform sampler2D iChannel0;
+uniform sampler2D iChannel1;
+uniform sampler2D iChannel2;
+uniform sampler2D iChannel3;
+uniform sampler2D uAsciiAnalysisColor;
+uniform sampler2D uAsciiAnalysisState;
+
+uniform vec3 uCameraPosition;
+uniform vec3 uCameraRight;
+uniform vec3 uCameraUp;
+uniform float uUniverseSign;
+uniform float uQuality;
+uniform float uTemporalJitter;
+uniform float uBlendWeight;
+uniform int uBloomMode;
+uniform vec2 uCanvasResolution;
+uniform vec2 uAsciiCellSize;
+uniform float uAsciiMix;
+uniform int uGlyphCount;
+uniform float uAsciiBrightness;
+uniform float uAsciiContrast;
+uniform int uPaletteMode;
+uniform vec3 uShadowColor;
+uniform vec3 uMidColor;
+uniform vec3 uHighlightColor;
+uniform float uExposure;
+uniform float uBloomStrength;

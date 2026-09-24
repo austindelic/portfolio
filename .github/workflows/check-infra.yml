@@ -1,10 +1,10 @@
 name: Check infrastructure and launcher
 on:
   pull_request:
-    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', '.github/workflows/**', '.gitattributes']
+    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', 'packages/black-hole/**', '.github/workflows/**', '.gitattributes']
   push:
     branches: [main]
-    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', '.github/workflows/**', '.gitattributes']
+    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', 'packages/black-hole/**', '.github/workflows/**', '.gitattributes']
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,6 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
+      - run: node --test packages/black-hole/tests/*.test.mjs
       - run: node apps/tui/scripts/sync-assets.mjs --check
       - run: git diff --exit-code
   validate:
