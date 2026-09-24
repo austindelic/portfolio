@@ -1,0 +1,85 @@
+{
+  "profile": {
+    "name": "Austin Delic",
+    "subtitle": "Software engineer in Perth.",
+    "bio": "I build web and mobile apps, work on the backend, and write tools in Rust. My projects include Tactify, which turns visual learning material into tactile graphics and audio, and Still, a project environment manager. This site has a terminal version too.",
+    "location": "Perth, Australia",
+    "work": "Web, mobile and backend development",
+    "focus": "Accessibility and developer tools",
+    "email": "austin@austindelic.com",
+    "stack": {
+      "ts": "TypeScript",
+      "go": "Go",
+      "rust": "Rust",
+      "python": "Python",
+      "postgres": "Postgres",
+      "next": "Next.js",
+      "angular": "Angular",
+      "dotnet": ".NET",
+      "azure": "Azure"
+    }
+  },
+  "projects": [
+    {
+      "title": "Tactify",
+      "description": "Turns visual learning material into tactile graphics and guided audio.",
+      "label": "product"
+    },
+    {
+      "title": "Still",
+      "description": "A Rust tool for managing a project’s tools, packages and tasks.",
+      "label": "systems",
+      "link": "https://github.com/austindelic/still"
+    },
+    {
+      "title": "This site + the TUI",
+      "description": "An Astro site and a Rust terminal app, with shared content and a black hole.",
+      "label": "personal",
+      "link": "/blog/site-and-terminal/"
+    }
+  ],
+  "socials": [
+    {
+      "title": "Portfolio",
+      "description": "austindelic.com",
+      "href": "https://austindelic.com",
+      "icon": "Globe"
+    },
+    {
+      "title": "GitHub",
+      "description": "@austindelic",
+      "href": "https://github.com/austindelic",
+      "icon": "Code"
+    },
+    {
+      "title": "YouTube",
+      "description": "Austin Develops",
+      "href": "https://youtube.com/@austindevelops",
+      "icon": "Video"
+    },
+    {
+      "title": "Instagram",
+      "description": "@austin.develops",
+      "href": "https://instagram.com/austin.develops",
+      "icon": "Camera"
+    },
+    {
+      "title": "TikTok",
+      "description": "@austin.develops",
+      "href": "https://tiktok.com/@austin.develops",
+      "icon": "Music"
+    },
+    {
+      "title": "LinkedIn",
+      "description": "Austin Delic",
+      "href": "https://linkedin.com/in/austindelic",
+      "icon": "Briefcase"
+    },
+    {
+      "title": "Email",
+      "description": "austin@austindelic.com",
+      "href": "mailto:austin@austindelic.com",
+      "icon": "Mail"
+    }
+  ]
+}
