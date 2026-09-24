@@ -590,6 +590,12 @@ pub struct Worker {
 }
 impl Worker {
     pub fn start(fps: u32) -> Self {
+        Self::start_with_renderer(fps, Renderer::new)
+    }
+    fn start_with_renderer(
+        fps: u32,
+        initialize: impl FnOnce() -> Result<Renderer> + Send + 'static,
+    ) -> Self {
         let request = Arc::new(Mutex::new(None::<Request>));
         let frame = Arc::new(Mutex::new(None));
         let status = Arc::new(Mutex::new("Starting live renderer".into()));
@@ -598,7 +604,7 @@ impl Worker {
         let thread = std::thread::spawn(move || {
             let result =
                 std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Result<()> {
-                    let mut renderer = Renderer::new()?;
+                    let mut renderer = initialize()?;
                     *msg.lock().unwrap() = format!("GPU · {}", renderer.adapter);
                     let mut last = Instant::now() - Duration::from_secs(1);
                     let interval = Duration::from_secs_f64(1. / f64::from(fps));
@@ -656,6 +662,27 @@ impl Drop for Worker {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn worker_recovers_from_initialization_errors_and_panics() {
+        for panic in [false, true] {
+            let mut worker = Worker::start_with_renderer(30, move || {
+                if panic {
+                    panic!("injected renderer panic");
+                }
+                anyhow::bail!("injected renderer error")
+            });
+            worker.thread.take().unwrap().join().unwrap();
+            assert!(
+                worker
+                    .status
+                    .lock()
+                    .unwrap()
+                    .starts_with("Static fallback:")
+            );
+            assert!(worker.frame.lock().unwrap().is_none());
+        }
+    }
+
     #[test]
     fn bundled_glyph_state_indices_are_valid() {
         let m: Metrics =
