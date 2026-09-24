@@ -66,7 +66,8 @@ test('real semantic-release dry runs choose 1.0.0, then patch, and skip duplicat
   r.commit('apps/tui/cli.rs', 'Initial CLI');
   // A local bare remote exercises semantic-release without publishing or network.
   const remote = path.join(r.root, 'remote.git');
-  execFileSync('git', ['init', '--bare', remote], { stdio: 'pipe' });
+  // Match the pushed branch even when the runner defaults new repos to master.
+  execFileSync('git', ['init', '--bare', '-b', 'main', remote], { stdio: 'pipe' });
   r.git('remote', 'add', 'origin', remote);
   r.git('push', 'origin', 'main');
   const options = { branches: ['main'], repositoryUrl: pathToFileURL(remote).href, tagFormat: 'tui-v${version}', dryRun: true,
