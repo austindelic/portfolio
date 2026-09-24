@@ -27,7 +27,7 @@ not screenshots of those products or Braille text.
 ### Selected word-gap Navara masthead
 
 The user explicitly requested image generation after reviewing the authored vector
-versions. `source/navara-word-gap.webp` is the selected generated banner, encoded
+versions. `source/navara-contact.webp` is the selected generated banner, encoded
 as WebP at quality 95. Its composition and typography are those produced by the
 image tool: no cropping, stretching, retouching, or text replacement was applied.
 The native output is 2172 × 724 (3:1), displayed responsively in the README.
@@ -37,17 +37,17 @@ the original photographs remain outside the repository. The approved side-profil
 banner supplied the vehicle style, name,
 role, location and palette for this placement edit. Three alternatives were
 generated independently; the user selected the middle option, bridging the word
-gap. This saved output is used as selected, without subsequent placement edits.
+gap. Two subsequent image-generation edits adjusted the scale and placement so the front tyre rests on the i dot in Austin and the rear tyre rests on the capital D. The final pose is level, with both tyres visibly contacting the white letter tops.
 This is a generated illustration, not a dimensionally exact drawing or a photograph
 of the vehicle.
 
-- `source/navara-word-gap-prompt.txt` records the exact placement-generation prompt.
-- `source/navara-word-gap.json` records the tool, reference names, original output
+- `source/navara-contact-prompt.txt` records both tyre-contact correction prompts.
+- `source/navara-contact.json` records the tool, reference names, original output
   hash, dimensions and compression settings.
 - The original generated PNG remains in Codex's generated-images directory;
   the checked-in optimized source is sufficient to reproduce the served asset.
 
-`render.py` copies the saved source byte-for-byte to `masthead-navara-word-gap.webp`.
+`render.py` copies the saved source byte-for-byte to `masthead-navara-contact.webp`.
 Rebuilding is deterministic; rerunning image generation is not. The fresh filename
 avoids cached versions of the previous vector banner on GitHub. Still connectors
 stop at the final card.
@@ -67,7 +67,7 @@ the Pillow build must support WOFF2. It does not add a dependency to the app.
 `render.py` copies the saved masthead and rebuilds the project strips and four
 standalone SVG icons. It produces:
 
-- `masthead-navara-word-gap.webp` — 2172 × 724.
+- `masthead-navara-contact.webp` — 2172 × 724.
 - `portfolio.webp`, `still-environment.webp`, `tactify.webp` — 1800 × 220 each.
 - `browser.svg`, `terminal.svg`, `systems.svg`, `tactile.svg` — transparent 24px icons.
 
@@ -80,8 +80,8 @@ Palette: charcoal `#0d1117`, warm white `#e6e3db`, amber `#ffa133`, and muted
 gray `#9da6b2`. All assets are static and served from this repository. The
 optional Spotify embed remains an external service.
 
-The display assets total 133,355 bytes; including the saved generated masthead
-and black-hole source, all image assets total 601,835 bytes. Rebuilding with the
+The display assets total 131,929 bytes; including the saved generated masthead
+and black-hole source, all image assets total 598,983 bytes. Rebuilding with the
 verified environment produces identical files.
 
 ## Layout verification

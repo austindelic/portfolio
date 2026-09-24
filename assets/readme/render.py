@@ -36,11 +36,11 @@ def place_capture(canvas, size, xy, bounds):
 def masthead():
     # The approved imagegen result is the source of truth. Copy without another
     # lossy encode; generation itself is not deterministic or performed here.
-    source = HERE / 'source/navara-word-gap.webp'
+    source = HERE / 'source/navara-contact.webp'
     with Image.open(source) as image:
         if image.size != (2172, 724):
             raise ValueError('Unexpected generated masthead dimensions')
-    copyfile(source, HERE / 'masthead-navara-word-gap.webp')
+    copyfile(source, HERE / 'masthead-navara-contact.webp')
 
 
 def strip(name, number, title, kind):
