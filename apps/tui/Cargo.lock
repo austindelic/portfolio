@@ -146,7 +146,7 @@ dependencies = [
 name = "austindelic-blackhole"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "555940db465040039f8d3597115ff93decce305888a8882835711d16e524eef2"
+checksum = "505781e9c8472dd71c49a370f2bed9395d0101ffb3e4be556e9b585b122226ed"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -161,7 +161,7 @@ dependencies = [
 name = "austindelic-blackhole-ratatui"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d069ecb1f25d610e2bc74e7c713c2ced13f7716a4ae2ae08d01669abee3fc261"
+checksum = "a12bd9dfa222d8b324c30c0f67f398423ec961847434190ef704ea4a96e9268b"
 dependencies = [
  "austindelic-blackhole",
  "ratatui",
