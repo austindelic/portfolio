@@ -6,13 +6,9 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 const root = new URL("../../", import.meta.url);
-const core = readFileSync(
-	new URL("src/components/BlackHoleGl.ts", root),
-	"utf8",
-);
 const read = (name) =>
-	readFileSync(new URL(`src/shaders/black-hole/${name}.glsl`, root), "utf8");
-const header = core.match(/export const FRAGMENT_HEADER = `([\s\S]*?)`;/)[1];
+	readFileSync(new URL(`shaders/${name}.glsl`, root), "utf8");
+const header = read("fragment-header");
 const fields = [...header.matchAll(/uniform (?!sampler)(\w+) (\w+)(\[4\])?;/g)];
 let slot = 0;
 const layout = {};
@@ -38,7 +34,7 @@ for (const [i, name] of [
 for (const n of [3, 4])
 	prefix += `bvec${n} portIsNan(vec${n} v){return greaterThan(floatBitsToUint(v) & uvec${n}(0x7fffffffu),uvec${n}(0x7f800000u));}\nbvec${n} portIsInf(vec${n} v){return equal(floatBitsToUint(v) & uvec${n}(0x7fffffffu),uvec${n}(0x7f800000u));}\n`;
 const temp = mkdtempSync(join(tmpdir(), "black-hole-wgsl-"));
-const out = new URL("src/shaders/black-hole/webgpu/", root);
+const out = new URL("shaders/webgpu/", root);
 mkdirSync(out, { recursive: true });
 const image = read("image");
 for (const name of [
@@ -62,7 +58,7 @@ for (const name of [
 				0,
 				read("buffer-a").indexOf("// SECTION 9: mainImage"),
 			) +
-			core.match(/export const BLACK_HOLE_HELPERS = `([\s\S]*?)`;/)[1] +
+			read("helpers") +
 			source;
 	if (name === "buffer-a" || name === "cell")
 		source = source
@@ -137,7 +133,7 @@ const sourceHashes = Object.fromEntries(
 );
 sourceHashes.header = hash(header);
 sourceHashes.helpers = hash(
-	core.match(/export const BLACK_HOLE_HELPERS = `([\s\S]*?)`;/)[1],
+	read("helpers"),
 );
 writeFileSync(
 	new URL("sources.json", out),

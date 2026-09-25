@@ -1,6 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
 const { EventEmitter } = require('node:events');
 const { executable, launch, targets } = require('../../npm/bin/cli.cjs');
 function fixture(platform = 'linux') {
@@ -8,12 +9,12 @@ function fixture(platform = 'linux') {
   const child = Object.assign(new EventEmitter(), { kill: (s) => { child.signal = s; } });
   const calls = [];
   const spawnProcess = (...args) => { calls.push(args); return child; };
-  return { host, child, calls, spawnProcess, exists: () => true };
+  return { host, child, calls, spawnProcess, exists: () => true, resolve: (name, options) => path.join(options.paths[0], 'node_modules', name) };
 }
 test('all five platform executables resolve beneath a path with spaces', () => {
   for (const target of targets) {
     const [platform, arch] = target.split('-');
-    const file = executable(platform, arch, '/tmp/path with spaces');
+    const file = executable(platform, arch, '/tmp/path with spaces', fixture().resolve);
     assert.ok(file.includes('path with spaces'));
     assert.ok(file.endsWith(platform === 'win32' ? 'austindelic.exe' : 'austindelic'));
   }
@@ -52,4 +53,13 @@ test('missing executable, unsupported runtime and spawn failure fail clearly', (
   assert.match(f.host.error, /22 or newer/);
   f = fixture(); launch(f); f.child.emit('error', new Error('permission denied'));
   assert.equal(f.host.exitCode, 1); assert.match(f.host.error, /permission denied/);
+});
+
+test('missing optional package gives reinstall instructions', () => {
+  const f = fixture();
+  launch({ ...f, resolve: () => { throw Object.assign(new Error('missing'), { code: 'MODULE_NOT_FOUND' }); } });
+  assert.match(f.host.error, /austindelic-linux-x64/);
+  assert.match(f.host.error, /--include=optional/);
+  assert.equal(f.calls.length, 0);
+  assert.equal(f.host.exitCode, 1);
 });

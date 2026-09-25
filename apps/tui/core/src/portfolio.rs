@@ -152,6 +152,7 @@ pub struct PortfolioApp {
     pub status: String,
     pub renderer_status: String,
     pub explore_help: String,
+    pub explore_resolution: String,
     pub gpu_available: bool,
     scroll: usize,
     focus: usize,
@@ -180,6 +181,7 @@ impl PortfolioApp {
             status: String::new(),
             renderer_status: "Static background".into(),
             explore_help: String::new(),
+            explore_resolution: String::new(),
             gpu_available: false,
             scroll: 0,
             focus: 0,
@@ -469,6 +471,11 @@ impl PortfolioApp {
                         self.ascii,
                     )),
                     Line::from(clean(&help, self.ascii)),
+                    Line::from(if self.gpu_available {
+                        clean(&self.explore_resolution, self.ascii)
+                    } else {
+                        String::new()
+                    }),
                 ])
                 .style(Style::default().fg(FG).bg(BG)),
                 box_area,
@@ -608,9 +615,10 @@ IJKL look; QE roll; arrows speed
 Drag look; wheel move
 Space pause; 0 reset
 [/] time; -/+ exposure; ,/. bloom
+9/8 decrease/increase render resolution
 Esc / ? / Enter closes help"
             } else if self.page == Page::Explore {
-                "EXPLORE\n\nW/A/S/D: forward / left / backward / right\nR/F: rise / descend   I/J/K/L: look\nQ/E: roll   Up/Down: movement speed\nSpace: pause   0: reset view and settings\n[/]: time scale   -/+: exposure   ,/.: bloom\nDrag: look   Mouse wheel: forward/back\n\nEsc: return   Ctrl-C: quit"
+                "EXPLORE\n\nW/A/S/D: forward / left / backward / right\nR/F: rise / descend   I/J/K/L: look\nQ/E: roll   Up/Down: movement speed\nSpace: pause   0: reset view and settings\n[/]: time scale   -/+: exposure   ,/.: bloom\n9/8: decrease/increase render resolution\nDrag: look   Mouse wheel: forward/back\n\nEsc: return   Ctrl-C: quit"
             } else {
                 "PORTFOLIO\n\nTab / Shift-Tab: focus navigation and links\nLeft/Right: navigation   Enter: activate\nUp/Down or j/k: scroll\nPageUp/PageDown, Home/End: long content\nClick: activate   Mouse wheel: scroll\nEsc: back   q / Ctrl-C: quit\n\nContent is bundled for offline reading.\nExternal links open only when activated.\nSet Departure Mono in your terminal for the intended look.\n\nEsc / ? / Enter: close help"
             };
@@ -892,7 +900,10 @@ mod tests {
     }
     #[test]
     fn markdown_contains_content_and_link_actions() {
-        let rows=markdown("# Heading\n\nParagraph with [link](https://example.com).\n\n- item\n\n> quote\n\n```rust\nlet x = 1;\n```\n\n![diagram](image.png)",|s|Action::Open(s.into()));
+        let rows = markdown(
+            "# Heading\n\nParagraph with [link](https://example.com).\n\n- item\n\n> quote\n\n```rust\nlet x = 1;\n```\n\n![diagram](image.png)",
+            |s| Action::Open(s.into()),
+        );
         let all = rows
             .iter()
             .map(|r| r.text.as_str())
@@ -943,6 +954,23 @@ mod tests {
                         .expect("run UPDATE_SNAPSHOTS=1 cargo test -p tui-core layouts")
                 );
             }
+        }
+    }
+    #[test]
+    fn explore_resolution_is_visible() {
+        for ascii in [false, true] {
+            let mut app = PortfolioApp::new(ascii);
+            app.navigate(Page::Explore);
+            app.gpu_available = true;
+            app.explore_resolution = "Render 0.5x · 1920x3200 px · 9/8 decrease/increase".into();
+            for (w, h) in [(60, 18), (80, 24), (120, 40)] {
+                let text = render(&mut app, w, h);
+                assert!(text.contains("Render 0.5x"));
+                assert!(text.contains("1920x3200 px"));
+                assert!(text.contains("9/8 decrease/increase"));
+            }
+            app.gpu_available = false;
+            assert!(!render(&mut app, 60, 18).contains("Render 0.5x"));
         }
     }
     #[test]

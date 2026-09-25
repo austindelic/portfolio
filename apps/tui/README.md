@@ -57,9 +57,10 @@ The terminal's reported pixel dimensions determine cell aspect where available; 
 | Explore roll | Q / E |
 | Movement speed | Up / Down |
 | Pause / reset | Space / 0 |
+| Render resolution | 9 decrease / 8 increase; 0.5x, 1x, 2x, 4x |
 | Time / exposure / bloom | [ / ], - / +, comma / period |
 
-Explore is entered through the navigation bar. In static mode it displays the fallback and explains that camera controls require the GPU. External actions report success or failure in the footer. Markdown links and images are listed as selectable actions at the end of each article. Use your terminal's selection override (typically Shift-drag) to select text while mouse capture is enabled.
+Explore is entered through the navigation bar. Render resolution changes the GPU image before ASCII conversion, leaving character density unchanged. The current scale and pixel dimensions appear in Explore. It defaults to 1x, persists across pages during the session, and returns to 1x with 0 reset. In static mode it displays the fallback and explains that camera controls require the GPU. External actions report success or failure in the footer. Markdown links and images are listed as selectable actions at the end of each article. Use your terminal's selection override (typically Shift-drag) to select text while mouse capture is enabled.
 
 ## Source and assets
 
@@ -68,14 +69,14 @@ Explore is entered through the navigation bar. In static mode it displays the fa
 - `renderer`: graphics device, six website shader passes, triple-buffered asynchronous cell readback, latest-value worker mailboxes, and authored route cameras.
 - `npm`: standalone public package and native executable launcher.
 
-Canonical profile/project/social records and camera presets live in the portfolio application's `src/data`. Astro reads those files directly. Blog Markdown remains under `src/content/blog`. The TUI build parses frontmatter, excludes `published: false`, and embeds posts newest first.
+Shared shaders, their uniform layout, and camera presets live in `packages/black-hole`. Canonical profile/project/social records remain in the portfolio application's `src/data`. Astro imports graphics assets from `@repo/black-hole` and reads content directly. Blog Markdown remains under `src/content/blog`. The TUI build parses frontmatter, excludes `published: false`, and embeds posts newest first.
 
 ```sh
 node apps/tui/scripts/sync-assets.mjs
 node apps/tui/scripts/sync-assets.mjs --check
 ```
 
-Sync copies website content, resume, shaders, uniform layout, and routes into package assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
+Sync copies shared graphics assets and website content/resume into embedded TUI assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
 
 Departure Mono metrics were generated from the actual website rasterizer in Chromium. To recalibrate after changing the font, glyph set, or rasterizer, start the Astro dev server at `http://127.0.0.1:4321` and run:
 
@@ -106,3 +107,13 @@ See [VALIDATION.md](VALIDATION.md) for measured results and remaining verificati
 ## License
 
 Copyright (c) Austin Delic. [MIT](LICENSE). Shader sources retain the website's source notices.
+
+## Distribution size
+
+The launcher uses exact-version optional packages for the five supported targets. npm installs only the matching binary, including with install scripts disabled. The release workflow measures the previous all-platform layout, validates all six tarballs, and tests OS/CPU filtering against an isolated local registry. Native execution still runs on each target's own runner.
+
+Run `python3 apps/tui/scripts/compare-builds.py` from the repository root to compare the default release baseline against thin/full LTO at optimization levels 3, s, and z. On macOS/Linux with GPU access, pass the baseline and candidate paths to `python3 apps/tui/scripts/benchmark.py`. This records seven startup samples and three throughput/input-latency samples per build; select the smallest build within 10% of the baseline. Compiler comparisons abort if application sources change during the study.
+
+`packed/sizes.json` records native bytes, npm compressed bytes, installed bytes, and artifact integrity. `packed/comparison.json` includes baseline comparisons. Copy accepted `size`, `unpackedSize`, and `executableBytes` measurements for each package into `scripts/size-budgets.json`; the release check permits at most 5% growth. Missing budgets are reported on main/manual runs and block tagged publication. Do not set unmeasured platform budgets. A first complete five-platform run is needed before publishing.
+
+For local packaging, generate notices, place the executable under `release/native/<target>/`, set `NPM_CLI_JS` to npm's `bin/npm-cli.js`, and run `NPM_TARGET=<target> node apps/tui/scripts/pack.cjs <output-directory>`. This produces development-only artifacts. Full release assembly omits `NPM_TARGET` and requires all five native/baseline binaries and measurement files from `release-build.sh`.

@@ -46,6 +46,47 @@ impl Camera {
         self.up = glam::Quat::from_axis_angle(self.forward, angle) * self.up;
     }
 }
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum RenderScale {
+    Half,
+    #[default]
+    One,
+    Two,
+    Four,
+}
+impl RenderScale {
+    pub fn decrease(self) -> Self {
+        match self {
+            Self::Half | Self::One => Self::Half,
+            Self::Two => Self::One,
+            Self::Four => Self::Two,
+        }
+    }
+    pub fn increase(self) -> Self {
+        match self {
+            Self::Half => Self::One,
+            Self::One => Self::Two,
+            Self::Two | Self::Four => Self::Four,
+        }
+    }
+    pub fn multiplier(self) -> f32 {
+        match self {
+            Self::Half => 0.5,
+            Self::One => 1.,
+            Self::Two => 2.,
+            Self::Four => 4.,
+        }
+    }
+    pub fn scene_size(self, width: u16, height: u16, aspect: f32) -> (u32, u32) {
+        let scale = 2. * self.multiplier();
+        (
+            (f32::from(width.clamp(1, 240)) * scale).round().max(1.) as u32,
+            (f32::from(height.clamp(1, 80)) * scale / aspect)
+                .round()
+                .max(1.) as u32,
+        )
+    }
+}
 #[derive(Clone, Debug)]
 pub struct Request {
     pub width: u16,
@@ -57,6 +98,7 @@ pub struct Request {
     pub camera: Camera,
     pub exposure: f32,
     pub bloom: f32,
+    pub render_scale: RenderScale,
 }
 impl Default for Request {
     fn default() -> Self {
@@ -70,6 +112,7 @@ impl Default for Request {
             camera: Camera::default(),
             exposure: 2.,
             bloom: 0.65,
+            render_scale: RenderScale::default(),
         }
     }
 }
@@ -98,6 +141,7 @@ struct Targets {
     w: u32,
     h: u32,
     aspect: f32,
+    render_scale: RenderScale,
     textures: Vec<Texture>,
     slots: Vec<Slot>,
     stride: u32,
@@ -331,8 +375,7 @@ impl Renderer {
     fn resize(&mut self, r: &Request) {
         let w = u32::from(r.width.clamp(1, 240));
         let h = u32::from(r.height.clamp(1, 80));
-        let sw = w * 2;
-        let sh = (h as f32 * 2. / r.aspect).round() as u32;
+        let (sw, sh) = r.render_scale.scene_size(r.width, r.height, r.aspect);
         let mut textures = Vec::new(); // history 0/1, bloom 2/3/4, scene 5, colors 6/7, states 8/9
         for i in 0..10 {
             let (tw, th, format) = if i >= 6 {
@@ -360,6 +403,7 @@ impl Renderer {
             w,
             h,
             aspect: r.aspect,
+            render_scale: r.render_scale,
             textures,
             slots,
             stride,
@@ -456,6 +500,7 @@ impl Renderer {
             t.w != u32::from(r.width.clamp(1, 240))
                 || t.h != u32::from(r.height.clamp(1, 80))
                 || t.aspect != r.aspect
+                || t.render_scale != r.render_scale
         }) {
             self.resize(&r);
         }
@@ -590,6 +635,12 @@ pub struct Worker {
 }
 impl Worker {
     pub fn start(fps: u32) -> Self {
+        Self::start_with_renderer(fps, Renderer::new)
+    }
+    fn start_with_renderer(
+        fps: u32,
+        initialize: impl FnOnce() -> Result<Renderer> + Send + 'static,
+    ) -> Self {
         let request = Arc::new(Mutex::new(None::<Request>));
         let frame = Arc::new(Mutex::new(None));
         let status = Arc::new(Mutex::new("Starting live renderer".into()));
@@ -598,7 +649,7 @@ impl Worker {
         let thread = std::thread::spawn(move || {
             let result =
                 std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Result<()> {
-                    let mut renderer = Renderer::new()?;
+                    let mut renderer = initialize()?;
                     *msg.lock().unwrap() = format!("GPU · {}", renderer.adapter);
                     let mut last = Instant::now() - Duration::from_secs(1);
                     let interval = Duration::from_secs_f64(1. / f64::from(fps));
@@ -657,6 +708,26 @@ impl Drop for Worker {
 mod tests {
     use super::*;
     #[test]
+    fn worker_recovers_from_initialization_errors_and_panics() {
+        for panic in [false, true] {
+            let mut worker = Worker::start_with_renderer(30, move || {
+                if panic {
+                    panic!("injected renderer panic");
+                }
+                anyhow::bail!("injected renderer error")
+            });
+            worker.thread.take().unwrap().join().unwrap();
+            assert!(
+                worker
+                    .status
+                    .lock()
+                    .unwrap()
+                    .starts_with("Static fallback:")
+            );
+            assert!(worker.frame.lock().unwrap().is_none());
+        }
+    }
+    #[test]
     fn bundled_glyph_state_indices_are_valid() {
         let m: Metrics =
             serde_json::from_str(include_str!("../assets/glyph-metrics.json")).unwrap();
@@ -684,6 +755,63 @@ mod tests {
             assert_eq!(slots[name], index);
         }
         assert_eq!(std::mem::size_of::<[[f32; 4]; 40]>(), 640);
+    }
+    #[test]
+    fn scene_resolution_presets() {
+        assert_eq!(Request::default().render_scale, RenderScale::One);
+        for (scale, expected) in [
+            (RenderScale::Half, (120, 80)),
+            (RenderScale::One, (240, 160)),
+            (RenderScale::Two, (480, 320)),
+            (RenderScale::Four, (960, 640)),
+        ] {
+            assert_eq!(scale.scene_size(120, 40, 0.5), expected);
+        }
+        assert_eq!(RenderScale::One.scene_size(60, 18, 0.5), (120, 72));
+        assert_eq!(RenderScale::Half.scene_size(1, 1, 2.), (1, 1));
+        assert_eq!(RenderScale::Four.scene_size(240, 80, 0.2), (1920, 3200));
+        assert_eq!(RenderScale::One.scene_size(80, 24, 1.5), (160, 32));
+    }
+    #[test]
+    #[ignore = "requires a GPU adapter"]
+    fn gpu_resolution_changes_preserve_ascii_grid() -> Result<()> {
+        let mut renderer = Renderer::new()?;
+        for (generation, render_scale) in [
+            RenderScale::Half,
+            RenderScale::One,
+            RenderScale::Two,
+            RenderScale::Four,
+            RenderScale::One,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let request = Request {
+                render_scale,
+                generation: generation as u64,
+                history: generation as u64,
+                ..Request::default()
+            };
+            assert!(renderer.submit(request.clone())?);
+            let targets = renderer.targets.as_ref().unwrap();
+            let scene = &targets.textures[5];
+            assert_eq!((scene.w, scene.h), render_scale.scene_size(120, 40, 0.5));
+            let start = std::time::Instant::now();
+            loop {
+                if let Some(frame) = renderer.poll()? {
+                    assert_eq!((frame.width, frame.height), (120, 40));
+                    assert_eq!(frame.cells.len(), 120 * 40);
+                    assert_eq!(frame.generation, request.generation);
+                    break;
+                }
+                anyhow::ensure!(
+                    start.elapsed() < std::time::Duration::from_secs(10),
+                    "GPU frame timed out"
+                );
+                std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+        }
+        Ok(())
     }
     #[test]
     fn readback_padding() {

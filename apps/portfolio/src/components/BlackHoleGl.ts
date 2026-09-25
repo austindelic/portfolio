@@ -1,5 +1,7 @@
-import asciiAnalysisSource from "../shaders/black-hole/ascii-analysis.glsl?raw";
-import bufferASource from "../shaders/black-hole/buffer-a.glsl?raw";
+import BLACK_HOLE_HELPERS from "@repo/black-hole/shaders/helpers.glsl?raw";
+import FRAGMENT_HEADER from "@repo/black-hole/shaders/fragment-header.glsl?raw";
+import asciiAnalysisSource from "@repo/black-hole/shaders/ascii-analysis.glsl?raw";
+import bufferASource from "@repo/black-hole/shaders/buffer-a.glsl?raw";
 import { submitPrograms } from "./BlackHoleCompilation";
 import {
 	type AsciiCellSize,
@@ -23,90 +25,9 @@ void main() {
 }
 `;
 
-export const FRAGMENT_HEADER = `#version 300 es
-precision highp float;
-precision highp int;
+export { FRAGMENT_HEADER };
 
-uniform vec3 iResolution;
-uniform float iTime;
-uniform float iTimeDelta;
-uniform int iFrame;
-uniform vec4 iMouse;
-uniform vec3 iChannelResolution[4];
-uniform sampler2D iChannel0;
-uniform sampler2D iChannel1;
-uniform sampler2D iChannel2;
-uniform sampler2D iChannel3;
-uniform sampler2D uAsciiAnalysisColor;
-uniform sampler2D uAsciiAnalysisState;
-
-uniform vec3 uCameraPosition;
-uniform vec3 uCameraRight;
-uniform vec3 uCameraUp;
-uniform float uUniverseSign;
-uniform float uQuality;
-uniform float uTemporalJitter;
-uniform float uBlendWeight;
-uniform int uBloomMode;
-uniform vec2 uCanvasResolution;
-uniform vec2 uAsciiCellSize;
-uniform float uAsciiMix;
-uniform int uGlyphCount;
-uniform float uAsciiBrightness;
-uniform float uAsciiContrast;
-uniform int uPaletteMode;
-uniform vec3 uShadowColor;
-uniform vec3 uMidColor;
-uniform vec3 uHighlightColor;
-uniform float uExposure;
-uniform float uBloomStrength;
-`;
-
-export const BLACK_HOLE_HELPERS = `
-void BuildCameraFrame(out mat4 inverseCamRot, out vec4 relativePos, out vec4 relativeDiskNormal, out vec4 relativeDiskTangent, out vec3 mapCamDir)
-{
-	vec3 camRight = normalize(uCameraRight);
-	vec3 camUp = normalize(uCameraUp);
-	vec3 camBack = normalize(cross(camRight, camUp));
-	mat3 camRot = mat3(camRight, camUp, camBack);
-
-	inverseCamRot = mat4(camRot);
-	relativePos = vec4(transpose(camRot) * (-uCameraPosition), 0.0);
-	relativeDiskNormal = vec4(transpose(camRot) * vec3(0.0, 1.0, 0.0), 0.0);
-	relativeDiskTangent = vec4(transpose(camRot) * vec3(1.0, 0.0, 0.0), 0.0);
-	mapCamDir = normalize((inverseCamRot * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
-}
-
-TraceResult TraceFromCamera(vec2 uv, vec2 resolution, float jitterScale, out mat4 inverseCamRot, out vec3 mapCamDir)
-{
-	vec4 relativePos;
-	vec4 relativeDiskNormal;
-	vec4 relativeDiskTangent;
-	BuildCameraFrame(inverseCamRot, relativePos, relativeDiskNormal, relativeDiskTangent, mapCamDir);
-
-	vec2 jitter = vec2(RandomStep(uv, fract(iTime * 1.0 + 0.5)), RandomStep(uv, fract(iTime * 1.0))) / resolution;
-	return TraceRay(uv + jitterScale * uTemporalJitter * jitter, resolution, inverseCamRot, relativePos, relativeDiskNormal, relativeDiskTangent, uUniverseSign);
-}
-
-vec4 FinalizeTrace(TraceResult res, vec2 uv, mat4 inverseCamRot, vec3 mapCamDir)
-{
-	vec4 finalColor = res.AccumColor;
-	float currentStatus = res.Status;
-	vec3 currentDir = res.EscapeDir;
-	float currentShift = res.FreqShift;
-
-	if (currentStatus > 0.5 && currentStatus < 20.0 && currentStatus != 3.0)
-	{
-		vec4 bg = SampleBackground(currentDir, currentShift, currentStatus);
-		float invA = 1.0 - finalColor.a;
-		finalColor += 0.9999 * bg * vec4(pow(invA, 1.0), pow(invA, 1.6), pow(invA, 2.5), 1.0);
-	}
-
-	finalColor = ApplyToneMapping(finalColor, currentShift);
-
-	return finalColor;
-}
-`;
+export { BLACK_HOLE_HELPERS };
 
 export const FALLBACK_CHANNEL_RESOLUTIONS = new Float32Array(12);
 export function cleanShaderSource(name: string, source: string): string {
