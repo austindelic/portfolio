@@ -1,6 +1,6 @@
 {
   "name": "austindelic",
-  "version": "0.1.1",
+  "version": "1.0.2",
   "description": "Austin Delic's interactive terminal portfolio",
   "license": "GPL-3.0-only",
   "author": "Austin Delic",
@@ -35,10 +35,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "optionalDependencies": {
-    "austindelic-darwin-arm64": "0.1.1",
-    "austindelic-darwin-x64": "0.1.1",
-    "austindelic-linux-arm64": "0.1.1",
-    "austindelic-linux-x64": "0.1.1",
-    "austindelic-win32-x64": "0.1.1"
+    "austindelic-darwin-arm64": "1.0.2",
+    "austindelic-darwin-x64": "1.0.2",
+    "austindelic-linux-arm64": "1.0.2",
+    "austindelic-linux-x64": "1.0.2",
+    "austindelic-win32-x64": "1.0.2"
   }
 }

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1
+## 1.0.2
 
 - Consume `austindelic-blackhole` and `austindelic-blackhole-ratatui` 0.1.0 instead of bundled renderer source.
 - Keep the `npx austindelic` command and all five native targets; move repository and release metadata to `austindelic/portfolio`.

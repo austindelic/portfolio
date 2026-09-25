@@ -55,3 +55,15 @@ jobs:
       - run: bun run lint
       - run: bun run --filter portfolio test:performance
       - run: bun run build
+  native:
+    name: Native external-library integration
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install native build prerequisites
+        run: sudo apt-get update && sudo apt-get install -y libwayland-dev pkg-config
+      - name: Install the release Rust toolchain
+        run: rustup toolchain install 1.96.1 --profile minimal && rustup default 1.96.1
+      - run: cargo test --locked --manifest-path apps/tui/Cargo.toml --workspace
+      - run: cargo build --locked --manifest-path apps/tui/Cargo.toml -p austindelic --bin austindelic --example pty-smoke
+      - run: apps/tui/target/debug/examples/pty-smoke apps/tui/target/debug/austindelic --renderer static

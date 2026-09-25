@@ -126,7 +126,7 @@ dependencies = [
 
 [[package]]
 name = "austindelic"
-version = "0.1.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "arboard",
@@ -134,11 +134,9 @@ dependencies = [
  "clap",
  "crossterm",
  "ctrlc",
- "glam",
  "open",
  "portable-pty",
  "ratatui",
- "serde",
  "serde_json",
  "tempfile",
  "tui-core",
@@ -148,7 +146,7 @@ dependencies = [
 name = "austindelic-blackhole"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "005b4f5191ce39e0a8b1c46c1477f04440b669592d40410c7c2338e00142812d"
+checksum = "555940db465040039f8d3597115ff93decce305888a8882835711d16e524eef2"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -163,7 +161,7 @@ dependencies = [
 name = "austindelic-blackhole-ratatui"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5b137bf44c55fcb454a358994f5f1cc2452dcdd7951a2ff2cd0722b24f86fa4"
+checksum = "d069ecb1f25d610e2bc74e7c713c2ced13f7716a4ae2ae08d01669abee3fc261"
 dependencies = [
  "austindelic-blackhole",
  "ratatui",

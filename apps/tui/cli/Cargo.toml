@@ -1,14 +1,12 @@
 [package]
 name = "austindelic"
-version = "0.1.1"
+version = "1.0.2"
 license = "GPL-3.0-only"
 edition = "2024"
 
 [dependencies]
 tui-core = { path = "../core" }
 austindelic-blackhole = "=0.1.0"
-glam = "0.30"
-serde = { version = "1", features = ["derive"] }
 ratatui = { version = "0.30", default-features = false, features = ["crossterm_0_29", "underline-color", "layout-cache"] }
 crossterm = "0.29"
 clap = { version = "4", features = ["derive"] }
