@@ -47,10 +47,23 @@ of the vehicle.
 - The original generated PNG remains in Codex's generated-images directory;
   the checked-in optimized source is sufficient to reproduce the served asset.
 
-`render.py` copies the saved source byte-for-byte to `masthead-navara-word-gap.webp`.
-Rebuilding is deterministic; rerunning image generation is not. The fresh filename
-avoids cached versions of the previous vector banner on GitHub. Still connectors
-stop at the final card.
+### Transparent masthead edit (draft)
+
+The README now references `masthead-navara-word-gap-transparent.webp`, an imagegen
+background-removal edit of the approved banner. The original opaque source and
+display asset remain available for comparison. The new source is
+`source/navara-word-gap-transparent.webp`, encoded as lossless RGBA WebP at the
+original 2172 × 724 dimensions. Its JSON sidecar records the exact prompt,
+generation output hash, encoding, and review status.
+
+**Not ready to merge:** the generated background is genuinely transparent, but
+edge halos and stray pixels remain around the lettering and truck. Clean edges
+and fidelity to the original foreground still require visual approval.
+
+`render.py` validates the dimensions and presence of transparent and opaque pixels,
+then copies the transparent source byte-for-byte to the display asset. It never
+flattens alpha or reruns image generation. The fresh filename avoids cached copies
+of the opaque banner on GitHub. Still connectors stop at the final card.
 
 ## Rebuild
 
@@ -67,7 +80,7 @@ the Pillow build must support WOFF2. It does not add a dependency to the app.
 `render.py` copies the saved masthead and rebuilds the project strips and four
 standalone SVG icons. It produces:
 
-- `masthead-navara-word-gap.webp` — 2172 × 724.
+- `masthead-navara-word-gap-transparent.webp` — 2172 × 724, RGBA with transparency.
 - `portfolio.webp`, `still-environment.webp`, `tactify.webp` — 1800 × 220 each.
 - `browser.svg`, `terminal.svg`, `systems.svg`, `tactile.svg` — transparent 24px icons.
 
@@ -80,11 +93,23 @@ Palette: charcoal `#0d1117`, warm white `#e6e3db`, amber `#ffa133`, and muted
 gray `#9da6b2`. All assets are static and served from this repository. The
 optional Spotify embed remains an external service.
 
-The display assets total 133,355 bytes; including the saved generated masthead
-and black-hole source, all image assets total 601,835 bytes. Rebuilding with the
-verified environment produces identical files.
+The transparent source and display asset are each 266,866 bytes. Rebuilding the
+masthead copies the source without changing any decoded pixels or alpha values.
 
-## Layout verification
+## Transparent edit verification
+
+The lossless WebP decoded identically to the generated PNG, including alpha.
+Rebuilding the masthead produced a byte-identical copy. Background corner and
+empty-canvas samples have alpha 0; a wheel sample retains alpha 253/255.
+
+A local preview using the README's actual masthead HTML passed Playwright checks
+at 1280px and 390px: the image loaded at 2172 × 724, the corner remained transparent,
+and there was no horizontal overflow, page error, console error, or failed request.
+The dark rectangular backdrop is gone. Visual inspection still found foreground
+edge artifacts, so these technical checks do not establish merge readiness.
+This focused preview is not a live GitHub profile or full Markdown rendering.
+
+## Previous layout verification
 
 The README was rendered through GitHub's Markdown API and previewed locally with
 GitHub-style Markdown CSS. Playwright checks passed at 1280px, 390px, and 320px
