@@ -74,8 +74,8 @@ Explore is entered through the navigation bar. In static mode it displays the fa
 Shared shaders, their uniform layout, and camera presets live in `packages/black-hole`. Canonical profile/project/social records remain in the portfolio application's `src/data`. Astro imports graphics assets from `@repo/black-hole` and reads content directly. Blog Markdown remains under `src/content/blog`. The TUI build parses frontmatter, excludes `published: false`, and embeds posts newest first.
 
 ```sh
-node apps/tui/scripts/sync-assets.mjs
-node apps/tui/scripts/sync-assets.mjs --check
+node --import tsx apps/tui/scripts/sync-assets.ts
+node --import tsx apps/tui/scripts/sync-assets.ts --check
 ```
 
 Sync copies shared graphics assets and website content/resume into embedded TUI assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
@@ -84,7 +84,7 @@ Departure Mono metrics were generated from the actual website rasterizer in Chro
 
 ```sh
 npx --yes --package @playwright/cli playwright-cli -s=tui open http://127.0.0.1:4321/
-npx --yes --package @playwright/cli playwright-cli --raw -s=tui run-code --filename=apps/tui/scripts/glyph-metrics.js > /tmp/glyph-metrics.json
+npx --yes --package @playwright/cli playwright-cli --raw -s=tui run-code --filename="$(bun run --silent prepare:browser apps/tui/scripts/glyph-metrics.ts)" > /tmp/glyph-metrics.json
 ```
 
 Validate that the result is the metrics JSON object, copy it to `apps/tui/renderer/assets/glyph-metrics.json`, then run asset sync. The static artwork is a real frame captured from the same GPU pipeline; regenerate with `cargo run --manifest-path apps/tui/Cargo.toml -p tui-renderer --example probe -- /tmp/fallback.json` and copy the resulting JSON to `core/assets/fallback.json` before syncing.
@@ -118,4 +118,4 @@ Run `python3 apps/tui/scripts/compare-builds.py` from the repository root to com
 
 `packed/<registry>/sizes.json` records native bytes, npm compressed bytes, installed bytes, and artifact integrity. `packed/<registry>/comparison.json` includes baseline comparisons. Copy accepted `size`, `unpackedSize`, and `executableBytes` measurements for each package into `scripts/size-budgets.json`; the release check permits at most 5% growth. Missing budgets are reported on main/manual runs and block publication. Do not set unmeasured platform budgets. A first complete five-platform run is needed before publishing.
 
-For local packaging, generate notices, place the executable under `release/native/<target>/`, set `NPM_CLI_JS` to npm's `bin/npm-cli.js`, and run `NPM_TARGET=<target> node apps/tui/scripts/pack.cjs <output-directory>`. This produces development-only artifacts. Full release assembly omits `NPM_TARGET` and requires all five native/baseline binaries and measurement files from `release-build.sh`.
+For local packaging, generate notices, place the executable under `release/native/<target>/`, set `NPM_CLI_JS` to npm's `bin/npm-cli.js`, and run `NPM_TARGET=<target> node --import tsx apps/tui/scripts/pack.ts <output-directory>`. This produces development-only artifacts. Full release assembly omits `NPM_TARGET` and requires all five native/baseline binaries and measurement files from `release-build.sh`.

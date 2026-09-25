@@ -12,10 +12,10 @@ From the repository root, regenerate with the existing pinned compiler:
 
 ```sh
 cargo install naga-cli --version 27.0.0 --locked --root /tmp/black-hole-naga
-node packages/black-hole/tooling/webgpu/port-shaders.mjs /tmp/black-hole-naga/bin/naga
-node apps/tui/scripts/sync-assets.mjs
-node --test packages/black-hole/tests/*.test.mjs
-node apps/tui/scripts/sync-assets.mjs --check
+node --import tsx packages/black-hole/tooling/webgpu/port-shaders.ts /tmp/black-hole-naga/bin/naga
+node --import tsx apps/tui/scripts/sync-assets.ts
+node --import tsx --test packages/black-hole/tests/*.test.ts
+node --import tsx apps/tui/scripts/sync-assets.ts --check
 ```
 
 Keep generated shaders and TUI copies committed. The TUI embeds its copies, allowing standalone Cargo builds without Node or this package at build/runtime. The sync check and source-hash tests run in CI. Preserve shader source notices and LF line endings.

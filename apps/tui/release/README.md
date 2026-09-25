@@ -1,12 +1,12 @@
 # Terminal release automation
 
-This isolated Node 24 tool package owns semantic-release dependencies and its npm lockfile. It is intentionally outside the Bun workspace. Install with `npm ci --prefix apps/tui/release`; test with `npm test --prefix apps/tui/release`.
+This isolated Node 24 tool package owns semantic-release dependencies and its npm lockfile. It is intentionally outside the Bun workspace. Install workspace tooling with `bun install --frozen-lockfile`, then release dependencies with `npm ci --prefix apps/tui/release`; test with `npm test --prefix apps/tui/release`.
 
 ## Pipeline
 
 `release-tui.yml` plans a version, stamps the temporary Cargo/npm build inputs, builds all five targets, packages both registries, and runs both package variants on every target. It retains `tested-release` only after the entire test matrix passes. Normal main pushes publish only when the repository variable `TUI_RELEASE_ENABLED` is exactly `true`. Manual `verify` runs never publish, including when that variable is enabled.
 
-The first automated version is 1.0.0. Later ordinary relevant changes default to patch releases; conventional feature and breaking-change commits select minor and major releases. Unrelated website/root changes are excluded from commit analysis. The relevant paths in `paths.mjs` and the workflow must stay aligned with the terminal's asset inputs. Git tags use `tui-vX.Y.Z`; generated manifest changes are not committed back to main.
+The first automated version is 1.0.0. Later ordinary relevant changes default to patch releases; conventional feature and breaking-change commits select minor and major releases. Unrelated website/root changes are excluded from commit analysis. The relevant paths in `paths.ts` and the workflow must stay aligned with the terminal's asset inputs. Git tags use `tui-vX.Y.Z`; generated manifest changes are not committed back to main.
 
 Once planning selects a release, publication uses that saved version, source commit, release notes and tested archives without running semantic-release again. New commits on main during the build are allowed, including new terminal features; they belong to a later release. Both normal publishing and recovery fetch current remote state and require the tested commit to remain an ancestor of main, valid archive hashes and size budgets, no newer release tag, and any existing same-version tag to identify the tested commit. Runs remain serialized by the workflow's `tui-release` concurrency group.
 
@@ -38,6 +38,6 @@ Artifacts are retained for 90 days. If they expire, do not rebuild and overwrite
 ## Local verification
 
 - `npm test --prefix apps/tui/release` exercises semantic-release dry runs and snapshot publication against local Git remotes, including advancing main, remote tag conflicts, newer releases, rewritten history, default-channel version progression, integrity/size gates and partial-publish retries. It also checks both package layouts with real npm installation for all five OS/CPU combinations. Registry publication is stubbed; native fixtures are not executable and do not replace platform CI.
-- `node --test apps/tui/scripts/tests/npm-launcher.test.cjs` checks launcher behavior.
+- `node --import tsx --test apps/tui/scripts/tests/npm-launcher.test.ts` checks launcher behavior.
 - Run actionlint against `.github/workflows/release-tui.yml` and the asset synchronization check before pushing.
 - The full platform workflow is required before publication; local tests do not establish Windows/Linux runtime or GPU correctness.

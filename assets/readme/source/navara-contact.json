@@ -1,0 +1,24 @@
+{
+  "tool": "Built-in image_gen",
+  "intent": "Selected word-gap placement corrected so both tyres touch lettering",
+  "referenceImages": [
+    "Selected word-gap banner",
+    "First tyre-contact edit"
+  ],
+  "originalOutput": "exec-f1948a0d-9c65-4dc4-a75c-ed35d6dab31c.png",
+  "originalSha256": "f09a75df02fb32115478eac1393a9deceae4a674c848720c05e272783e0d4993",
+  "storedSource": "navara-contact.webp",
+  "storedDimensions": [
+    2172,
+    724
+  ],
+  "encoding": {
+    "format": "WebP",
+    "quality": 95,
+    "method": 6
+  },
+  "processing": "Format/compression conversion only; no crop, stretching, compositing, retouching or text replacement.",
+  "prompt": "navara-contact-prompt.txt",
+  "generationPasses": 2,
+  "selection": "Contact correction of user-selected middle placement"
+}

@@ -27,7 +27,7 @@ not screenshots of those products or Braille text.
 ### Selected word-gap Navara masthead
 
 The user explicitly requested image generation after reviewing the authored vector
-versions. `source/navara-word-gap.webp` is the selected generated banner, encoded
+versions. `source/navara-contact.webp` is the selected generated banner, encoded
 as WebP at quality 95. Its composition and typography are those produced by the
 image tool: no cropping, stretching, retouching, or text replacement was applied.
 The native output is 2172 × 724 (3:1), displayed responsively in the README.
@@ -37,33 +37,32 @@ the original photographs remain outside the repository. The approved side-profil
 banner supplied the vehicle style, name,
 role, location and palette for this placement edit. Three alternatives were
 generated independently; the user selected the middle option, bridging the word
-gap. This saved output is used as selected, without subsequent placement edits.
+gap. Two subsequent image-generation edits adjusted the scale and placement so the front tyre rests on the i dot in Austin and the rear tyre rests on the capital D. The final pose is level, with both tyres visibly contacting the white letter tops.
 This is a generated illustration, not a dimensionally exact drawing or a photograph
 of the vehicle.
 
-- `source/navara-word-gap-prompt.txt` records the exact placement-generation prompt.
-- `source/navara-word-gap.json` records the tool, reference names, original output
+- `source/navara-contact-prompt.txt` records both tyre-contact correction prompts.
+- `source/navara-contact.json` records the tool, reference names, original output
   hash, dimensions and compression settings.
 - The original generated PNG remains in Codex's generated-images directory;
   the checked-in optimized source is sufficient to reproduce the served asset.
 
-### Transparent masthead edit (draft)
+### Transparent tyre-contact edit (draft)
 
-The README now references `masthead-navara-word-gap-transparent.webp`, an imagegen
-background-removal edit of the approved banner. The original opaque source and
-display asset remain available for comparison. The new source is
-`source/navara-word-gap-transparent.webp`, encoded as lossless RGBA WebP at the
-original 2172 × 724 dimensions. Its JSON sidecar records the exact prompt,
-generation output hash, encoding, and review status.
+The README uses `masthead-navara-contact-transparent.webp`, an imagegen
+background-removal edit of `source/navara-contact.webp`. It retains the newer
+composition with the front tyre on the i dot and the rear tyre on the D.
+The approved opaque source and display asset remain available for comparison.
+The saved transparent source is `source/navara-contact-transparent.webp`;
+its JSON sidecar records the exact prompt, output hash, encoding, and review status.
 
-**Not ready to merge:** the generated background is genuinely transparent, but
-edge halos and stray pixels remain around the lettering and truck. Clean edges
-and fidelity to the original foreground still require visual approval.
+The source is lossless RGBA WebP at 2172 × 724. `render.py` validates its dimensions
+and presence of transparent and opaque pixels, then copies it byte-for-byte to
+the display asset without flattening alpha or rerunning image generation.
 
-`render.py` validates the dimensions and presence of transparent and opaque pixels,
-then copies the transparent source byte-for-byte to the display asset. It never
-flattens alpha or reruns image generation. The fresh filename avoids cached copies
-of the opaque banner on GitHub. Still connectors stop at the final card.
+**Not ready to merge:** edge halos and stray pixels remain around the lettering
+and truck. Tyre contact is retained, but exact foreground fidelity and clean edges
+still need visual cleanup. The previous word-gap transparent draft is superseded.
 
 ## Rebuild
 
@@ -80,7 +79,7 @@ the Pillow build must support WOFF2. It does not add a dependency to the app.
 `render.py` copies the saved masthead and rebuilds the project strips and four
 standalone SVG icons. It produces:
 
-- `masthead-navara-word-gap-transparent.webp` — 2172 × 724, RGBA with transparency.
+- `masthead-navara-contact-transparent.webp` — 2172 × 724, RGBA with transparency.
 - `portfolio.webp`, `still-environment.webp`, `tactify.webp` — 1800 × 220 each.
 - `browser.svg`, `terminal.svg`, `systems.svg`, `tactile.svg` — transparent 24px icons.
 
@@ -93,20 +92,20 @@ Palette: charcoal `#0d1117`, warm white `#e6e3db`, amber `#ffa133`, and muted
 gray `#9da6b2`. All assets are static and served from this repository. The
 optional Spotify embed remains an external service.
 
-The transparent source and display asset are each 266,866 bytes. Rebuilding the
-masthead copies the source without changing any decoded pixels or alpha values.
+The transparent source and display asset are each 222,236 bytes.
+The lossless encoding preserves every generated RGBA pixel.
 
 ## Transparent edit verification
 
-The lossless WebP decoded identically to the generated PNG, including alpha.
-Rebuilding the masthead produced a byte-identical copy. Background corner and
-empty-canvas samples have alpha 0; a wheel sample retains alpha 253/255.
+The WebP decoded identically to the generated PNG, including alpha. Rebuilding
+the masthead produced a byte-identical display asset. Background corner and
+empty-canvas samples have alpha 0; both wheel-centre samples retain alpha 253/255.
 
-A local preview using the README's actual masthead HTML passed Playwright checks
-at 1280px and 390px: the image loaded at 2172 × 724, the corner remained transparent,
-and there was no horizontal overflow, page error, console error, or failed request.
-The dark rectangular backdrop is gone. Visual inspection still found foreground
-edge artifacts, so these technical checks do not establish merge readiness.
+A local preview using the README's masthead HTML passed Playwright checks at
+1280px and 390px: the 2172 × 724 image loaded, corner alpha remained zero, and
+there was no horizontal overflow, page error, console error, or failed request.
+Visual inspection confirmed the newer tyre-contact composition and removal of
+the dark rectangle, but found foreground edge artifacts. The PR remains a draft.
 This focused preview is not a live GitHub profile or full Markdown rendering.
 
 ## Previous layout verification

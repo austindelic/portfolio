@@ -36,13 +36,13 @@ def place_capture(canvas, size, xy, bounds):
 def masthead():
     # Copy the saved transparent edit without re-encoding or flattening its alpha.
     # Generation itself is not deterministic or performed here.
-    source = HERE / 'source/navara-word-gap-transparent.webp'
+    source = HERE / 'source/navara-contact-transparent.webp'
     with Image.open(source) as image:
         if image.size != (2172, 724):
             raise ValueError('Unexpected generated masthead dimensions')
         if image.mode != 'RGBA' or image.getchannel('A').getextrema() != (0, 255):
             raise ValueError('Masthead must retain transparent and opaque pixels')
-    copyfile(source, HERE / 'masthead-navara-word-gap-transparent.webp')
+    copyfile(source, HERE / 'masthead-navara-contact-transparent.webp')
 
 
 def strip(name, number, title, kind):
