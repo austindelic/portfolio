@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "bun"
+    ],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "paths": {
+      "/src/*": [
+        "./apps/portfolio/src/*"
+      ],
+      "/tests/*": [
+        "./apps/portfolio/tests/*"
+      ]
+    }
+  },
+  "include": [
+    "tooling/**/*.ts",
+    "infra/tests/*.ts",
+    "apps/portfolio/scripts/**/*.ts",
+    "apps/portfolio/tests/**/*.ts",
+    "apps/portfolio/tooling/**/*.ts",
+    "apps/portfolio/astro.config.ts",
+    "apps/tui/scripts/**/*.ts",
+    "apps/tui/npm/bin/*.ts",
+    "packages/eslint-config/**/*.ts",
+    "packages/ui/eslint.config.ts",
+    "apps/portfolio/src/env.d.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**"
+  ]
+}

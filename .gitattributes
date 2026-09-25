@@ -9,9 +9,7 @@ apps/portfolio/src/components/BlackHoleCore.ts text eol=lf
 apps/tui/assets-manifest.json text eol=lf
 apps/tui/core/assets/**/*.md text eol=lf
 apps/tui/core/assets/*.json text eol=lf
-apps/tui/renderer/assets/*.json text eol=lf
-apps/tui/renderer/assets/*.wgsl text eol=lf
-apps/tui/core/tests/snapshots/*.txt text eol=lf
+apps/tui/core/tests/snapshots/*.txt text eol=lf -whitespace
 
 # Bash also needs LF when invoked by the Windows release runner.
 apps/tui/scripts/*.sh text eol=lf

@@ -5,46 +5,46 @@
                                                                                   │                                                                          │  
                                                                                   │ 01 / ABOUT                         Perth, Australia                      │  
                                                                                   │ Austin Delic.                                                            │  
-                                                                                  │ Software engineer / builder in Perth.                                    │  
+                                                                                  │ Software engineer in Perth.                                              │  
                                                                                   │                                                                          │  
-                                                                                  │ I build production software across web, mobile, backend systems,         │  
-                                                                                  │ cloud infrastructure, and AI product surfaces. Recent work spans         │  
-                                                                                  │ healthcare payments platforms, accessibility tooling, Rust developer     │  
-                                                                                  │ infrastructure, and full-stack client products.                          │  
+                                                                                  │ I build web and mobile apps, work on the backend, and write tools in     │  
+                                                                                  │ Rust. My projects include Tactify, which turns visual learning material  │  
+                                                                                  │ into tactile graphics and audio, and Still, a project environment        │  
+                                                                                  │ manager. This site has a terminal version too.                           │  
                                                                                   │                                                                          │  
                                                                                   │ Location Perth, Australia                                                │  
-                                                                                  │ Work     Production full-stack engineering, AI products, systems tooling │  
-                                                                                  │ Focus    End-to-end ownership, reliable delivery, useful abstractions    │  
+                                                                                  │ Work     Web, mobile and backend development                             │  
+                                                                                  │ Focus    Accessibility and developer tools                               │  
                                                                                   │   @ Contact  austin@austindelic.com                                      │  
                                                                                   │   Copy email                                                             │  
                                                                                   │ Stack    angular / azure / dotnet / go / next / postgres / python /      │  
                                                                                   │ rust / ts                                                                │  
                                                                                   │                                                                          │  
-                                                                                  │ 02 / PROJECT SAMPLES                                                     │  
-                                                                                  │   01  Tactify  / product                                                 │  
-                                                                                  │ AI accessibility platform for tactile SVG graphics and guided audio      │  
-                                                                                  │ narration.                                                               │  
+                                                                                  │ 02 / PROJECTS                                                            │  
+                                                                                  │ 01  Tactify  / product                                                   │  
+                                                                                  │ Turns visual learning material into tactile graphics and guided audio.   │  
                                                                                   │                                                                          │  
                                                                                   │   02  Still  / systems                                                   │  
-                                                                                  │ Rust project environment manager built around typed desired state.       │  
+                                                                                  │ A Rust tool for managing a project’s tools, packages and tasks.          │  
                                                                                   │                                                                          │  
-                                                                                  │   03  Production systems  / work                                         │  
-                                                                                  │ Notes from shipping across web, mobile, APIs, cloud, CI/CD, and support  │  
-                                                                                  │ tooling.                                                                 │  
+                                                                                  │   03  This site + the TUI  / personal                                    │  
+                                                                                  │ An Astro site and a Rust terminal app, with shared content and a black   │  
+                                                                                  │ hole.                                                                    │  
                                                                                   │                                                                          │  
                                                                                   │ 03 / LATEST POSTS                                                        │  
-                                                                                  │   2026-07-08  Building Tactify                                           │  
-                                                                                  │ Notes on turning an accessibility problem into an AI product that        │  
-                                                                                  │ converts visual learning material into tactile graphics and guided       │  
-                                                                                  │ audio.                                                                   │  
+                                                                                  │   2026-09-25  Rendering a Black Hole in the Browser and Terminal         │  
+                                                                                  │ How the Astro site and Rust terminal app share their content, shaders    │  
+                                                                                  │ and black hole.                                                          │  
                                                                                   │                                                                          │  
-                                                                                  │   2026-07-07  Still and Desired State                                    │  
-                                                                                  │ Why I am building Still as a Rust project environment manager around     │  
-                                                                                  │ typed config, planning, lockfiles, and trust.                            │  
                                                                                   │                                                                          │  
-                                                                                  │   2026-07-06  Notes From Production Systems                              │  
-                                                                                  │ What I have learned working across web apps, mobile apps, backend APIs,  │  
-                                                                                  │ cloud deployments, CI/CD, and support tooling.                           │  
+                                                                                  │                                                                          │  
+                                                                                  │                                                                          │  
+                                                                                  │                                                                          │  
+                                                                                  │                                                                          │  
+                                                                                  │                                                                          │  
+                                                                                  │                                                                          │  
+                                                                                  │                                                                          │  
+                                                                                  │                                                                          │  
                                                                                   └──────────────────────────────────────────────────────────────────────────┘  
                                                                                                                                                                 
 Tab focus  Enter open  j/k scroll  ? help  q quit  | Static background                                                                                          

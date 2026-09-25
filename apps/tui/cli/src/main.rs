@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use austindelic_blackhole::{Camera, RenderScale, Request, Worker};
 use clap::{Parser, ValueEnum};
 use crossterm::{
     cursor::{Hide, Show},
@@ -19,7 +20,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tui_core::portfolio::{self, Action, Input, Page, PortfolioApp};
-use tui_renderer::{Camera, RenderScale, Request, Worker, route};
+mod route;
 #[derive(Clone, Copy, Debug, ValueEnum, PartialEq)]
 enum RendererMode {
     Auto,
@@ -35,6 +36,9 @@ struct Args {
     fps: u32,
     #[arg(long)]
     no_animation: bool,
+    /// Use the terminal’s configured background instead of pure black.
+    #[arg(short = 't', long)]
+    terminal_background: bool,
     #[arg(long)]
     ascii: bool,
     /// Character width / height (e.g. 0.5); auto-detected when reported by the terminal.
@@ -193,6 +197,7 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     startup_trace("terminal backend initialized");
     let mut app = PortfolioApp::new(args.ascii);
+    app.terminal_background = args.terminal_background;
     let fallback = portfolio::fallback();
     let mut background = fallback.clone();
     let worker = (args.renderer != RendererMode::Static).then(|| Worker::start(args.fps));
@@ -226,7 +231,15 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
         let dt = now.duration_since(last).as_secs_f32().min(0.1);
         last = now;
         if let Some(worker) = &worker {
-            let status = worker.status.lock().unwrap().clone();
+            let status = worker
+                .status()
+                .map(
+                    |status| match status.strip_prefix("Renderer unavailable:") {
+                        Some(reason) => format!("Static fallback:{reason}"),
+                        None => status,
+                    },
+                )
+                .unwrap_or_else(|| app.renderer_status.clone());
             if status != app.renderer_status {
                 app.renderer_status = status;
                 dirty = true;
@@ -238,7 +251,7 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
                     anyhow::bail!("{}", app.renderer_status);
                 }
             }
-            if let Some(frame) = worker.frame.lock().unwrap().take()
+            if let Some(frame) = worker.take_frame()
                 && frame.generation == generation
             {
                 background = frame;
@@ -512,6 +525,21 @@ fn perform(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn terminal_background_arguments() {
+        assert!(
+            !Args::try_parse_from(["austindelic"])
+                .unwrap()
+                .terminal_background
+        );
+        for flag in ["-t", "--terminal-background"] {
+            assert!(
+                Args::try_parse_from(["austindelic", flag])
+                    .unwrap()
+                    .terminal_background
+            );
+        }
+    }
     #[test]
     fn render_resolution() {
         assert_eq!(render_grid(240, 80, 120), (120, 40));

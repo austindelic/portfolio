@@ -4,6 +4,26 @@
     "unpackedSize": 3996522,
     "executableBytes": 3333344
   },
+  "austindelic-darwin-x64": {
+    "size": 1740535,
+    "unpackedSize": 4395742,
+    "executableBytes": 3732572
+  },
+  "austindelic-linux-arm64": {
+    "size": 2186109,
+    "unpackedSize": 5125070,
+    "executableBytes": 4461896
+  },
+  "austindelic-linux-x64": {
+    "size": 2166654,
+    "unpackedSize": 5643574,
+    "executableBytes": 4980408
+  },
+  "austindelic-win32-x64": {
+    "size": 1916740,
+    "unpackedSize": 5313150,
+    "executableBytes": 4649984
+  },
   "austindelic": {
     "size": 4545,
     "unpackedSize": 9936,

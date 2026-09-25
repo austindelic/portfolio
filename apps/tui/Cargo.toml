@@ -1,5 +1,5 @@
 [workspace]
-members = ["core", "cli", "renderer"]
+members = ["core", "cli"]
 default-members = ["cli"]
 resolver = "2"
 

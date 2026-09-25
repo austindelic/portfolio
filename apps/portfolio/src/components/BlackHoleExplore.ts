@@ -1,6 +1,6 @@
-import type { mountBlackHoleRuntime } from "./BlackHoleRuntime";
+import type { mountBlackHole } from "@austindelic/blackhole";
 
-type Runtime = ReturnType<typeof mountBlackHoleRuntime>;
+type Runtime = ReturnType<typeof mountBlackHole>;
 
 export function bindBlackHoleExplore(getRuntime: () => Runtime | undefined) {
 	const trigger = document.querySelector<HTMLButtonElement>(

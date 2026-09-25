@@ -2,7 +2,8 @@ use std::{env, fs, path::PathBuf};
 fn main() {
     println!("cargo:rerun-if-changed=assets/posts");
     let mut posts = Vec::new();
-    for entry in fs::read_dir("assets/posts").expect("Run node scripts/sync-assets.mjs") {
+    for entry in fs::read_dir("assets/posts").expect("Run node --import tsx scripts/sync-assets.ts")
+    {
         let path = entry.unwrap().path();
         if path.extension().is_none_or(|x| x != "md") {
             continue;

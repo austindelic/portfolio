@@ -126,20 +126,47 @@ dependencies = [
 
 [[package]]
 name = "austindelic"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "arboard",
+ "austindelic-blackhole",
  "clap",
  "crossterm",
  "ctrlc",
+ "glam",
  "open",
  "portable-pty",
  "ratatui",
+ "serde",
  "serde_json",
  "tempfile",
  "tui-core",
- "tui-renderer",
+]
+
+[[package]]
+name = "austindelic-blackhole"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "005b4f5191ce39e0a8b1c46c1477f04440b669592d40410c7c2338e00142812d"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "glam",
+ "pollster",
+ "serde",
+ "serde_json",
+ "wgpu",
+]
+
+[[package]]
+name = "austindelic-blackhole-ratatui"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5b137bf44c55fcb454a358994f5f1cc2452dcdd7951a2ff2cd0722b24f86fa4"
+dependencies = [
+ "austindelic-blackhole",
+ "ratatui",
 ]
 
 [[package]]
@@ -2328,6 +2355,8 @@ dependencies = [
 name = "tui-core"
 version = "0.1.0"
 dependencies = [
+ "austindelic-blackhole",
+ "austindelic-blackhole-ratatui",
  "pulldown-cmark",
  "ratatui",
  "serde",
@@ -2335,20 +2364,6 @@ dependencies = [
  "serde_yaml_ng",
  "textwrap",
  "unicode-width",
-]
-
-[[package]]
-name = "tui-renderer"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytemuck",
- "glam",
- "pollster",
- "serde",
- "serde_json",
- "tui-core",
- "wgpu",
 ]
 
 [[package]]

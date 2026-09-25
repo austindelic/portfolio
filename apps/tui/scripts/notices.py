@@ -7,11 +7,11 @@ import subprocess
 
 root = Path(__file__).resolve().parents[1]
 metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--locked', '--format-version=1', '--manifest-path', str(root / 'Cargo.toml')]))
-parts = ['# Third-party notices\n\nThe portfolio application is MIT licensed. Dependencies retain their individual licenses.\n',
-         '## Shader sources\n\nThe bundled WGSL shaders derive from the website sources in this repository. The original source header credits:\n\n'
+parts = ['# Third-party notices\n\nThe distributed portfolio application is GPL-3.0-only licensed. Dependencies retain their individual licenses.\n',
+         '## Shader sources\n\nThe bundled WGSL shaders are distributed by austindelic-blackhole. The original source header credits:\n\n'
          '- https://github.com/baopinshui/NPGS/blob/master/NPGS/Sources/Engine/Shaders/BlackHole_common.glsl\n'
          '- https://zhuanlan.zhihu.com/p/2003513260645830673\n'
-         '- Code rain: https://www.shadertoy.com/view/4t3BWl\n\nThese credits are preserved from the source and do not relicense third-party material.\n']
+         '\nThe unverified Shadertoy code-rain effect is not included in Blackhole 0.1.0.\n']
 texts = {}
 expanded = list(parts)
 for pkg in sorted(metadata['packages'], key=lambda p: (p['name'], p['version'])):

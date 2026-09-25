@@ -3,22 +3,22 @@
  │  ⌂ Home  ≡ Blog  @ Socials  ↓ Resume  ◎ Explore                            │ 
  │ PERTH / 00:00:00                                                           │ 
  │                                                                            │ 
- │ Building Tactify                                                           │ 
- │ 2026-07-08                                                                 │ 
- │ Notes on turning an accessibility problem into an AI product that converts │ 
- │ visual learning material into tactile graphics and guided audio.           │ 
+ │ Rendering a Black Hole in the Browser and Terminal                         │ 
+ │ 2026-09-25                                                                 │ 
+ │ How the Astro site and Rust terminal app share their content, shaders and  │ 
+ │ black hole.                                                                │ 
  │                                                                            │ 
- │ Tactify started as a simple frustration: a lot of learning material        │ 
- │ assumes vision as the default interface.                                   │ 
+ │ This portfolio has two interfaces: an Astro website and a native Rust      │ 
+ │ terminal app. They share the content and black-hole shaders. The terminal  │ 
+ │ version renders the scene as coloured characters, with Ratatui drawing the │ 
+ │ interface over it.                                                         │ 
  │                                                                            │ 
- │ Worksheets, diagrams, charts, and classroom handouts often carry the real  │ 
- │ explanation in layout, arrows, shape, labels, and visual grouping. If you  │ 
- │ cannot inspect that visual structure directly, the material is not just    │ 
- │ inconvenient. It is incomplete.                                            │ 
+ │ The website                                                                │ 
  │                                                                            │ 
- │ I wanted to explore whether AI could help translate that visual structure  │ 
- │ into something more tactile and navigable. Not just "describe this image", │ 
- │ but turn the image into a set of artifacts someone could actually use:     │ 
+ │ Astro builds the profile, projects and Markdown posts into static pages.   │ 
+ │ The black hole runs separately in the browser. Open explore to move the    │ 
+ │ camera without the page covering the scene, or leave it running behind     │ 
+ │ the content.                                                               │ 
  └────────────────────────────────────────────────────────────────────────────┘ 
                                                                                 
 Tab focus  Enter open  j/k scroll  ? help  q quit  | Static background          

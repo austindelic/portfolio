@@ -1,12 +1,12 @@
 {
   "name": "austindelic",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Austin Delic's interactive terminal portfolio",
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "author": "Austin Delic",
   "repository": {
     "type": "git",
-    "url": "https://github.com/austindelic/austindelic.git",
+    "url": "https://github.com/austindelic/portfolio.git",
     "directory": "apps/tui/npm"
   },
   "homepage": "https://austindelic.com",
@@ -26,7 +26,7 @@
     "x64"
   ],
   "files": [
-    "bin/",
+    "bin/cli.cjs",
     "README.md",
     "LICENSE"
   ],
@@ -35,10 +35,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "optionalDependencies": {
-    "austindelic-darwin-arm64": "0.1.0",
-    "austindelic-darwin-x64": "0.1.0",
-    "austindelic-linux-arm64": "0.1.0",
-    "austindelic-linux-x64": "0.1.0",
-    "austindelic-win32-x64": "0.1.0"
+    "austindelic-darwin-arm64": "0.1.1",
+    "austindelic-darwin-x64": "0.1.1",
+    "austindelic-linux-arm64": "0.1.1",
+    "austindelic-linux-x64": "0.1.1",
+    "austindelic-win32-x64": "0.1.1"
   }
 }

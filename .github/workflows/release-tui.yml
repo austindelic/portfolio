@@ -4,15 +4,13 @@ on:
     branches: [main]
     paths:
       - 'apps/tui/**'
-      - 'packages/black-hole/**'
       - '.github/workflows/release-tui.yml'
       - '.gitattributes'
       - 'apps/portfolio/src/data/portfolio.json'
       - 'apps/portfolio/src/content/blog/**'
       - 'apps/portfolio/public/resume.pdf'
       - 'apps/portfolio/public/fonts/DepartureMono-Regular.woff2'
-      - 'apps/portfolio/src/lib/ascii-analysis.ts'
-      - 'apps/portfolio/src/components/BlackHoleCore.ts'
+      - 'apps/portfolio/src/config/black-hole-routes.json'
   workflow_dispatch:
     inputs:
       mode:
@@ -37,18 +35,22 @@ jobs:
     outputs:
       release: ${{ steps.plan.outputs.release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
       - run: npm ci --prefix apps/tui/release
       - run: npm test --prefix apps/tui/release
-      - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs
+      - run: node --import tsx apps/tui/scripts/build-launcher.ts
+      - run: node --import tsx --test apps/tui/scripts/tests/npm-launcher.test.ts
       - id: plan
-        run: node apps/tui/release/run.mjs plan
+        run: node --import tsx apps/tui/release/run.ts plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with: { name: release-plan, path: release-plan.json, if-no-files-found: error }
   native:
     needs: plan
@@ -67,15 +69,18 @@ jobs:
       NPM_TARGET: ${{ matrix.npm }}
       MACOSX_DEPLOYMENT_TARGET: '13.0'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - run: node --test packages/black-hole/tests/*.test.mjs
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v7
         with: { name: release-plan }
-      - run: node apps/tui/release/version.cjs
-      - run: node apps/tui/scripts/sync-assets.mjs --check
-      - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs
+      - run: node --import tsx apps/tui/release/version.ts
+      - run: node --import tsx apps/tui/scripts/sync-assets.ts --check
+      - run: node --import tsx apps/tui/scripts/build-launcher.ts
+      - run: node --import tsx --test apps/tui/scripts/tests/npm-launcher.test.ts
       - name: Build Linux on Debian 12 for a consistent glibc baseline
         if: runner.os == 'Linux'
         shell: bash
@@ -90,7 +95,7 @@ jobs:
           rustup target add "$RUST_TARGET"
           if [[ "$RUNNER_OS" == Windows ]]; then export RUSTFLAGS='-C target-feature=+crt-static'; fi
           bash apps/tui/scripts/release-build.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: native-${{ matrix.npm }}
           path: release/
@@ -99,14 +104,17 @@ jobs:
     needs: [plan, native]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v7
         with: { pattern: 'native-*', path: release, merge-multiple: true }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: release-plan }
-      - run: node apps/tui/release/version.cjs
+      - run: node --import tsx apps/tui/release/version.ts
       - name: Assemble both registries from identical native binaries
         run: |
           rustup toolchain install 1.96.1 --profile minimal
@@ -116,12 +124,12 @@ jobs:
           NPM_CLI_JS="$(npm root -g)/npm/bin/npm-cli.js"
           export NPM_CLI_JS
           for registry in npm github; do
-            PACK_REGISTRY="$registry" node apps/tui/scripts/pack.cjs "packed/$registry"
-            node apps/tui/scripts/check-npm-package.cjs "packed/$registry"
-            node apps/tui/scripts/test-platform-selection.cjs "packed/$registry"
+            PACK_REGISTRY="$registry" node --import tsx apps/tui/scripts/pack.ts "packed/$registry"
+            node --import tsx apps/tui/scripts/check-npm-package.ts "packed/$registry"
+            node --import tsx apps/tui/scripts/test-platform-selection.ts "packed/$registry"
           done
-          node apps/tui/release/bundle.mjs
-      - uses: actions/upload-artifact@v4
+          node --import tsx apps/tui/release/bundle.ts
+      - uses: actions/upload-artifact@v6
         with: { name: npm-package, path: 'packed/', if-no-files-found: error }
   packed-test:
     needs: package
@@ -136,12 +144,15 @@ jobs:
           - { runner: windows-2022, npm: win32-x64 }
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v7
         with: { name: npm-package, path: packed }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: 'native-${{ matrix.npm }}', path: release }
       - name: Test the exact npm tarballs in a real terminal
         timeout-minutes: 5
@@ -155,7 +166,7 @@ jobs:
           suffix=''; if [[ "$RUNNER_OS" == Windows ]]; then suffix='.exe'; fi
           chmod +x release/test/${{ matrix.npm }}/* || true
           for registry in npm github; do
-            node apps/tui/scripts/test-packed.cjs "packed/$registry" "release/test/${{ matrix.npm }}/pty-smoke$suffix"
+            node --import tsx apps/tui/scripts/test-packed.ts "packed/$registry" "release/test/${{ matrix.npm }}/pty-smoke$suffix"
           done
       - name: Install Linux software Vulkan
         if: runner.os == 'Linux'
@@ -173,9 +184,9 @@ jobs:
     needs: packed-test
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: npm-package, path: packed }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: tested-release
           path: packed/
@@ -193,12 +204,15 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
       - run: npm ci --prefix apps/tui/release
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { name: tested-release, path: packed }
       - name: Publish tested archives and create the GitHub Release
         env:
@@ -209,7 +223,7 @@ jobs:
           export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/tui-npmrc"
           # shellcheck disable=SC2016 # npm expands this variable when reading its config
           printf '%s\n' '//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}' > "$NPM_CONFIG_USERCONFIG"
-          node apps/tui/release/run.mjs publish
+          node --import tsx apps/tui/release/run.ts publish
   recover:
     if: github.ref == 'refs/heads/main' && inputs.mode == 'recover' && vars.TUI_RELEASE_ENABLED == 'true'
     runs-on: ubuntu-24.04
@@ -219,21 +233,24 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v7
         with:
           name: tested-release
           path: packed
           run-id: ${{ inputs.recovery_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - id: original
-        run: node apps/tui/release/recover.mjs
+        run: node --import tsx apps/tui/release/recover.ts
         env:
           RECOVERY_RUN_ID: ${{ inputs.recovery_run_id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ steps.original.outputs.sha }}
           fetch-depth: 0
@@ -248,4 +265,4 @@ jobs:
           export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/tui-npmrc"
           # shellcheck disable=SC2016 # npm expands this variable when reading its config
           printf '%s\n' '//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}' > "$NPM_CONFIG_USERCONFIG"
-          node apps/tui/release/run.mjs recover
+          node --import tsx apps/tui/release/run.ts recover

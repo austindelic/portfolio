@@ -12,6 +12,8 @@ Metal, Vulkan and DirectX 12 render locally into terminal characters. If graphic
 
 Use Tab and arrows to navigate, Enter to activate, `?` for help, and Ctrl-C to quit. Explore uses WASD, IJKL or mouse dragging. Outside Explore, `q` also quits. Resize your terminal freely. URLs and the embedded resume open using your operating system's default application; copying email uses the system clipboard. A true-colour terminal gives the intended appearance. Departure Mono is optional.
 
+Use `npx austindelic --terminal-background` (or `npx austindelic -t`) to use your terminal’s configured background instead of pure black. Artwork, animation, text colours, and orange selection highlights are preserved. Pure black remains the default.
+
 ## Releasing from the repository
 
 This directory is a standalone npm distribution, outside the Bun workspace. Application code stays in the adjacent Rust crates. Native files and dependency notices are generated, not committed.
@@ -22,7 +24,7 @@ Each registry gets six tarballs: a small launcher and five optional platform pac
 
 Once initial setup is complete, passing main runs publish `austindelic` to npmjs.com and `@austindelic/austindelic` to GitHub Packages. Both contain identical native binaries. The workflow publishes native dependencies before their launcher, creates a `tui-vX.Y.Z` tag, and creates a GitHub Release after both registries finish. Tag pushes do not trigger another publication.
 
-Manual runs default to verification only. The `tested-release` artifact contains both package sets, size reports, source revision, release notes and integrity hashes. Recovery reuses these bytes; it never rebuilds an already published version. See [release setup and recovery](https://github.com/austindelic/austindelic/blob/main/apps/tui/release/README.md) for account setup, activation and retries. Never publish locally packed single-platform test artifacts.
+Manual runs default to verification only. The `tested-release` artifact contains both package sets, size reports, source revision, release notes and integrity hashes. Recovery reuses these bytes; it never rebuilds an already published version. See [release setup and recovery](https://github.com/austindelic/portfolio/blob/main/apps/tui/release/README.md) for account setup, activation and retries. Never publish locally packed single-platform test artifacts.
 
 ### Installing from GitHub Packages
 
@@ -42,7 +44,7 @@ See `apps/tui/VALIDATION.md` in the repository for actual results.
 
 ## License
 
-MIT. The generated `THIRD_PARTY_NOTICES.md` includes dependency license texts and retained shader source credits.
+GPL-3.0-only. The generated `THIRD_PARTY_NOTICES.md` includes dependency license texts and retained shader source credits.
 
 Optional dependencies must be enabled. If a native package is missing, reinstall with `npm install --include=optional austindelic`. No install scripts are required.
 

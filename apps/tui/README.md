@@ -23,7 +23,7 @@ cargo run -p austindelic -- --renderer static
 
 Content, published blog posts, shaders, glyph metrics, static artwork, and the resume PDF are embedded. No network or repository is needed at runtime. External links and the resume use the platform default application only when activated. Copy email uses the system clipboard through `arboard`.
 
-The local CLI supports macOS Metal, Linux Vulkan and Windows DirectX 12. Automatic mode starts with a static black hole and keeps it if graphics initialization fails. The app runs locally and is distributed through npm; no application server is required. The website remains on Cloudflare Pages.
+The local CLI supports macOS Metal, Linux Vulkan and Windows DirectX 12. Automatic mode starts with a static black hole and keeps it if graphics initialization fails. The app runs locally and is distributed through npm; no application server is required. The website remains on Cloudflare Workers Static Assets.
 
 ## Terminal setup
 
@@ -66,35 +66,25 @@ Explore is entered through the navigation bar. Render resolution changes the GPU
 
 - `core`: content, Markdown presentation, navigation, terminal composition.
 - `cli`: terminal lifecycle, events, platform actions, and renderer orchestration.
-- `renderer`: graphics device, six website shader passes, triple-buffered asynchronous cell readback, latest-value worker mailboxes, and authored route cameras.
-- `npm`: standalone public package and native executable launcher.
+- `npm`: public launcher and native executable packages.
 
-Shared shaders, their uniform layout, and camera presets live in `packages/black-hole`. Canonical profile/project/social records remain in the portfolio application's `src/data`. Astro imports graphics assets from `@repo/black-hole` and reads content directly. Blog Markdown remains under `src/content/blog`. The TUI build parses frontmatter, excludes `published: false`, and embeds posts newest first.
+The versioned `austindelic-blackhole` and `austindelic-blackhole-ratatui` crates (0.1.0) own GPU rendering and completed-frame display. The portfolio owns routes in `apps/portfolio/src/config/black-hole-routes.json`, terminal navigation and composition, content, and static fallback artwork. Shader and glyph-metric tooling lives in [Blackhole](https://github.com/austindelic/blackhole).
 
-```sh
-node apps/tui/scripts/sync-assets.mjs
-node apps/tui/scripts/sync-assets.mjs --check
-```
-
-Sync copies shared graphics assets and website content/resume into embedded TUI assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
-
-Departure Mono metrics were generated from the actual website rasterizer in Chromium. To recalibrate after changing the font, glyph set, or rasterizer, start the Astro dev server at `http://127.0.0.1:4321` and run:
+Profile records remain in the web application's `src/data`; blog Markdown remains in `src/content/blog`. Sync embedded content after changing either:
 
 ```sh
-npx --yes --package @playwright/cli playwright-cli -s=tui open http://127.0.0.1:4321/
-npx --yes --package @playwright/cli playwright-cli --raw -s=tui run-code --filename=apps/tui/scripts/glyph-metrics.js > /tmp/glyph-metrics.json
+node --import tsx apps/tui/scripts/sync-assets.ts
+node --import tsx apps/tui/scripts/sync-assets.ts --check
 ```
 
-Validate that the result is the metrics JSON object, copy it to `apps/tui/renderer/assets/glyph-metrics.json`, then run asset sync. The static artwork is a real frame captured from the same GPU pipeline; regenerate with `cargo run --manifest-path apps/tui/Cargo.toml -p tui-renderer --example probe -- /tmp/fallback.json` and copy the resulting JSON to `core/assets/fallback.json` before syncing.
-
-GPU glyph output is font-independent character data, but visual coverage will vary with the user's terminal font. Route orbit position, drift, aim, and framing use the shared website presets. The native introduction/route transitions use spherical eased interpolation; they do not reproduce the browser's complete motion-derivative transition solver.
+Sync copies content and the resume, removes obsolete post copies, and records input hashes. Committed assets allow Cargo builds without Node. The native route evaluator uses portfolio camera presets and spherical eased transitions. The small `cli/examples/probe.rs` executable verifies rendering through the external crate; it also supports regenerating fallback artwork.
 
 ## Verification
 
 ```sh
-cargo test --manifest-path apps/tui/Cargo.toml -p tui-core -p tui-renderer -p austindelic
-cargo clippy --manifest-path apps/tui/Cargo.toml -p tui-core -p tui-renderer -p austindelic --all-targets -- -D warnings
-cargo fmt --manifest-path apps/tui/Cargo.toml -p tui-core -p tui-renderer -p austindelic --check
+cargo test --manifest-path apps/tui/Cargo.toml -p tui-core -p austindelic
+cargo clippy --manifest-path apps/tui/Cargo.toml -p tui-core -p austindelic --all-targets -- -D warnings
+cargo fmt --manifest-path apps/tui/Cargo.toml -p tui-core -p austindelic --check
 uv run --with pyte apps/tui/scripts/smoke.py apps/tui/target/debug/austindelic /tmp/austindelic-smoke --gpu
 ```
 
@@ -106,7 +96,7 @@ See [VALIDATION.md](VALIDATION.md) for measured results and remaining verificati
 
 ## License
 
-Copyright (c) Austin Delic. [MIT](LICENSE). Shader sources retain the website's source notices.
+Copyright (c) Austin Delic. [GPL-3.0-only](../../LICENSE). Shader sources retain the website's source notices.
 
 ## Distribution size
 
@@ -116,4 +106,4 @@ Run `python3 apps/tui/scripts/compare-builds.py` from the repository root to com
 
 `packed/sizes.json` records native bytes, npm compressed bytes, installed bytes, and artifact integrity. `packed/comparison.json` includes baseline comparisons. Copy accepted `size`, `unpackedSize`, and `executableBytes` measurements for each package into `scripts/size-budgets.json`; the release check permits at most 5% growth. Missing budgets are reported on main/manual runs and block tagged publication. Do not set unmeasured platform budgets. A first complete five-platform run is needed before publishing.
 
-For local packaging, generate notices, place the executable under `release/native/<target>/`, set `NPM_CLI_JS` to npm's `bin/npm-cli.js`, and run `NPM_TARGET=<target> node apps/tui/scripts/pack.cjs <output-directory>`. This produces development-only artifacts. Full release assembly omits `NPM_TARGET` and requires all five native/baseline binaries and measurement files from `release-build.sh`.
+For local packaging, generate notices, place the executable under `release/native/<target>/`, set `NPM_CLI_JS` to npm's `bin/npm-cli.js`, and run `NPM_TARGET=<target> node --import tsx apps/tui/scripts/pack.ts <output-directory>`. This produces development-only artifacts. Full release assembly omits `NPM_TARGET` and requires all five native/baseline binaries and measurement files from `release-build.sh`.

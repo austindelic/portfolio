@@ -1,4 +1,4 @@
-import routeData from "@repo/black-hole/routes.json";
+import routeData from "./black-hole-routes.json";
 
 export type BlackHoleVec3 = [number, number, number];
 

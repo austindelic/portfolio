@@ -86,7 +86,7 @@ Use the Playwright CLI skill. Keep only one benchmark browser active. In environ
 
 ```sh
 bunx @playwright/cli -s=perf open 'http://127.0.0.1:4399/?perfRun=baseline' --browser=chrome
-bunx @playwright/cli -s=perf run-code --filename=apps/portfolio/scripts/perf/measure.js > /private/tmp/portfolio-baseline-measure.log
+bunx @playwright/cli -s=perf run-code --filename="$(bun run --silent prepare:browser apps/portfolio/scripts/perf/measure.ts)" > /private/tmp/portfolio-baseline-measure.log
 bunx @playwright/cli -s=perf close
 ```
 
@@ -94,19 +94,19 @@ Repeat on port 4321 with label `final` and output `portfolio-final-measure.log`.
 
 | Script | Log suffix | Purpose |
 | --- | --- | --- |
-| `capture.js` | `baseline-capture` / `final-capture` | Deterministic home PNGs |
-| `capture-routes.js` | `baseline-routes` / `final-routes` | Navigation PNGs/uniform checkpoints |
-| `capture-editor.js` | `baseline-editor` / `final-editor` | Bloom on/off PNGs |
-| `measure-completion.js` | `baseline-readback` / `final-readback` | Frame plus synchronous readback |
-| `flows.js` | `flows` | Candidate navigation/lifecycle assertions |
-| `audit-routes.js` | `audit` | Fonts, images, hydration and resource status across all routes |
-| `optional.js` | `optional` | Explicit alternate backend and benchmark cancellation |
-| `failure-paths.js` | `failures` | Candidate injected failures |
+| `capture.ts` | `baseline-capture` / `final-capture` | Deterministic home PNGs |
+| `capture-routes.ts` | `baseline-routes` / `final-routes` | Navigation PNGs/uniform checkpoints |
+| `capture-editor.ts` | `baseline-editor` / `final-editor` | Bloom on/off PNGs |
+| `measure-completion.ts` | `baseline-readback` / `final-readback` | Frame plus synchronous readback |
+| `flows.ts` | `flows` | Candidate navigation/lifecycle assertions |
+| `audit-routes.ts` | `audit` | Fonts, images, hydration and resource status across all routes |
+| `optional.ts` | `optional` | Explicit alternate backend and benchmark cancellation |
+| `failure-paths.ts` | `failures` | Candidate injected failures |
 
 Scripts return JSON through the CLI `### Result` section. Inspect `failures`, `errors`, `consoleErrors` and `badRequests`; CLI success alone does not imply the assertions passed. Capture scripts preserve temporal warm-up. Do not use image snapshots captured before fonts load as a visual baseline.
 
 ```sh
-bun apps/portfolio/scripts/perf/summarize.mjs /private/tmp/portfolio-perf-baseline apps/portfolio/dist /private/tmp
+bun apps/portfolio/scripts/perf/summarize.ts /private/tmp/portfolio-perf-baseline apps/portfolio/dist /private/tmp
 ```
 
 Deployment is outside this pass. Remaining performance work should start with isolated GPU profiling on target devices and cold-transfer measurements; reducing quality to reach the targets is not an acceptable substitute.

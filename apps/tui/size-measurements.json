@@ -403,5 +403,15 @@
       "linux-x64",
       "win32-x64"
     ]
+  },
+  "isolatedPrVerification": {
+    "base": "shared-shader PR on a9dfeb6",
+    "rustTests": 15,
+    "releaseTests": 11,
+    "launcherTests": 6,
+    "nativeBytes": 3333328,
+    "npmDownloadBytes": 1677758,
+    "githubDownloadBytes": 1677752,
+    "excluded": "concurrent Explore resolution controls and unmerged Windows startup diagnostics"
   }
 }

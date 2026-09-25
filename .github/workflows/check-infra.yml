@@ -1,10 +1,10 @@
 name: Check infrastructure and launcher
 on:
   pull_request:
-    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', 'packages/black-hole/**', '.github/workflows/**', '.gitattributes']
+    paths: ['infra/**', 'wrangler.jsonc', 'apps/tui/**', 'apps/portfolio/**', 'packages/**', 'tooling/**', 'package.json', 'bun.lock', 'tsconfig.tooling.json', '.github/workflows/**', '.gitattributes']
   push:
     branches: [main]
-    paths: ['infra/**', 'apps/tui/**', 'apps/portfolio/**', 'packages/black-hole/**', '.github/workflows/**', '.gitattributes']
+    paths: ['infra/**', 'wrangler.jsonc', 'apps/tui/**', 'apps/portfolio/**', 'packages/**', 'tooling/**', 'package.json', 'bun.lock', 'tsconfig.tooling.json', '.github/workflows/**', '.gitattributes']
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,22 +19,39 @@ jobs:
     steps:
       - name: Exercise checkout with automatic line-ending conversion
         run: git config --global core.autocrlf true
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22' }
-      - run: node --test packages/black-hole/tests/*.test.mjs
-      - run: node apps/tui/scripts/sync-assets.mjs --check
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '22', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
+      - run: node --import tsx apps/tui/scripts/sync-assets.ts --check
       - run: git diff --exit-code
   validate:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: opentofu/setup-opentofu@v1
-        with: { tofu_version: '1.11.5', tofu_wrapper: false }
-      - uses: actions/setup-node@v4
-        with: { node-version: '22' }
-      - run: tofu -chdir=infra fmt -check -recursive
-      - run: tofu -chdir=infra init -backend=false -input=false -lockfile=readonly
-      - run: tofu -chdir=infra validate
-      - run: tofu -chdir=infra test
-      - run: node --test apps/tui/scripts/tests/npm-launcher.test.cjs
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '22', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: "1.3.5" }
+      - run: bun install --frozen-lockfile
+      - run: node --import tsx --test infra/tests/hosting.test.ts
+      - run: node --import tsx apps/tui/scripts/build-launcher.ts
+      - run: node --import tsx --test apps/tui/scripts/tests/npm-launcher.test.ts
+  typescript:
+    name: TypeScript, browser tooling and production build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '24', package-manager-cache: false }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: '1.3.5' }
+      - run: bun install --frozen-lockfile
+      - run: npm ci --prefix apps/tui/release
+      - run: bun run check-types
+      - run: bun run test:tooling
+      - run: bun run lint
+      - run: bun run --filter portfolio test:performance
+      - run: bun run build

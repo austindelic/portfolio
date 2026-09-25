@@ -1,5 +1,5 @@
 ---
-import type { Props } from "./BlackHoleCore";
+import type { BlackHoleOptions as Props } from "@austindelic/blackhole";
 const props: Props = Astro.props;
 ---
 <div data-black-hole-background data-settings={JSON.stringify(props)} transition:persist="black-hole-background" class={`relative h-full w-full bg-black ${props.className ?? ""}`}>
@@ -11,19 +11,26 @@ const props: Props = Astro.props;
   <div data-black-hole-error hidden class="absolute inset-x-4 bottom-4 border border-red-500/60 bg-black/85 p-3 font-mono text-xs text-red-200"></div>
 </div>
 <script>
-import type { Props } from "./BlackHoleCore";
-import type { mountBlackHoleRuntime } from "./BlackHoleRuntime";
+import type { BlackHoleOptions as Props } from "@austindelic/blackhole";
+import type { mountBlackHole } from "@austindelic/blackhole";
+import { BLACK_HOLE_ANIMATION_ROUTES, normalizeBlackHoleAnimationRoute } from "../config/black-hole-animation";
 import { bindBlackHoleExplore } from "./BlackHoleExplore";
 // Keep this query in sync with the mobile background styles.
 const staticBackground = window.matchMedia(
 	"(pointer: coarse), (max-width: 768px), (max-height: 768px)",
 );
 let host: HTMLElement | null = null;
-let runtime: ReturnType<typeof mountBlackHoleRuntime> | undefined;
+let runtime: ReturnType<typeof mountBlackHole> | undefined;
 let previousRoute = "";
 let generation = 0;
 let loading = false;
 let unbindExplore: (() => void) | undefined;
+// Explicitly opt into diagnostics for browser integration checks.
+const debug = new URLSearchParams(location.search).has("bhDebug");
+if (debug) Object.defineProperty(window, "__blackHoleStats", {
+    configurable: true,
+    get: () => runtime?.getStats(),
+});
 function stopBackground() {
 	unbindExplore?.();
 	unbindExplore = undefined;
@@ -61,7 +68,7 @@ async function syncBackground() {
 	unbindExplore = bindBlackHoleExplore(() => runtime);
 	if (runtime) {
 		if (previousRoute !== location.pathname)
-			runtime.updateRoute(location.pathname);
+			runtime.update({ animationRoute: normalizeBlackHoleAnimationRoute(location.pathname) });
 		previousRoute = location.pathname;
 		return;
 	}
@@ -71,8 +78,7 @@ async function syncBackground() {
 	const current = ++generation;
 	const target = host;
 	try {
-		const { createRuntimeState, mountBlackHoleRuntime, runtimeOptions } =
-			await import("./BlackHoleRuntime");
+		const { mountBlackHole } = await import("@austindelic/blackhole");
 		if (
 			current !== generation ||
 			host !== target ||
@@ -82,10 +88,12 @@ async function syncBackground() {
 			return;
 		const props: Props = {
 			...JSON.parse(target.dataset.settings!),
-			animationRoute: location.pathname,
+			animationRoute: normalizeBlackHoleAnimationRoute(location.pathname),
+			routes: BLACK_HOLE_ANIMATION_ROUTES,
+            debugStats: debug,
 		};
 		const error = target.querySelector<HTMLElement>("[data-black-hole-error]")!;
-		const options = runtimeOptions(props, (message) => {
+		const options: Props = { ...props, onError: (message) => {
 			if (current !== generation) return;
 			error.textContent = message ?? "";
 			error.hidden = !message;
@@ -93,18 +101,14 @@ async function syncBackground() {
 				delete target.dataset.bhLive;
 				target.dataset.bhFallback = "true";
 			}
-		});
+		}};
 		options.onReady = () => {
 			if (current === generation) {
 				delete target.dataset.bhFallback;
 				target.dataset.bhLive = "true";
 			}
 		};
-		runtime = mountBlackHoleRuntime(
-			target.querySelector("canvas")!,
-			createRuntimeState(props),
-			options,
-		);
+		runtime = mountBlackHole(target.querySelector("canvas")!, options);
 		previousRoute = location.pathname;
 	} catch (error) {
 		if (current === generation && host === target && target.isConnected) {
