@@ -1,4 +1,4 @@
-<a href="https://austindelic.com"><img src="./assets/readme/masthead-navara-contact.webp" width="1800" alt="Austin Delic — software engineer in Perth, Australia. My white 2014 D22 Navara in a stylized side profile, with its tyres resting on the lettering across the gap in my name." /></a>
+<a href="https://austindelic.com"><img src="./assets/readme/masthead-navara-contact-transparent.webp" width="1800" alt="Austin Delic — software engineer in Perth, Australia. My white 2014 D22 Navara in a stylized side profile, with its tyres resting on the lettering across the gap in my name." /></a>
 
 I'm Austin, a software engineer in Perth and Founding Engineer at **The Next Something**.
 

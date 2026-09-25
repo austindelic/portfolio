@@ -1,0 +1,23 @@
+{
+  "tool": "Built-in image_gen",
+  "intent": "Remove the newer tyre-contact masthead background while retaining its composition",
+  "referenceImages": [
+    "navara-contact.webp"
+  ],
+  "originalOutput": "exec-6219c470-a8a1-415f-a3e7-a65af5c7615e.png",
+  "originalSha256": "8cb6fc59704025a11a7856a592e661709218e1fac5b329b97f920a532208d27f",
+  "storedSource": "navara-contact-transparent.webp",
+  "storedDimensions": [
+    2172,
+    724
+  ],
+  "encoding": {
+    "format": "WebP",
+    "lossless": true,
+    "method": 6,
+    "exact": true
+  },
+  "prompt": "Background extraction only, transparent PNG. Do not enlarge, reposition, crop, reframe or redraw any part of this reference. Keep the input canvas exactly 2172 pixels wide by 724 pixels high. The truck must remain the exact same size and location, the front wheel at x677 y384 and rear wheel at x990 y384, both tyres touching the letter tops at y428. Name, subtitle and location remain exactly where they are. Delete the nearly-black backdrop around the truck and letters; retain all foreground colors and clean sharp pixel lettering. This is an alpha-mask edit, not a new composition.",
+  "processing": "Lossless format conversion only; generated alpha preserved.",
+  "reviewStatus": "Draft: transparency and tyre contact retained, but edge halos and stray pixels remain around the lettering and truck. Requires visual cleanup before merge."
+}
