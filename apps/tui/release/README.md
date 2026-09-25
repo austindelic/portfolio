@@ -12,7 +12,7 @@ Once planning selects a release, publication uses that saved version, source com
 
 The publisher creates a lightweight tag at the tested commit without force-pushing before uploading packages. Stable tags without channel notes use semantic-release's default channel, so subsequent planning continues from the published version. A tag conflict or history rewrite stops publication with a specific error; advancing main alone does not. Planning itself still requires an eligible main checkout.
 
-`packed/npm` contains `austindelic` plus `austindelic-{darwin-arm64,darwin-x64,linux-arm64,linux-x64,win32-x64}`. `packed/github` contains the same six packages under `@austindelic/`, with scoped optional dependencies. All twelve carry the same version and repository metadata. Native bytes are shared between distributions. Only the appropriate platform package is installed. This does not change the public `npx austindelic` command.
+`packed/npm` contains launcher `austindelic`; `packed/github` contains launcher `@austindelic/austindelic`. Both use the five native packages `@austindelic/austindelic-{darwin-arm64,darwin-x64,linux-arm64,linux-x64,win32-x64}` as exact-version optional dependencies. All twelve carry the same version and repository metadata. Native bytes are shared between distributions. Only the appropriate platform package is installed. This does not change the public `npx austindelic` command.
 
 ## First-time setup
 

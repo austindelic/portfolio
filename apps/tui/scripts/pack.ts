@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { targets } from "../npm/bin/cli.ts";
+import { targets, nativePackageName } from "../npm/bin/cli.ts";
 const root = path.resolve(__dirname, "..");
 assert.ok(
   process.env.NPM_CLI_JS && fs.existsSync(process.env.NPM_CLI_JS),
@@ -28,12 +28,7 @@ const pkg = {
   ...original,
   name: prefix + original.name,
   publishConfig: { access: "public", registry: url },
-  optionalDependencies: Object.fromEntries(
-    Object.entries(original.optionalDependencies).map(([name, version]) => [
-      prefix + name,
-      version,
-    ]),
-  ),
+  optionalDependencies: original.optionalDependencies,
 };
 const output = path.resolve(process.argv[2] || "packed");
 const selected = process.env.NPM_TARGET ? [process.env.NPM_TARGET] : targets;
@@ -46,9 +41,7 @@ if (process.env.RELEASE_TAG)
   assert.equal(process.env.RELEASE_TAG, `tui-v${version}`);
 assert.deepEqual(
   pkg.optionalDependencies,
-  Object.fromEntries(
-    targets.map((t) => [`${prefix}austindelic-${t}`, version]),
-  ),
+  Object.fromEntries(targets.map((t) => [nativePackageName(t), version])),
 );
 fs.mkdirSync(output, { recursive: true });
 const staging = fs.mkdtempSync(path.join(output, ".staging-"));
@@ -96,7 +89,7 @@ function pack(folder: string, manifest: PackageManifest, executableBytes = 0) {
 try {
   for (const target of selected) {
     const [os, cpu] = target.split("-");
-    const name = `${prefix}austindelic-${target}`;
+    const name = nativePackageName(target);
     const folder = path.join(staging, name.replace("/", "-"));
     fs.mkdirSync(path.join(folder, "bin"), { recursive: true });
     const binary = os === "win32" ? "austindelic.exe" : "austindelic";

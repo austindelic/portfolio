@@ -35,10 +35,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "optionalDependencies": {
-    "austindelic-darwin-arm64": "1.0.2",
-    "austindelic-darwin-x64": "1.0.2",
-    "austindelic-linux-arm64": "1.0.2",
-    "austindelic-linux-x64": "1.0.2",
-    "austindelic-win32-x64": "1.0.2"
+    "@austindelic/austindelic-darwin-arm64": "1.0.2",
+    "@austindelic/austindelic-darwin-x64": "1.0.2",
+    "@austindelic/austindelic-linux-arm64": "1.0.2",
+    "@austindelic/austindelic-linux-x64": "1.0.2",
+    "@austindelic/austindelic-win32-x64": "1.0.2"
   }
 }

@@ -39,9 +39,9 @@ export interface LaunchOptions {
 }
 
 const packageName = (require("../package.json") as { name: string }).name;
-const packageScope = packageName.startsWith("@")
-  ? packageName.split("/")[0] + "/"
-  : "";
+// Native names are shared by the npm and GitHub launchers.
+const nativePackageName = (target: string) =>
+  `@austindelic/austindelic-${target}`;
 const targets = Object.freeze([
   "darwin-arm64",
   "darwin-x64",
@@ -61,7 +61,7 @@ function executable(
       `Unsupported platform ${target}. Supported: ${targets.join(", ")}.`,
     );
   }
-  const name = `${packageScope}austindelic-${target}`;
+  const name = nativePackageName(target);
   try {
     return resolve(
       `${name}/bin/${platform === "win32" ? "austindelic.exe" : "austindelic"}`,
@@ -141,5 +141,5 @@ function launch({
   });
   return child;
 }
-export { targets, executable, launch };
+export { targets, nativePackageName, executable, launch };
 if (require.main === module) launch();

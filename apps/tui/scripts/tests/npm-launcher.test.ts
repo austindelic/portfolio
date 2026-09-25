@@ -59,7 +59,14 @@ test("all five platform executables resolve beneath a path with spaces", () => {
       "/tmp/path with spaces",
       fixture().resolve,
     );
-    assert.ok(file.includes("path with spaces"));
+    assert.equal(
+      file,
+      path.join(
+        "/tmp/path with spaces/node_modules",
+        `@austindelic/austindelic-${target}/bin`,
+        platform === "win32" ? "austindelic.exe" : "austindelic",
+      ),
+    );
     assert.ok(
       file.endsWith(platform === "win32" ? "austindelic.exe" : "austindelic"),
     );

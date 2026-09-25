@@ -20,7 +20,7 @@ This directory is a standalone npm distribution, outside the Bun workspace. Appl
 
 The `release-tui.yml` workflow builds and tests five targets whenever terminal, shared shader, embedded content, or release-tool changes reach `main`. Semantic-release chooses one version before compilation: ordinary relevant commits produce a patch, `feat:` a minor, and a `BREAKING CHANGE:` footer a major release. The first automated release is `1.0.0`. Generated version changes stay in the build checkout.
 
-Each registry gets six tarballs: a small launcher and five optional platform packages. Every platform installs both variants from an isolated registry serving the exact archives, verifies host-only downloads and the CLI version, and runs terminal checks. Size comparisons and license notices remain part of packaging. Publishing requires accepted size budgets for every platform.
+Each registry gets six tarballs: a small launcher and five optional platform packages named `@austindelic/austindelic-{target}` in both registries. The npm launcher remains `austindelic`, so `npx austindelic` is unchanged. Every platform installs both variants from an isolated registry serving the exact archives, verifies host-only downloads and the CLI version, and runs terminal checks. Size comparisons and license notices remain part of packaging. Publishing requires accepted size budgets for every platform.
 
 Once initial setup is complete, passing main runs publish `austindelic` to npmjs.com and `@austindelic/austindelic` to GitHub Packages. Both contain identical native binaries. The workflow publishes native dependencies before their launcher, creates a `tui-vX.Y.Z` tag, and creates a GitHub Release after both registries finish. Tag pushes do not trigger another publication.
 

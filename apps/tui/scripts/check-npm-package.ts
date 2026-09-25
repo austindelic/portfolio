@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
-import { targets } from "../npm/bin/cli.ts";
+import { targets, nativePackageName } from "../npm/bin/cli.ts";
 const folder = path.resolve(process.argv[2] || "packed");
 const reports: PackageReport[] = JSON.parse(
   fs.readFileSync(path.join(folder, "sizes.json"), "utf8"),
@@ -16,10 +16,7 @@ const reports: PackageReport[] = JSON.parse(
 const prefix = reports[0].registry === "github" ? "@austindelic/" : "";
 assert.deepEqual(
   reports.map((p) => p.name).sort(),
-  [
-    prefix + "austindelic",
-    ...targets.map((t) => `${prefix}austindelic-${t}`),
-  ].sort(),
+  [prefix + "austindelic", ...targets.map((t) => nativePackageName(t))].sort(),
 );
 for (const report of reports) {
   assert.equal(report.version, require("../npm/package.json").version);
@@ -39,7 +36,7 @@ const baselinePackage = JSON.parse(
   fs.readFileSync(path.join(folder, "baseline-package.json"), "utf8"),
 );
 for (const report of reports) {
-  const bareName = report.name.slice(prefix.length);
+  const bareName = report.name.replace(/^@austindelic\//, "");
   const budget = budgets[bareName];
   if (process.env.RELEASE_TAG)
     assert.ok(

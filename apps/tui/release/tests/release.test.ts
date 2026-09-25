@@ -178,7 +178,7 @@ test("version stamping keeps Cargo, lockfile, launcher and optional dependencies
     path.join(root, "npm/package.json"),
     JSON.stringify({
       version: "0.1.0",
-      optionalDependencies: { "austindelic-linux-x64": "0.1.0" },
+      optionalDependencies: { "@austindelic/austindelic-linux-x64": "0.1.0" },
     }),
   );
   versioning.stampVersion(root, "1.2.3");
@@ -192,7 +192,7 @@ test("version stamping keeps Cargo, lockfile, launcher and optional dependencies
   );
   assert.equal(
     JSON.parse(readFileSync(path.join(root, "npm/package.json"), "utf8"))
-      .optionalDependencies["austindelic-linux-x64"],
+      .optionalDependencies["@austindelic/austindelic-linux-x64"],
     "1.2.3",
   );
   assert.throws(

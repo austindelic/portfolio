@@ -13,6 +13,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync, fork } from "node:child_process";
 import assert from "node:assert/strict";
+import { nativePackageName } from "../npm/bin/cli.ts";
 const [directory, helper] = process.argv.slice(2);
 assert.ok(
   directory && helper,
@@ -23,9 +24,7 @@ const reports: PackageReport[] = JSON.parse(
 );
 const launcher = reports.find((p) => p.manifest.bin);
 assert.ok(launcher, "Packed launcher is required");
-const prefix = launcher!.name.startsWith("@")
-  ? launcher!.name.split("/")[0] + "/"
-  : "";
+const prefix = "@austindelic/";
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "austindelic packed "));
 function run(
   command: string,
@@ -129,7 +128,7 @@ async function main() {
       .filter((name) => name.startsWith("austindelic-"))
       .map((name) => prefix + name);
     assert.deepEqual(installed, [
-      `${prefix}austindelic-${process.platform}-${process.arch}`,
+      nativePackageName(`${process.platform}-${process.arch}`),
     ]);
     const { executable } = require(path.join(root, "bin", "cli.cjs"));
     const entries: [string, string[]][] = [

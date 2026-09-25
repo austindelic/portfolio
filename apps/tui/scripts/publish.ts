@@ -16,7 +16,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
-import { targets } from "../npm/bin/cli.ts";
+import { targets, nativePackageName } from "../npm/bin/cli.ts";
 import { BinaryLike } from "crypto";
 const registries = {
   npm: { url: "https://registry.npmjs.org/", prefix: "" },
@@ -83,7 +83,7 @@ function validateBundle(directory: string, bundle: ReleaseBundle) {
       reports.map((r) => r.name).sort(),
       [
         prefix + "austindelic",
-        ...targets.map((t) => `${prefix}austindelic-${t}`),
+        ...targets.map((t) => nativePackageName(t)),
       ].sort(),
     );
     for (const report of reports) {

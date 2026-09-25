@@ -71,7 +71,7 @@ function fixture(t: import("node:test").TestContext) {
       budgets[name] = { size: 100, unpackedSize: 100, executableBytes: 100 };
       bundle.packages.push({
         registry,
-        name: prefix + name,
+        name: name === "austindelic" ? prefix + name : "@austindelic/" + name,
         filename,
         version: bundle.version,
         integrity: publisher.integrity(bytes),
@@ -79,7 +79,7 @@ function fixture(t: import("node:test").TestContext) {
         unpackedSize: bytes.length,
         executableBytes: 0,
         manifest: {
-          name: prefix + name,
+          name: name === "austindelic" ? prefix + name : "@austindelic/" + name,
           version: bundle.version,
           publishConfig: { registry: url },
           ...(name === "austindelic" ? { bin: {} } : {}),

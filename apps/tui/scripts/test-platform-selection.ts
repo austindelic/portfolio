@@ -8,11 +8,12 @@ const __dirname = pathDirname(fileURLToPath(import.meta.url));
 import { fileURLToPath } from "node:url";
 // Exercise npm's real OS/CPU filtering without executing foreign binaries.
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import assert from "node:assert/strict";
 import { fork, spawnSync } from "node:child_process";
-import { targets } from "../npm/bin/cli.ts";
+import { targets, nativePackageName } from "../npm/bin/cli.ts";
 const directory = path.resolve(process.argv[2] || "packed");
 const reports: PackageReport[] = JSON.parse(
   fs.readFileSync(path.join(directory, "sizes.json"), "utf8"),
@@ -21,9 +22,7 @@ assert.equal(reports.length, 6, "Selection test requires all six tarballs");
 const launcher = reports.find((r) => r.manifest.bin);
 assert.ok(launcher, "Packed launcher is required");
 const { version } = launcher;
-const prefix = launcher!.name.startsWith("@")
-  ? launcher!.name.split("/")[0] + "/"
-  : "";
+const prefix = "@austindelic/";
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "austindelic selection "));
 const registry = fork(path.join(__dirname, "test-registry.ts"), [directory], {
   execArgv: ["--import", import.meta.resolve("tsx")],
@@ -85,7 +84,23 @@ async function main() {
         .readdirSync(path.join(cwd, "node_modules", prefix))
         .filter((n) => n.startsWith("austindelic-"))
         .map((n) => prefix + n),
-      [`${prefix}austindelic-${target}`],
+      [nativePackageName(target)],
+    );
+    const launcherRoot = path.join(cwd, "node_modules", launcher!.name);
+    const packedLauncher = createRequire(import.meta.url)(
+      path.join(launcherRoot, "bin/cli.cjs"),
+    ) as typeof import("../npm/bin/cli.ts");
+    assert.equal(
+      packedLauncher.executable(platform, arch, launcherRoot),
+      fs.realpathSync(
+        path.join(
+          cwd,
+          "node_modules",
+          nativePackageName(target),
+          "bin",
+          platform === "win32" ? "austindelic.exe" : "austindelic",
+        ),
+      ),
     );
     const downloads = await new Promise<string[]>((resolve) => {
       registry.once("message", (message) => {
@@ -102,7 +117,7 @@ async function main() {
     });
     assert.deepEqual(
       [...new Set(downloads.slice(previousDownloads))].sort(),
-      [launcher!.name, `${prefix}austindelic-${target}`].sort(),
+      [launcher!.name, nativePackageName(target)].sort(),
     );
     previousDownloads = downloads.length;
     console.log(

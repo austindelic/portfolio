@@ -74,6 +74,19 @@ test("both registries pack five platforms, select only host dependencies, and re
       fs.writeFileSync(path.join(destination, binary), data, { mode: 0o755 });
     }
   }
+  fs.mkdirSync(path.join(root, "release/measurements"));
+  for (const target of [
+    "darwin-arm64",
+    "darwin-x64",
+    "linux-arm64",
+    "linux-x64",
+    "win32-x64",
+  ]) {
+    fs.writeFileSync(
+      path.join(root, "release/measurements", `${target}.json`),
+      JSON.stringify({ executableBytes: 2048 }),
+    );
+  }
   const npm = process.env.npm_execpath;
   assert.ok(npm, "Run through npm test");
   const packages = [];
@@ -106,8 +119,23 @@ test("both registries pack five platforms, select only host dependencies, and re
     assert.equal(Object.keys(launcher.manifest.optionalDependencies).length, 5);
     assert.ok(
       Object.keys(launcher.manifest.optionalDependencies).every((name) =>
-        name.startsWith(prefix + "austindelic-"),
+        name.startsWith("@austindelic/austindelic-"),
       ),
+    );
+    // Scoped names must still resolve to the existing canonical size budgets.
+    execFileSync(
+      process.execPath,
+      [
+        "--import",
+        import.meta.resolve("tsx"),
+        path.join(tui, "scripts/check-npm-package.ts"),
+        folder,
+      ],
+      {
+        cwd: root,
+        env: { ...env, RELEASE_TAG: `tui-v${pkg.version}` },
+        stdio: "pipe",
+      },
     );
     // npm itself selects each target; no foreign fixture binary is executed.
     execFileSync(
