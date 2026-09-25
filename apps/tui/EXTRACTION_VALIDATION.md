@@ -22,3 +22,7 @@ Final launch verification uses the published Blackhole 0.1.0 packages. Bun integ
 Linux, Windows and Intel macOS execution were not tested on this Apple Silicon host. The five-target release workflow verifies compilation, fixtures, and packaged launchers; it does not claim live GPU/PTY coverage on every runner. The ordinary CI workflow builds/tests the website and Linux CLI against external registry packages. Existing size budgets must be remeasured if the final release exceeds them; they are not relaxed here.
 
 The live site is Workers Static Assets, not Pages. Root wrangler.jsonc targets Worker austindelic with compatibility date 2026-09-21 and static 404 handling. Deployment and custom-domain verification belong to the coordinator.
+
+## GPL launcher size baseline
+
+Release run 36094255202 built all five native targets successfully, then stopped at the launcher archive budget. The required GPL-3.0 license is 35,149 bytes; the prior launcher budget covered the shorter MIT notice. Only the launcher baseline is updated: 16,212 compressed bytes (the measured CI npm archive) and 45,073 unpacked bytes (the larger GitHub-scoped manifest). Local assembly from that run's native artifacts measured npm 16,204 / 44,995 bytes and GitHub 16,205 / 45,073 bytes; compression varies slightly with the npm/Node runtime. All five native package budgets and the existing 5% tolerance remain unchanged. Both registries pass the package-size and platform-selection checks with this baseline.
