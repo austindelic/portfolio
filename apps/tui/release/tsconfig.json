@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.tooling.json",
+  "compilerOptions": { "types": ["node"] },
+  "include": ["./**/*.ts", "../scripts/**/*.ts", "../npm/bin/*.ts"],
+  "exclude": [
+    "node_modules",
+    "../scripts/glyph-metrics.ts",
+    "../scripts/web-check.ts"
+  ]
+}

@@ -11,7 +11,7 @@ run = "cargo build --release -p austindelic"
 
 [tasks.assets]
 description = "Sync canonical website assets"
-run = "node scripts/sync-assets.mjs"
+run = "node --import tsx scripts/sync-assets.ts"
 
 [tasks.check-assets]
-run = "node scripts/sync-assets.mjs --check"
+run = "node --import tsx scripts/sync-assets.ts --check"
