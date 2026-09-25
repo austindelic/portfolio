@@ -61,3 +61,6 @@ yarn-error.log*
 /infra/crash*.log
 /infra/errored_test.tfstate
 **/__pycache__/
+
+# Compiled npm launcher (source is bin/cli.ts)
+/apps/tui/npm/bin/cli.cjs

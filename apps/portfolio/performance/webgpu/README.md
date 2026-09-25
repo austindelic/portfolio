@@ -126,20 +126,20 @@ type declaration in the test file; source-only checking passes.
 Run from the repository root after installing locked dependencies:
 
 ```sh
-node --test apps/portfolio/scripts/perf/*.test.mjs
+node --import tsx --test apps/portfolio/scripts/perf/*.test.ts
 bun test apps/portfolio/tests
 bun run --cwd apps/portfolio build
 # Start a production preview, open it in Playwright CLI, then:
-TMPDIR=/private/tmp bunx @playwright/cli -s=gpu-reference run-code --filename=apps/portfolio/scripts/perf/webgpu-parity.js
+TMPDIR=/private/tmp bunx @playwright/cli -s=gpu-reference run-code --filename="$(bun run --silent prepare:browser apps/portfolio/scripts/perf/webgpu-parity.ts)"
 ```
 
 The parity harness uses the current tab's origin. Query `?matrix=routes` selects
 route cases; `?matrix=rendered` checks actual rendered-frame milestones and zero
 bloom. The default runs the settings/viewport matrix. Capture CLI output to a file
-and run `webgpu-report.mjs <log>` to generate numerical comparisons. The lifecycle,
+and run `webgpu-report.ts <log>` to generate numerical comparisons. The lifecycle,
 editor, intermediate and measurement harnesses use the same CLI invocation style.
 Run measurements alone, without simultaneous GPU workloads. `?profile=1` enables
-timing instrumentation; `webgpu-measure-report.mjs <log>` writes its report.
+timing instrumentation; `webgpu-measure-report.ts <log>` writes its report.
 Intermediate capture expects the untouched reference on port 4399 and candidate on
 4322. Preserve a pre-change production build to reproduce that comparison.
 
@@ -147,7 +147,7 @@ Regenerate WGSL only when GLSL or its effective source transformations change:
 
 ```sh
 cargo install naga-cli --version 27.0.0 --root /private/tmp/black-hole-naga
-node packages/black-hole/tooling/webgpu/port-shaders.mjs /private/tmp/black-hole-naga/bin/naga
+node --import tsx packages/black-hole/tooling/webgpu/port-shaders.ts /private/tmp/black-hole-naga/bin/naga
 ```
 
 Re-run shader compilation, parity and source-hash tests after regeneration. Browser

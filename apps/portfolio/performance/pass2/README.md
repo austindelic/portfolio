@@ -88,17 +88,17 @@ Run each Playwright CLI script in a fresh session. Capture labels come from `per
 ```sh
 export TMPDIR=/private/tmp
 bunx @playwright/cli -s=pass2 open 'http://127.0.0.1:4400/?perfRun=p2final' --browser=chrome
-bunx @playwright/cli -s=pass2 run-code --filename=apps/portfolio/scripts/perf/measure-interleaved.js > /private/tmp/portfolio-p2final-readback.log
+bunx @playwright/cli -s=pass2 run-code --filename="$(bun run --silent prepare:browser apps/portfolio/scripts/perf/measure-interleaved.ts)" > /private/tmp/portfolio-p2final-readback.log
 bunx @playwright/cli -s=pass2 close
 ```
 
-- `measure-public.js`: cache-disabled navigations, startup compilation blocking and first draw/completion/presentation-opportunity probes, 5.5 s warm-up then 3 s sustained sampling. Two subsequent RAF callbacks are only a presentation opportunity proxy, not proof of scanout.
-- `measure-startup.js`: a separate short startup repeat; disregard its short-window frame metrics.
-- `measure-interleaved.js`: fixed clock, 120 warm-up frames then 120 measured frames, completing each with a one-pixel readback. No production measurement hooks.
-- `capture.js`: controlled fonts/date/clock/history, three viewports, frames 30/60/120/420/900/1500/2100/2400. The 40-second sequence covers intro and a complete idle loop. GPU completion and a compositor wait precede PNG capture.
-- `capture-settings.js`, `capture-editor.js`, `capture-routes.js`: settings, bloom toggles and navigation comparisons.
-- `flows.js`, `failure-paths.js`, `compilation-lifecycle.js`, `font-dpr.js`, `optional.js`, `audit-routes.js`: route/lifecycle, injected failures, cancellation, optional backend and asset checks.
-- `bundle-report.mjs BASELINE_DIST CANDIDATE_DIST`: identical Node gzip/Brotli estimates of the static initial import graph, not deployed-CDN transfer measurements.
-- `results-pass2.mjs LOG_LABEL...`: extract successful CLI JSON and aggregate medians. Set `CAPTURE_BEFORE` and `CAPTURE_AFTER` to compare PNG labels; comparison bounds include all changed channels, with no visual masking.
+- `measure-public.ts`: cache-disabled navigations, startup compilation blocking and first draw/completion/presentation-opportunity probes, 5.5 s warm-up then 3 s sustained sampling. Two subsequent RAF callbacks are only a presentation opportunity proxy, not proof of scanout.
+- `measure-startup.ts`: a separate short startup repeat; disregard its short-window frame metrics.
+- `measure-interleaved.ts`: fixed clock, 120 warm-up frames then 120 measured frames, completing each with a one-pixel readback. No production measurement hooks.
+- `capture.ts`: controlled fonts/date/clock/history, three viewports, frames 30/60/120/420/900/1500/2100/2400. The 40-second sequence covers intro and a complete idle loop. GPU completion and a compositor wait precede PNG capture.
+- `capture-settings.ts`, `capture-editor.ts`, `capture-routes.ts`: settings, bloom toggles and navigation comparisons.
+- `flows.ts`, `failure-paths.ts`, `compilation-lifecycle.ts`, `font-dpr.ts`, `optional.ts`, `audit-routes.ts`: route/lifecycle, injected failures, cancellation, optional backend and asset checks.
+- `bundle-report.ts BASELINE_DIST CANDIDATE_DIST`: identical Node gzip/Brotli estimates of the static initial import graph, not deployed-CDN transfer measurements.
+- `results-pass2.ts LOG_LABEL...`: extract successful CLI JSON and aggregate medians. Set `CAPTURE_BEFORE` and `CAPTURE_AFTER` to compare PNG labels; comparison bounds include all changed channels, with no visual masking.
 
 The machine uses Chrome 153 headless, ANGLE Metal on Apple M5, DPR 1. Mobile is desktop viewport emulation, not physical-phone GPU evidence. Safari, Firefox, physical phones and high-DPR hardware remain unverified. Synthetic visibility events test scheduling but do not establish physical OS tab suspension. Deployment and Cloudflare configuration are outside this pass.

@@ -8,8 +8,8 @@
     "./routes.json": "./routes.json"
   },
   "scripts": {
-    "build": "node --test tests/*.test.mjs",
-    "test": "node --test tests/*.test.mjs",
-    "generate": "node tooling/webgpu/port-shaders.mjs"
+    "build": "tsx --test tests/*.test.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "generate": "tsx tooling/webgpu/port-shaders.ts"
   }
 }

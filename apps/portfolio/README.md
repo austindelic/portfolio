@@ -65,7 +65,7 @@ terminus/
 │   ├── styles/         # Global CSS styles
 │   ├── utils/          # Utility functions
 │   └── config.ts       # Site configuration
-├── astro.config.mjs    # Astro configuration
+├── astro.config.ts    # Astro configuration
 └── package.json        # Dependencies and scripts
 ```
 
@@ -82,7 +82,7 @@ export const SITE_DESCRIPTION = "Your site description";
 
 ### Astro Configuration
 
-Modify `astro.config.mjs` to:
+Modify `astro.config.ts` to:
 
 - Update the site URL for production
 - Add new integrations
@@ -121,7 +121,7 @@ This template is configured for **automatic deployment to GitHub Pages** using G
 2. **Enable GitHub Pages** in your repository settings:
    - Go to Settings → Pages
    - Select "GitHub Actions" as the source
-3. **Update the site URL** in `astro.config.mjs`:
+3. **Update the site URL** in `astro.config.ts`:
 
    ```javascript
    export default defineConfig({
@@ -145,3 +145,16 @@ Contributions, issues, and feature requests are welcome!
 ## Shared graphics
 
 Black-hole shaders and camera presets live in [`packages/black-hole`](../../packages/black-hole/README.md), imported through `@repo/black-hole`. Run dependency installation from the repository root. Shader generation is explicit; normal builds use committed WGSL and validate its source hashes.
+
+### TypeScript tooling
+
+From the repository root, run `bun install --frozen-lockfile` and `npm ci --prefix apps/tui/release`, then `bun run check-types`. All authored scripts and configuration use TypeScript; Node scripts use `tsx`.
+
+Playwright CLI evaluates JavaScript function expressions. Compile a browser audit before passing it to `run-code`:
+
+```sh
+bun run --silent prepare:browser apps/portfolio/tests/quality-presets.browser.ts
+playwright-cli run-code --filename=.playwright-cli/compiled/apps/portfolio/tests/quality-presets.browser.js
+```
+
+Compiled audits stay under the ignored `.playwright-cli` directory. The TUI launcher similarly compiles from `apps/tui/npm/bin/cli.ts` to its existing npm entry point during packaging; `bun run build:launcher` generates it for local launcher tests.
