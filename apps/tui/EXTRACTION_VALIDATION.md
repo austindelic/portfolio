@@ -4,7 +4,7 @@ Validated in an isolated worktree; no deployment, push, repository rename or pac
 
 ## Verified locally
 
-- Astro 5.16.6 production build with the packed `@austindelic/blackhole` 0.1.0 candidate, repeated with the final 11:38 lifecycle/route-injection candidate.
+- Astro 5.16.6 production build with the packed `@austindelic/blackhole` 0.1.0 candidate, repeated with the explicitly finalized web package at commit 2914babf (archive SHA-256 c68f3f8273c7ceb2cd87cdd59e36b9aafa59e107325560200af0146245aa2e0b).
 - TypeScript checks for workspace tooling and isolated release tools; lint completes with existing non-null-assertion/style warnings.
 - Six mobile/navigation lifecycle unit checks, browser-audit compilation and authored-TypeScript check, hosting configuration check.
 - Playwright CLI: desktop home/blog/article/social navigation, 3 projects / 2 posts / 7 socials, Explore entry and exit; zero console errors or failed requests.
