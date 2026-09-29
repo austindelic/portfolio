@@ -14,6 +14,9 @@
       "selection": "#ffa133"
     },
     "shader": {
+      "background": "#222222",
+      "stars": "#e6e8ef",
+      "jet": "#79d9ff",
       "shadow": "#08162d",
       "mid": "#35c7ff",
       "highlight": "#fffaf2"
@@ -46,6 +49,9 @@
       "selection": "#3d4352"
     },
     "shader": {
+      "background": "#145550",
+      "stars": "#ebaa4a",
+      "jet": "#01e0c0",
       "shadow": "#7cb7ff",
       "mid": "#c74ded",
       "highlight": "#ffec90"
@@ -78,6 +84,9 @@
       "selection": "#262e47"
     },
     "shader": {
+      "background": "#313d5e",
+      "stars": "#d79395",
+      "jet": "#e7c389",
       "shadow": "#f07178",
       "mid": "#c792ea",
       "highlight": "#a0beff"
@@ -110,6 +119,9 @@
       "selection": "#1b3a5b"
     },
     "shader": {
+      "background": "#544425",
+      "stars": "#cdaceb",
+      "jet": "#5cb9c8",
       "shadow": "#aad94c",
       "mid": "#ff8f40",
       "highlight": "#ffc67d"
@@ -142,6 +154,9 @@
       "selection": "#494e63"
     },
     "shader": {
+      "background": "#5d5072",
+      "stars": "#e4ad9a",
+      "jet": "#ca9ee6",
       "shadow": "#a6d189",
       "mid": "#ef9f76",
       "highlight": "#a8bef2"
@@ -174,6 +189,9 @@
       "selection": "#cccfd7"
     },
     "shader": {
+      "background": "#312a3d",
+      "stars": "#c05925",
+      "jet": "#8839ef",
       "shadow": "#3f9f2b",
       "mid": "#ed5d0a",
       "highlight": "#548bf7"
@@ -206,6 +224,9 @@
       "selection": "#404459"
     },
     "shader": {
+      "background": "#564a71",
+      "stars": "#e9b5a0",
+      "jet": "#c6a0f6",
       "shadow": "#a6da95",
       "mid": "#f5a97f",
       "highlight": "#a6c1f7"
@@ -238,6 +259,9 @@
       "selection": "#3b3d4f"
     },
     "shader": {
+      "background": "#54486b",
+      "stars": "#edbda6",
+      "jet": "#cba6f7",
       "shadow": "#a6e3a1",
       "mid": "#fab387",
       "highlight": "#a5c6fb"
@@ -270,6 +294,9 @@
       "selection": "#569cd6"
     },
     "shader": {
+      "background": "#2d4458",
+      "stars": "#79acd5",
+      "jet": "#8ecff6",
       "shadow": "#ce9178",
       "mid": "#b5cea8",
       "highlight": "#7fb4e0"
@@ -302,6 +329,9 @@
       "selection": "#44475a"
     },
     "shader": {
+      "background": "#2c2e3a",
+      "stars": "#f8f8f2",
+      "jet": "#7dc9dc",
       "shadow": "#ff79c6",
       "mid": "#bd93f9",
       "highlight": "#7afb9b"
@@ -334,6 +364,9 @@
       "selection": "#44475a"
     },
     "shader": {
+      "background": "#2c2e3a",
+      "stars": "#f6f6f4",
+      "jet": "#86c2d3",
       "shadow": "#f286c4",
       "mid": "#bf9eee",
       "highlight": "#88eea2"
@@ -366,6 +399,9 @@
       "selection": "#414b51"
     },
     "shader": {
+      "background": "#505c4a",
+      "stars": "#d5a6b3",
+      "jet": "#8ac08e",
       "shadow": "#d699b6",
       "mid": "#e67e80",
       "highlight": "#bccf9e"
@@ -398,6 +434,9 @@
       "selection": "#efe9d5"
     },
     "shader": {
+      "background": "#35372b",
+      "stars": "#b567a2",
+      "jet": "#46a471",
       "shadow": "#d866b4",
       "mid": "#f85552",
       "highlight": "#a2b13e"
@@ -430,6 +469,9 @@
       "selection": "#284566"
     },
     "shader": {
+      "background": "#1a3b26",
+      "stars": "#e1e4e8",
+      "jet": "#b9cdc2",
       "shadow": "#6a737d",
       "mid": "#f97583",
       "highlight": "#e8eaee"
@@ -462,6 +504,9 @@
       "selection": "#238636"
     },
     "shader": {
+      "background": "#13361e",
+      "stars": "#e6edf3",
+      "jet": "#6cd477",
       "shadow": "#8b949e",
       "mid": "#ff7b72",
       "highlight": "#ddbdff"
@@ -494,6 +539,9 @@
       "selection": "#347d39"
     },
     "shader": {
+      "background": "#233e2b",
+      "stars": "#adbac7",
+      "jet": "#7bc87b",
       "shadow": "#768390",
       "mid": "#f47067",
       "highlight": "#e4cdfc"
@@ -526,6 +574,9 @@
       "selection": "#ffffff"
     },
     "shader": {
+      "background": "#08431c",
+      "stars": "#f0f3f6",
+      "jet": "#5de478",
       "shadow": "#bdc4cc",
       "mid": "#ff9492",
       "highlight": "#e4c8ff"
@@ -558,6 +609,9 @@
       "selection": "#dae9f9"
     },
     "shader": {
+      "background": "#28352c",
+      "stars": "#24292e",
+      "jet": "#213f30",
       "shadow": "#6a737d",
       "mid": "#d73a49",
       "highlight": "#595c60"
@@ -590,6 +644,9 @@
       "selection": "#1f883d"
     },
     "shader": {
+      "background": "#29342c",
+      "stars": "#1f2328",
+      "jet": "#146a2d",
       "shadow": "#6e7781",
       "mid": "#cf222e",
       "highlight": "#a07ae7"
@@ -622,6 +679,9 @@
       "selection": "#0e1116"
     },
     "shader": {
+      "background": "#273029",
+      "stars": "#0e1116",
+      "jet": "#034f1b",
       "shadow": "#66707b",
       "mid": "#a0111f",
       "highlight": "#885fcc"
@@ -654,6 +714,9 @@
       "selection": "#303f33"
     },
     "shader": {
+      "background": "#1f2c2e",
+      "stars": "#ebdbb2",
+      "jet": "#5d8e66",
       "shadow": "#b8bb26",
       "mid": "#fb4934",
       "highlight": "#8cb58e"
@@ -686,6 +749,9 @@
       "selection": "#384539"
     },
     "shader": {
+      "background": "#273232",
+      "stars": "#ebdbb2",
+      "jet": "#5e8f66",
       "shadow": "#b8bb26",
       "mid": "#fb4934",
       "highlight": "#8cb58e"
@@ -718,6 +784,9 @@
       "selection": "#404b3e"
     },
     "shader": {
+      "background": "#2e3737",
+      "stars": "#ebdbb2",
+      "jet": "#5f9067",
       "shadow": "#b8bb26",
       "mid": "#fb4934",
       "highlight": "#8cb58e"
@@ -750,6 +819,9 @@
       "selection": "#d5dfbc"
     },
     "shader": {
+      "background": "#353832",
+      "stars": "#3c3836",
+      "jet": "#71a176",
       "shadow": "#79740e",
       "mid": "#9d0006",
       "highlight": "#8bb28c"
@@ -782,6 +854,9 @@
       "selection": "#d6dcb0"
     },
     "shader": {
+      "background": "#36372f",
+      "stars": "#3c3836",
+      "jet": "#709e73",
       "shadow": "#79740e",
       "mid": "#9d0006",
       "highlight": "#89b08b"
@@ -814,6 +889,9 @@
       "selection": "#cfd3a7"
     },
     "shader": {
+      "background": "#34342c",
+      "stars": "#3c3836",
+      "jet": "#6b976d",
       "shadow": "#79740e",
       "mid": "#9d0006",
       "highlight": "#85aa86"
@@ -846,6 +924,9 @@
       "selection": "#3f2b4c"
     },
     "shader": {
+      "background": "#255f53",
+      "stars": "#fadcb0",
+      "jet": "#cdf1ef",
       "shadow": "#ffd493",
       "mid": "#acafff",
       "highlight": "#3de3f3"
@@ -878,6 +959,9 @@
       "selection": "#223249"
     },
     "shader": {
+      "background": "#1a1818",
+      "stars": "#baa190",
+      "jet": "#7a8b89",
       "shadow": "#949fb5",
       "mid": "#8992a7",
       "highlight": "#a7bac3"
@@ -910,6 +994,9 @@
       "selection": "#c7d7e0"
     },
     "shader": {
+      "background": "#3b392c",
+      "stars": "#aa661c",
+      "jet": "#758e7e",
       "shadow": "#608bb4",
       "mid": "#624c83",
       "highlight": "#788db3"
@@ -942,6 +1029,9 @@
       "selection": "#223249"
     },
     "shader": {
+      "background": "#1e1e27",
+      "stars": "#f5af7e",
+      "jet": "#6a8f8a",
       "shadow": "#7fb4ca",
       "mid": "#957fb8",
       "highlight": "#9db4e1"
@@ -974,6 +1064,9 @@
       "selection": "#452b43"
     },
     "shader": {
+      "background": "#643356",
+      "stars": "#c8a4d5",
+      "jet": "#8cc6c2",
       "shadow": "#b4dce7",
       "mid": "#40b4c4",
       "highlight": "#f089ca"
@@ -1006,6 +1099,9 @@
       "selection": "#0000ff"
     },
     "shader": {
+      "background": "#262640",
+      "stars": "#0000b8",
+      "jet": "#b70033",
       "shadow": "#a31515",
       "mid": "#098658",
       "highlight": "#3d3dff"
@@ -1038,6 +1134,9 @@
       "selection": "#31454a"
     },
     "shader": {
+      "background": "#243136",
+      "stars": "#fab8c3",
+      "jet": "#77bfdb",
       "shadow": "#c3e88d",
       "mid": "#f78c6c",
       "highlight": "#f2ffff"
@@ -1070,6 +1169,9 @@
       "selection": "#353535"
     },
     "shader": {
+      "background": "#232323",
+      "stars": "#fab8c3",
+      "jet": "#78bbd7",
       "shadow": "#c3e88d",
       "mid": "#f78c6c",
       "highlight": "#f2ffff"
@@ -1102,6 +1204,9 @@
       "selection": "#dbeeec"
     },
     "shader": {
+      "background": "#3b3d3d",
+      "stars": "#e06a81",
+      "jet": "#56b0b5",
       "shadow": "#7b9c4b",
       "mid": "#ed6944",
       "highlight": "#a0aeb5"
@@ -1134,6 +1239,9 @@
       "selection": "#2e334a"
     },
     "shader": {
+      "background": "#171a27",
+      "stars": "#eca6b8",
+      "jet": "#77bbdb",
       "shadow": "#c3e88d",
       "mid": "#f78c6c",
       "highlight": "#cbcee1"
@@ -1166,6 +1274,9 @@
       "selection": "#404663"
     },
     "shader": {
+      "background": "#2b2f41",
+      "stars": "#eca6b8",
+      "jet": "#7abfe0",
       "shadow": "#c3e88d",
       "mid": "#f78c6c",
       "highlight": "#cbcee1"
@@ -1198,6 +1309,9 @@
       "selection": "#656565"
     },
     "shader": {
+      "background": "#212121",
+      "stars": "#89adfb",
+      "jet": "#d1d1d1",
       "shadow": "#9db1c5",
       "mid": "#b392f0",
       "highlight": "#c5acf4"
@@ -1230,6 +1344,9 @@
       "selection": "#757575"
     },
     "shader": {
+      "background": "#323232",
+      "stars": "#1b5ea0",
+      "jet": "#c03d3d",
       "shadow": "#2b5581",
       "mid": "#24292e",
       "highlight": "#de6161"
@@ -1262,6 +1379,9 @@
       "selection": "#575a5a"
     },
     "shader": {
+      "background": "#3c3b31",
+      "stars": "#c3a2fb",
+      "jet": "#9ccb38",
       "shadow": "#e6db74",
       "mid": "#f92672",
       "highlight": "#bbe960"
@@ -1294,6 +1414,9 @@
       "selection": "#1d3b53"
     },
     "shader": {
+      "background": "#23244b",
+      "stars": "#eea390",
+      "jet": "#e0b190",
       "shadow": "#ecc48d",
       "mid": "#c792ea",
       "highlight": "#d4acef"
@@ -1326,6 +1449,9 @@
       "selection": "#3f4758"
     },
     "shader": {
+      "background": "#445964",
+      "stars": "#99b2cc",
+      "jet": "#8cbbbd",
       "shadow": "#a3be8c",
       "mid": "#81a1c1",
       "highlight": "#a5cfdb"
@@ -1358,6 +1484,9 @@
       "selection": "#404859"
     },
     "shader": {
+      "background": "#2a2f37",
+      "stars": "#c6a17f",
+      "jet": "#52a0ac",
       "shadow": "#98c379",
       "mid": "#c678dd",
       "highlight": "#87c2f3"
@@ -1390,6 +1519,9 @@
       "selection": "#e5e5e6"
     },
     "shader": {
+      "background": "#2e313d",
+      "stars": "#7d5b13",
+      "jet": "#ac8031",
       "shadow": "#50a14f",
       "mid": "#a626a4",
       "highlight": "#3ea2cc"
@@ -1422,6 +1554,9 @@
       "selection": "#3c4149"
     },
     "shader": {
+      "background": "#5d383e",
+      "stars": "#a9b2c3",
+      "jet": "#e4af7a",
       "shadow": "#98c379",
       "mid": "#e06c75",
       "highlight": "#c79de4"
@@ -1454,6 +1589,9 @@
       "selection": "#272c3c"
     },
     "shader": {
+      "background": "#1e212a",
+      "stars": "#c47aaa",
+      "jet": "#c0cad6",
       "shadow": "#add7ff",
       "mid": "#4db3a0",
       "highlight": "#c1e1ff"
@@ -1486,6 +1624,9 @@
       "selection": "#750000"
     },
     "shader": {
+      "background": "#4b1111",
+      "stars": "#f8f8f8",
+      "jet": "#93bb39",
       "shadow": "#cd8d8d",
       "mid": "#f12727",
       "highlight": "#ffc67d"
@@ -1518,6 +1659,9 @@
       "selection": "#2a2838"
     },
     "shader": {
+      "background": "#5d4c52",
+      "stars": "#e8c6ca",
+      "jet": "#accbd2",
       "shadow": "#f6c177",
       "mid": "#31748f",
       "highlight": "#f092ac"
@@ -1550,6 +1694,9 @@
       "selection": "#efe9e5"
     },
     "shader": {
+      "background": "#3b3230",
+      "stars": "#a86e76",
+      "jet": "#709098",
       "shadow": "#c0812b",
       "mid": "#286983",
       "highlight": "#c6889a"
@@ -1582,6 +1729,9 @@
       "selection": "#312f45"
     },
     "shader": {
+      "background": "#61454f",
+      "stars": "#e7adb1",
+      "jet": "#acc4cb",
       "shadow": "#f6c177",
       "mid": "#3e8fb0",
       "highlight": "#f092ac"
@@ -1614,6 +1764,9 @@
       "selection": "#0b7db8"
     },
     "shader": {
+      "background": "#113a4f",
+      "stars": "#7eb1da",
+      "jet": "#7dc8ef",
       "shadow": "#ce9178",
       "mid": "#569cd6",
       "highlight": "#b4e4fe"
@@ -1646,6 +1799,9 @@
       "selection": "#aed4fb"
     },
     "shader": {
+      "background": "#2d2f30",
+      "stars": "#11335d",
+      "jet": "#11489d",
       "shadow": "#110000",
       "mid": "#7b30d0",
       "highlight": "#95b961"
@@ -1678,6 +1834,9 @@
       "selection": "#dff1e6"
     },
     "shader": {
+      "background": "#2a372f",
+      "stars": "#37915a",
+      "jet": "#177484",
       "shadow": "#b98b00",
       "mid": "#e861b0",
       "highlight": "#44b2ea"
@@ -1710,6 +1869,9 @@
       "selection": "#274642"
     },
     "shader": {
+      "background": "#093d42",
+      "stars": "#bd5088",
+      "jet": "#a75328",
       "shadow": "#2aa198",
       "mid": "#859900",
       "highlight": "#5aa7dd"
@@ -1742,6 +1904,9 @@
       "selection": "#eee8d5"
     },
     "shader": {
+      "background": "#37352b",
+      "stars": "#b44982",
+      "jet": "#c55b23",
       "shadow": "#299f96",
       "mid": "#849800",
       "highlight": "#5aa7dd"
@@ -1774,6 +1939,9 @@
       "selection": "#413f4e"
     },
     "shader": {
+      "background": "#342c48",
+      "stars": "#f19990",
+      "jet": "#df465b",
       "shadow": "#848bbd",
       "mid": "#72f1b8",
       "highlight": "#66faf8"
@@ -1806,6 +1974,9 @@
       "selection": "#2b2f41"
     },
     "shader": {
+      "background": "#202945",
+      "stars": "#e7a384",
+      "jet": "#5b689a",
       "shadow": "#5e6587",
       "mid": "#5c658d",
       "highlight": "#47cae1"
@@ -1838,6 +2009,9 @@
       "selection": "#333333"
     },
     "shader": {
+      "background": "#5f4c3c",
+      "stars": "#ffd7b6",
+      "jet": "#ffc799",
       "shadow": "#ffffff",
       "mid": "#a0a0a0",
       "highlight": "#ffd4b1"
@@ -1870,6 +2044,9 @@
       "selection": "#161616"
     },
     "shader": {
+      "background": "#1a3228",
+      "stars": "#cf918e",
+      "jet": "#b27c76",
       "shadow": "#657365",
       "mid": "#595959",
       "highlight": "#9ebb8a"
@@ -1902,6 +2079,9 @@
       "selection": "#272727"
     },
     "shader": {
+      "background": "#233b31",
+      "stars": "#cf918e",
+      "jet": "#b27c76",
       "shadow": "#687668",
       "mid": "#666666",
       "highlight": "#9ebb8a"
@@ -1934,6 +2114,9 @@
       "selection": "#eaeaea"
     },
     "shader": {
+      "background": "#29312d",
+      "stars": "#8b504f",
+      "jet": "#8e5d56",
       "shadow": "#8d988d",
       "mid": "#959595",
       "highlight": "#81a469"

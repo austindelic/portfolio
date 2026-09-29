@@ -20,25 +20,40 @@ try {
 		deviceScaleFactor: 1,
 	});
 	await page.goto(
-		`${origin}/?bhPerf=theme-capture,hide-content,no-clock,no-route-animation`,
+		`${origin}/?bhPerf=theme-capture,hide-content,no-clock,no-route-animation&bhDebug`,
 		{ waitUntil: "networkidle" },
 	);
 	await page.locator("[data-bh-live='true']").waitFor({ timeout: 60_000 });
-	await page
-		.locator("astro-dev-toolbar")
-		.evaluateAll((elements) => {
-			for (const element of elements) element.remove();
-		});
+	await page.locator("astro-dev-toolbar").evaluateAll((elements) => {
+		for (const element of elements) element.remove();
+	});
 	for (const theme of themes.filter(
 		(item) => item.id !== "original" && (only.size === 0 || only.has(item.id)),
 	)) {
-		await page.evaluate((selected) => {
-			document.documentElement.dataset.theme = selected.id;
-			document.dispatchEvent(
-				new CustomEvent("portfolio-theme-change", { detail: selected }),
-			);
-		}, theme);
-		await page.waitForTimeout(280);
+		await page.evaluate((id) => {
+			document
+				.querySelector<HTMLButtonElement>("[data-theme-trigger]")
+				?.click();
+			document
+				.querySelector<HTMLButtonElement>(`[data-theme-id="${id}"]`)
+				?.click();
+		}, theme.id);
+		await page.waitForFunction(
+			(id) =>
+				document.documentElement.dataset.theme === id &&
+				document
+					.querySelector("[data-black-hole-background]")
+					?.getAttribute("data-bh-live") === "true" &&
+				(
+					window as typeof window & {
+						__blackHoleStats?: { paletteMode?: string };
+					}
+				).__blackHoleStats?.paletteMode === "theme",
+			theme.id,
+		);
+		// Allow the renderer to clear history and accumulate several themed frames.
+		// Without this delay, software WebGL can capture the preceding palette.
+		await page.waitForTimeout(1200);
 		const image = await page.locator(".bh-background-live").screenshot();
 		await sharp(image)
 			.webp({ quality: 78, effort: 5 })

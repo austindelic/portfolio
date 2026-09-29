@@ -108,7 +108,14 @@ const original = {
 		accentText: "#222222",
 		selection: "#ffa133",
 	},
-	shader: { shadow: "#08162d", mid: "#35c7ff", highlight: "#fffaf2" },
+	shader: {
+		background: "#222222",
+		stars: "#e6e8ef",
+		jet: "#79d9ff",
+		shadow: "#08162d",
+		mid: "#35c7ff",
+		highlight: "#fffaf2",
+	},
 	syntax: {
 		constant: "#d2a6ff",
 		string: "#aad94c",
@@ -195,6 +202,15 @@ for (const id of themeNames) {
 			selection: hex(color("editor.selectionBackground") ?? accent),
 		},
 		shader: {
+			background: hex(
+				blend(
+					blend(bg, rawAccent, 0.4),
+					[0, 0, 0],
+					theme.type === "light" ? 0.75 : 0.15,
+				),
+			),
+			stars: hex(blend(parse(syntax.constant) ?? fg, fg, 0.28)),
+			jet: hex(blend(parse(syntax.type) ?? fg, rawAccent, 0.2)),
 			shadow: hex(emission[0]),
 			mid: hex(emission[1]),
 			highlight: hex(blend(emission[2], [255, 255, 255], 0.24)),

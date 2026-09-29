@@ -41,6 +41,12 @@ function syncTheme() {
 	}
 	runtime?.updateControls(themeShaderControls(theme));
 }
+function switchTheme() {
+	syncTheme();
+	if (!runtime && !loading) return;
+	stopBackground();
+	void syncBackground();
+}
 function stopBackground() {
 	unbindExplore?.();
 	unbindExplore = undefined;
@@ -85,7 +91,7 @@ async function syncBackground() {
 	}
 	if (loading) return;
 	loading = true;
-	delete host.dataset.bhFallback;
+	host.dataset.bhFallback = "true";
 	const current = ++generation;
 	const target = host;
 	try {
@@ -135,7 +141,7 @@ async function syncBackground() {
 void syncBackground();
 staticBackground.addEventListener("change", syncBackground);
 document.addEventListener("astro:page-load", syncBackground);
-document.addEventListener("portfolio-theme-change", syncTheme);
+document.addEventListener("portfolio-theme-change", switchTheme);
 document.addEventListener("astro:before-swap", (event) => {
 	unbindExplore?.();
 	unbindExplore = undefined;

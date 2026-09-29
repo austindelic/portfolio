@@ -39,8 +39,18 @@ test("every pinned Shiki theme has a complete, readable portfolio port and still
 		);
 		assert.equal(Object.keys(theme.ui).length, 8, theme.id);
 		assert.equal(Object.keys(theme.syntax).length, 10, theme.id);
-		assert.equal(Object.keys(theme.shader).length, 3, theme.id);
-		assert.equal(new Set(Object.values(theme.shader)).size, 3, theme.id);
+		assert.deepEqual(
+			Object.keys(theme.shader),
+			["background", "stars", "jet", "shadow", "mid", "highlight"],
+			theme.id,
+		);
+		assert.equal(
+			new Set([theme.shader.shadow, theme.shader.mid, theme.shader.highlight])
+				.size,
+			3,
+			theme.id,
+		);
+		assert.ok(luminance(theme.shader.background) < 0.11, theme.id);
 		for (const value of [
 			...Object.values(theme.ui),
 			...Object.values(theme.syntax),

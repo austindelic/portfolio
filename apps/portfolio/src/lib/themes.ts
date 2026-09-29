@@ -38,6 +38,9 @@ export function themeShaderControls(theme: PortfolioTheme) {
 		? { paletteMode: "source" as const }
 		: {
 				paletteMode: "theme" as const,
+				backgroundColor: theme.shader.background,
+				starColor: theme.shader.stars,
+				jetColor: theme.shader.jet,
 				shadowColor: theme.shader.shadow,
 				midColor: theme.shader.mid,
 				highlightColor: theme.shader.highlight,

@@ -436,6 +436,10 @@ html[data-theme] {
 	--line: var(--theme-border);
 	color-scheme: dark;
 }
+html[data-theme] .bh-background-layer,
+html[data-theme] [data-black-hole-background] {
+	background-color: var(--theme-background);
+}
 html[data-theme]:not(.dark) { color-scheme: light; }
 html[data-theme] .portfolio-header,
 html[data-theme] .portfolio-section { background: color-mix(in srgb, var(--theme-surface) 92%, transparent); }
