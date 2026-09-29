@@ -8,7 +8,7 @@ export type BlackHoleAnimationEase =
 	| "easeInOutCubic"
 	| "cinematic";
 
-export type BlackHoleAnimationPaletteMode = "source" | "custom";
+export type BlackHoleAnimationPaletteMode = "source" | "custom" | "theme";
 
 export type BlackHoleAnimationGlyphPreset =
 	| "gargantua"

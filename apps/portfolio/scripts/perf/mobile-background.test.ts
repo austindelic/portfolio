@@ -5,11 +5,13 @@ interface Session {
   routes: string[];
   dispose(): void;
   update(options: {animationRoute: string}): void;
+  updateControls(options: {paletteMode: string}): void;
 }
 interface Host {
   dataset: { settings: string; bhLive?: string };
   isConnected: boolean;
   querySelector(selector: string): object;
+  querySelectorAll(selector: string): object[];
 }
 interface FixtureEvent {
   persisted?: boolean;
@@ -40,6 +42,7 @@ const script = ts
   })
   .replace('import("@austindelic/blackhole")', "load()")
   .replace('import { bindBlackHoleExplore } from "./BlackHoleExplore";', "")
+  .replace('import { activeTheme, themeShaderControls } from "../lib/themes";', "")
   .replace(/import \{ BLACK_HOLE_ANIMATION_ROUTES, normalizeBlackHoleAnimationRoute \} from "[^";]+";/, "const BLACK_HOLE_ANIMATION_ROUTES = {}; const normalizeBlackHoleAnimationRoute = value => value;")
   .replace("export {};", "");
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -68,6 +71,7 @@ function fixture(mobile = true) {
     isConnected: true,
     querySelector: (selector: string) =>
       selector === "canvas" ? canvas : error,
+    querySelectorAll: () => [],
   };
   const document = { ...events(), querySelector: () => host };
   const window = { ...events(), matchMedia: () => media };
@@ -92,6 +96,7 @@ function fixture(mobile = true) {
         update(options: { animationRoute: string }) {
           this.routes.push(options.animationRoute);
         },
+        updateControls() {},
       };
       sessions.push(session);
       return session;
@@ -103,6 +108,8 @@ function fixture(mobile = true) {
     "location",
     "load",
     "bindBlackHoleExplore",
+    "activeTheme",
+    "themeShaderControls",
     script,
   )(
     window,
@@ -120,6 +127,8 @@ function fixture(mobile = true) {
         binding.active = false;
       };
     },
+    () => ({ id: "original" }),
+    () => ({ paletteMode: "source" }),
   );
   return {
     media,

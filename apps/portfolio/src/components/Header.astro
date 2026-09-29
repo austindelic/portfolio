@@ -5,6 +5,7 @@ const { navbarActiveItemID, disableClock = false } = Astro.props;
 import { Home } from "pixelarticons/react/Home.js";
 import { FileText } from "pixelarticons/react/FileText.js";
 import { Users } from "pixelarticons/react/Users.js";
+import ThemePicker from "./ThemePicker.astro";
 
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const links: Array<{
@@ -74,6 +75,7 @@ const links: Array<{
       <button type="button" class="nav-link explore-trigger" data-explore-trigger aria-controls="black-hole-explore" aria-expanded="false">
         <span aria-hidden="true">◎</span> explore
       </button>
+      <ThemePicker />
     </span>
   </nav>
 </header>
