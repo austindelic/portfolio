@@ -1175,6 +1175,9 @@ function startRendererSession(
 				shaderTime = 0;
 				lastTime = now;
 				resetFrameRequested = false;
+				// A frame counter reset does not clear the ping-pong textures.
+				// Reallocate them so the previous palette cannot feed this frame.
+				if (renderWidth > 0) createTargetsWithRetry(createFallbackTargets);
 			}
 			resize();
 
@@ -1661,8 +1664,18 @@ export function mountBlackHoleRuntime(
 		},
 		updateControls(next: Partial<ShaderControls>) {
 			if (!disposed) {
+				const paletteChanged =
+					(next.paletteMode !== undefined &&
+						next.paletteMode !== state.controls.paletteMode) ||
+					(next.shadowColor !== undefined &&
+						next.shadowColor !== state.controls.shadowColor) ||
+					(next.midColor !== undefined &&
+						next.midColor !== state.controls.midColor) ||
+					(next.highlightColor !== undefined &&
+						next.highlightColor !== state.controls.highlightColor);
 				Object.assign(state.controls, next);
 				state.atlasConfig = createGlyphAtlasConfig(state.controls);
+				if (paletteChanged) state.resetFrame();
 				state.requestRender();
 			}
 		},

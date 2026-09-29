@@ -8,7 +8,7 @@ export type BlackHoleAnimationEase =
 	| "easeInOutCubic"
 	| "cinematic";
 
-export type BlackHoleAnimationPaletteMode = "source" | "custom";
+export type BlackHoleAnimationPaletteMode = "source" | "custom" | "theme";
 
 export type BlackHoleAnimationGlyphPreset =
 	| "gargantua"
@@ -68,7 +68,10 @@ export type BlackHoleAnimationRouteKey =
 	| "/404"
 	| "fallback";
 
-const routes = routeData as Record<BlackHoleAnimationRouteKey, BlackHoleRouteAnimation>;
+const routes = routeData as Record<
+	BlackHoleAnimationRouteKey,
+	BlackHoleRouteAnimation
+>;
 
 export const BLACK_HOLE_ANIMATION_ROUTES = routes;
 

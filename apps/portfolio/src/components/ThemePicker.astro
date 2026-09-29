@@ -1,0 +1,61 @@
+---
+import { themes } from "../lib/themes";
+const darkThemes = themes.filter((theme) => theme.type === "dark");
+const lightThemes = themes.filter((theme) => theme.type === "light");
+---
+<button type="button" class="nav-link theme-trigger" data-theme-trigger aria-haspopup="dialog" aria-controls="theme-picker">Theme</button>
+<dialog id="theme-picker" class="theme-picker" aria-label="Choose a theme">
+  <div class="theme-picker-head"><strong>Choose theme</strong><button type="button" data-theme-close aria-label="Close theme picker">×</button></div>
+  <label class="theme-search-label" for="theme-search">Search themes</label>
+  <input id="theme-search" data-theme-search type="search" autocomplete="off" placeholder={`Search ${themes.length} themes`} />
+  <div class="theme-list" data-theme-list>
+    <section data-theme-group><h2>Dark</h2><div class="theme-options">{darkThemes.map((theme) => <button type="button" data-theme-id={theme.id} aria-pressed="false"><span class="theme-swatch" style={`--swatch-bg:${theme.ui.background};--swatch-accent:${theme.ui.accent};--swatch-fg:${theme.ui.foreground}`}></span><span>{theme.name}</span></button>)}</div></section>
+    <section data-theme-group><h2>Light</h2><div class="theme-options">{lightThemes.map((theme) => <button type="button" data-theme-id={theme.id} aria-pressed="false"><span class="theme-swatch" style={`--swatch-bg:${theme.ui.background};--swatch-accent:${theme.ui.accent};--swatch-fg:${theme.ui.foreground}`}></span><span>{theme.name}</span></button>)}</div></section>
+  </div>
+  <p class="theme-credit">Editor palettes from <a href="https://shiki.style/themes" target="_blank" rel="noopener noreferrer">Shiki themes</a>. <a href="/theme-notices.txt" target="_blank">Licenses</a></p>
+</dialog>
+<script>
+  import { activeTheme, applyTheme, getTheme, THEME_STORAGE_KEY } from "../lib/themes";
+  function bindThemePicker() {
+    const trigger = document.querySelector<HTMLButtonElement>("[data-theme-trigger]");
+    const picker = document.querySelector<HTMLDialogElement>("#theme-picker");
+    const search = picker?.querySelector<HTMLInputElement>("[data-theme-search]");
+    if (!trigger || !picker || !search || trigger.dataset.bound) return;
+    trigger.dataset.bound = "true";
+    const options = [...picker.querySelectorAll<HTMLButtonElement>("[data-theme-id]")];
+    const updateSelected = () => {
+      const selected = activeTheme().id;
+      trigger.textContent = "theme";
+      trigger.setAttribute("aria-label", `Theme: ${activeTheme().name}`);
+      trigger.title = `Current theme: ${activeTheme().name}`;
+      for (const option of options) option.setAttribute("aria-pressed", String(option.dataset.themeId === selected));
+    };
+    const filter = () => {
+      const fold = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase();
+      const query = fold(search.value.trim());
+      for (const option of options) option.hidden = !fold(option.textContent ?? "").includes(query);
+      for (const group of picker.querySelectorAll<HTMLElement>("[data-theme-group]"))
+        group.hidden = !group.querySelector("[data-theme-id]:not([hidden])");
+    };
+    trigger.addEventListener("click", () => { search.value = ""; filter(); updateSelected(); picker.showModal(); search.focus(); });
+    picker.querySelector("[data-theme-close]")?.addEventListener("click", () => picker.close());
+    picker.addEventListener("click", (event) => { if (event.target === picker) picker.close(); });
+    picker.addEventListener("close", () => trigger.focus());
+    search.addEventListener("input", filter);
+    for (const option of options) option.addEventListener("click", () => {
+      applyTheme(option.dataset.themeId!);
+      updateSelected();
+      picker.close();
+    });
+    updateSelected();
+  }
+  try { applyTheme(getTheme(localStorage.getItem(THEME_STORAGE_KEY)).id, false); }
+  catch { applyTheme("original", false); }
+  bindThemePicker();
+  document.addEventListener("astro:page-load", bindThemePicker);
+  document.addEventListener("astro:before-swap", (event) => {
+    const next = (event as Event & { newDocument: Document }).newDocument;
+    next.documentElement.dataset.theme = activeTheme().id;
+    next.documentElement.classList.toggle("dark", activeTheme().type === "dark");
+  });
+</script>

@@ -284,6 +284,10 @@ vec3 KelvinToRgb(float Kelvin) {
 // Authored emission from the film stills and supplied copper/gold reference.
 // Applied per disk sample, before accumulation; this is not a screen tint.
 vec3 GargantuaEmission(float heat) {
+    if (uPaletteMode == 2) {
+        vec3 color = mix(uShadowColor, uMidColor, smoothstep(0.0, 0.65, heat));
+        return 0.72 * mix(color, uHighlightColor, smoothstep(0.64, 0.99, heat));
+    }
     vec3 copper = vec3(0.75, 0.12, 0.012);
     vec3 amber = vec3(0.95, 0.32, 0.055);
     vec3 peach = vec3(1.0, 0.65, 0.36);
@@ -1079,7 +1083,10 @@ vec4 JetColor(vec4 BaseColor, vec4 RayPos, vec4 LastRayPos, vec4 iP_cov, vec4 la
                 float Ut = (abs(A) < 1e-7) ? (-C / max(1e-19, B)) : ((B < 0.0) ? (2.0 * C / (-B + sqrt(Det))) : ((-B - sqrt(Det)) / (2.0 * A)));
                 
                 float E_emit = -dot(Sample_P_cov, vec4(U_spatial, Ut)); float FreqRatio = 1.0 / max(1e-6, E_emit);
-                AccumColor.xyz *= KelvinToRgb(min(100000.0 * FreqRatio,100000.0)) * min(pow(FreqRatio, JetRedShiftIntensityExponent), JetShiftMax) * JetBrightmut * (0.5 + 0.5 * tanh(log(max(1e-6, AccretionRate)) + 1.0)); AccumColor.a *= 0.0; 
+                vec3 jetEmission = uPaletteMode == 2
+                    ? mix(uMidColor, uHighlightColor, smoothstep(0.5, 2.0, FreqRatio))
+                    : KelvinToRgb(min(100000.0 * FreqRatio,100000.0));
+                AccumColor.xyz *= jetEmission * min(pow(FreqRatio, JetRedShiftIntensityExponent), JetShiftMax) * JetBrightmut * (0.5 + 0.5 * tanh(log(max(1e-6, AccretionRate)) + 1.0)); AccumColor.a *= 0.0;
                 
                 if (E_emit <= 0.0) AccumColor.rgb = vec3(max(max(AccumColor.r, AccumColor.g), AccumColor.b) + min(min(AccumColor.r, AccumColor.g), AccumColor.b)) - AccumColor.rgb;
 

@@ -12,7 +12,7 @@ export type AsciiCellSize = {
 };
 
 export type GlyphPreset = "gargantua" | "classic" | "dense" | "custom";
-export type PaletteMode = "source" | "custom";
+export type PaletteMode = "source" | "custom" | "theme";
 export type QualityPreset =
 	| "cinematic-ascii"
 	| "mobile-safe"
@@ -1048,17 +1048,26 @@ export function writeAnimationControlsFromFrame(
 		baseControls.temporalJitter,
 	);
 	target.invertControls = baseControls.invertControls;
-	target.paletteMode = frame.paletteMode ?? baseControls.paletteMode;
+	target.paletteMode =
+		baseControls.paletteMode === "theme"
+			? "theme"
+			: (frame.paletteMode ?? baseControls.paletteMode);
 	target.shadowColor = normalizeHexColor(
-		frame.shadowColor ?? baseControls.shadowColor,
+		baseControls.paletteMode === "theme"
+			? baseControls.shadowColor
+			: (frame.shadowColor ?? baseControls.shadowColor),
 		baseControls.shadowColor,
 	);
 	target.midColor = normalizeHexColor(
-		frame.midColor ?? baseControls.midColor,
+		baseControls.paletteMode === "theme"
+			? baseControls.midColor
+			: (frame.midColor ?? baseControls.midColor),
 		baseControls.midColor,
 	);
 	target.highlightColor = normalizeHexColor(
-		frame.highlightColor ?? baseControls.highlightColor,
+		baseControls.paletteMode === "theme"
+			? baseControls.highlightColor
+			: (frame.highlightColor ?? baseControls.highlightColor),
 		baseControls.highlightColor,
 	);
 	target.glyphPreset = frame.glyphPreset ?? baseControls.glyphPreset;
@@ -1439,7 +1448,12 @@ export function createRenderUniforms(
 			controls.contrast,
 			DEFAULT_SHADER_CONTROLS.contrast,
 		),
-		paletteMode: controls.paletteMode === "custom" ? 1 : 0,
+		paletteMode:
+			controls.paletteMode === "custom"
+				? 1
+				: controls.paletteMode === "theme"
+					? 2
+					: 0,
 		shadowColor: hexToVec3(
 			controls.shadowColor,
 			DEFAULT_SHADER_CONTROLS.shadowColor,
@@ -1483,7 +1497,12 @@ export function writeRenderUniforms(
 		controls.contrast,
 		DEFAULT_SHADER_CONTROLS.contrast,
 	);
-	target.paletteMode = controls.paletteMode === "custom" ? 1 : 0;
+	target.paletteMode =
+		controls.paletteMode === "custom"
+			? 1
+			: controls.paletteMode === "theme"
+				? 2
+				: 0;
 	writeHexToVec3(
 		target.shadowColor,
 		controls.shadowColor,

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../generated/themes.css";
 
 @font-face {
 	font-family: "Departure Mono";
@@ -419,6 +420,59 @@ pre {
 	--line: #8a8a6f;
 	color-scheme: dark;
 }
+html[data-theme] {
+	--background: var(--theme-background);
+	--foreground: var(--theme-foreground);
+	--primary: var(--theme-accent);
+	--primary-foreground: var(--theme-accent-text);
+	--muted: var(--theme-surface);
+	--muted-foreground: var(--theme-muted);
+	--border: var(--theme-border);
+	--ring: var(--theme-accent);
+	--card: var(--theme-surface);
+	--card-foreground: var(--theme-foreground);
+	--accent: var(--theme-accent);
+	--accent-foreground: var(--theme-accent-text);
+	--line: var(--theme-border);
+	color-scheme: dark;
+}
+html[data-theme]:not(.dark) { color-scheme: light; }
+html[data-theme] .portfolio-header,
+html[data-theme] .portfolio-section { background: color-mix(in srgb, var(--theme-surface) 92%, transparent); }
+html[data-theme] .portfolio-article { background: color-mix(in srgb, var(--theme-surface) 96%, transparent); }
+html[data-theme] .bh-content-shell::before { background: color-mix(in srgb, var(--theme-surface) 75%, transparent); }
+html[data-theme] :is(.nav-link[aria-current="page"], a.project-row:is(:hover, :focus-visible) .row-category) { color: var(--theme-accent-text); }
+html[data-theme] a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) { background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-surface)); }
+html[data-theme].portfolio-theme pre,
+html[data-theme] .astro-code { background: var(--shiki-background); color: var(--shiki-foreground); border-color: var(--theme-border); }
+html[data-theme].portfolio-theme :not(pre) > code { background: var(--theme-surface); color: var(--theme-accent); border-color: var(--theme-border); }
+html[data-theme] ::selection { background: var(--theme-selection); color: var(--theme-accent-text); }
+.theme-trigger { cursor: pointer; }
+.theme-picker {
+	position: fixed;
+	width: min(440px, calc(100vw - 24px));
+	max-height: min(680px, calc(100dvh - 24px));
+	margin: auto;
+	padding: 16px;
+	background: var(--theme-surface);
+	color: var(--theme-foreground);
+	border: 1px solid var(--theme-border);
+	box-shadow: 0 24px 80px #0009;
+}
+.theme-picker::backdrop { background: rgb(0 0 0 / 0.65); }
+.theme-picker-head { display: flex; align-items: center; justify-content: space-between; font-size: 14px; text-transform: uppercase; }
+.theme-picker-head button { padding: 2px 8px; font-size: 24px; cursor: pointer; }
+.theme-search-label { display: block; margin-top: 14px; margin-bottom: 6px; color: var(--theme-muted); }
+.theme-picker input[type="search"] { width: 100%; padding: 9px 10px; background: var(--theme-background); color: var(--theme-foreground); border: 1px solid var(--theme-border); }
+.theme-list { max-height: min(470px, 55dvh); overflow-y: auto; margin-top: 12px; }
+.theme-list h2 { color: var(--theme-muted); font-size: 11px; text-transform: uppercase; padding: 10px 0 5px; }
+.theme-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.theme-options button { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 5px 7px; text-align: left; cursor: pointer; border: 1px solid transparent; }
+.theme-options button:hover, .theme-options button:focus-visible, .theme-options button[aria-pressed="true"] { background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-surface)); border-color: var(--theme-accent); }
+.theme-swatch { width: 24px; height: 24px; flex: none; background: linear-gradient(120deg, var(--swatch-bg) 55%, var(--swatch-accent) 55% 80%, var(--swatch-fg) 80%); border: 1px solid var(--theme-border); }
+.theme-credit { margin-top: 12px; color: var(--theme-muted); }
+.theme-credit a { color: var(--theme-accent); text-decoration: underline; }
+.theme-options button[hidden], .theme-list section[hidden] { display: none; }
 .portfolio-theme body {
 	color: var(--foreground);
 	font-size: 12px;
@@ -795,7 +849,7 @@ a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
 		gap: 8px;
 	}
 	.nav-link {
-		padding: 7px 8px;
+		padding: 7px 6px;
 	}
 	.portfolio-section {
 		padding: 12px;
@@ -950,9 +1004,9 @@ body.bh-exploring { overflow: hidden; }
 .bh-explore[hidden], #explore-settings-content[hidden] { display: none; }
 .bh-explore { position: fixed; inset: 0; z-index: 30; pointer-events: none; font-size: 12px; color: var(--foreground); outline: none; }
 .bh-explore button { cursor: pointer; min-height: 40px; padding: 8px 14px; }
-.explore-exit, .explore-settings { position: absolute; right: 24px; pointer-events: auto; background: rgb(24 24 24 / 94%); border: 1px solid var(--border); box-shadow: 0 8px 28px #0006; }
+.explore-exit, .explore-settings { position: absolute; right: 24px; pointer-events: auto; background: color-mix(in srgb, var(--theme-surface) 94%, transparent); border: 1px solid var(--border); box-shadow: 0 8px 28px #0006; }
 .explore-exit { top: 24px; display: flex; gap: 24px; align-items: center; }
-.explore-help { position: absolute; left: 24px; bottom: 24px; margin: 0; line-height: 1.9; color: #ddd; background: rgb(24 24 24 / 94%); border: 1px solid var(--border); padding: 10px 14px; }
+.explore-help { position: absolute; left: 24px; bottom: 24px; margin: 0; line-height: 1.9; color: var(--theme-foreground); background: color-mix(in srgb, var(--theme-surface) 94%, transparent); border: 1px solid var(--border); padding: 10px 14px; }
 .explore-settings { bottom: 24px; width: 260px; }
 [data-explore-settings] { width: 100%; display: flex; justify-content: space-between; }
 [data-explore-settings][aria-expanded="true"] span { transform: rotate(180deg); }

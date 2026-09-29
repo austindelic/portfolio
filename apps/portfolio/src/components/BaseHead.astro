@@ -3,6 +3,8 @@
 // all pages through the use of the <BaseHead /> component.
 import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
+import catalog from "../generated/themes.json";
+const themeBoot = Object.fromEntries(catalog.map((theme) => [theme.id, { type: theme.type, background: theme.ui.background }]));
 
 export interface Props {
 	title: string;
@@ -27,6 +29,17 @@ const { title, description, image = "/share.jpg" } = Astro.props;
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=black-hole-2" />
 <meta name="msapplication-TileColor" content="#222222" />
 <meta name="theme-color" content="#222222" />
+<script is:inline define:vars={{ themeBoot }}>
+  try {
+    const selected = localStorage.getItem("portfolio-theme");
+    const theme = selected && themeBoot[selected];
+    if (theme) {
+      document.documentElement.dataset.theme = selected;
+      document.documentElement.classList.toggle("dark", theme.type === "dark");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.background);
+    }
+  } catch {}
+</script>
 
 <!-- Primary Meta Tags -->
 <title>{title}</title>
