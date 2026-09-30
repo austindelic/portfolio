@@ -1,0 +1,354 @@
+{
+  "renderer": "Pillow/NumPy \u2014 real text glyphs",
+  "plannedDesigns": 28,
+  "fonts": [
+    {
+      "id": "menlo",
+      "family": "Menlo",
+      "style": "Regular",
+      "sha256": "dc256e0b39c2a6fec947129d421fef41b8b429f58f9b6e5d1b148c87f775c1f6",
+      "trial": false,
+      "variants": [
+        {
+          "effect": "clean",
+          "glyphCount": 976,
+          "images": [
+            "finished/menlo/clean-1584x396.png",
+            "finished/menlo/clean-6336x1584.png"
+          ],
+          "svg": "finished/menlo/clean-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "oversized",
+          "glyphCount": 1621,
+          "images": [
+            "finished/menlo/oversized-1584x396.png",
+            "finished/menlo/oversized-6336x1584.png"
+          ],
+          "svg": "finished/menlo/oversized-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "tilted",
+          "glyphCount": 747,
+          "images": [
+            "finished/menlo/tilted-1584x396.png",
+            "finished/menlo/tilted-6336x1584.png"
+          ],
+          "svg": "finished/menlo/tilted-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "perspective",
+          "glyphCount": 1225,
+          "images": [
+            "finished/menlo/perspective-1584x396.png",
+            "finished/menlo/perspective-6336x1584.png"
+          ],
+          "svg": "finished/menlo/perspective-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "trails",
+          "glyphCount": 1392,
+          "images": [
+            "finished/menlo/trails-1584x396.png",
+            "finished/menlo/trails-6336x1584.png"
+          ],
+          "svg": "finished/menlo/trails-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "dissolve",
+          "glyphCount": 1238,
+          "images": [
+            "finished/menlo/dissolve-1584x396.png",
+            "finished/menlo/dissolve-6336x1584.png"
+          ],
+          "svg": "finished/menlo/dissolve-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "disintegrate",
+          "glyphCount": 1270,
+          "images": [
+            "finished/menlo/disintegrate-1584x396.png",
+            "finished/menlo/disintegrate-6336x1584.png"
+          ],
+          "svg": "finished/menlo/disintegrate-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": "passed"
+        }
+      ]
+    },
+    {
+      "id": "departure-mono",
+      "family": "Departure Mono",
+      "style": "Regular",
+      "sha256": "5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb",
+      "trial": false,
+      "variants": [
+        {
+          "effect": "clean",
+          "glyphCount": 996,
+          "images": [
+            "finished/departure-mono/clean-1584x396.png",
+            "finished/departure-mono/clean-6336x1584.png"
+          ],
+          "svg": "finished/departure-mono/clean-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "oversized",
+          "glyphCount": 1602,
+          "images": [
+            "finished/departure-mono/oversized-1584x396.png",
+            "finished/departure-mono/oversized-6336x1584.png"
+          ],
+          "svg": "finished/departure-mono/oversized-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "tilted",
+          "glyphCount": 761,
+          "images": [
+            "finished/departure-mono/tilted-1584x396.png",
+            "finished/departure-mono/tilted-6336x1584.png"
+          ],
+          "svg": "finished/departure-mono/tilted-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "perspective",
+          "glyphCount": 1330,
+          "images": [
+            "finished/departure-mono/perspective-1584x396.png",
+            "finished/departure-mono/perspective-6336x1584.png"
+          ],
+          "svg": "finished/departure-mono/perspective-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "trails",
+          "glyphCount": 1389,
+          "images": [
+            "finished/departure-mono/trails-1584x396.png",
+            "finished/departure-mono/trails-6336x1584.png"
+          ],
+          "svg": "finished/departure-mono/trails-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "dissolve",
+          "glyphCount": 1372,
+          "images": [
+            "finished/departure-mono/dissolve-1584x396.png",
+            "finished/departure-mono/dissolve-6336x1584.png"
+          ],
+          "svg": "finished/departure-mono/dissolve-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "disintegrate",
+          "glyphCount": 1292,
+          "images": [
+            "finished/departure-mono/disintegrate-1584x396.png",
+            "finished/departure-mono/disintegrate-6336x1584.png"
+          ],
+          "svg": "finished/departure-mono/disintegrate-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": "passed"
+        }
+      ]
+    },
+    {
+      "id": "maple-mono",
+      "family": "Maple Mono NF",
+      "style": "Regular",
+      "sha256": "de5c085ec43e7b292c62d8c6cd449225eb1c304d47fc21b5f67e80535a1a284a",
+      "trial": false,
+      "variants": [
+        {
+          "effect": "clean",
+          "glyphCount": 909,
+          "images": [
+            "finished/maple-mono/clean-1584x396.png",
+            "finished/maple-mono/clean-6336x1584.png"
+          ],
+          "svg": "finished/maple-mono/clean-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "oversized",
+          "glyphCount": 1396,
+          "images": [
+            "finished/maple-mono/oversized-1584x396.png",
+            "finished/maple-mono/oversized-6336x1584.png"
+          ],
+          "svg": "finished/maple-mono/oversized-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "tilted",
+          "glyphCount": 686,
+          "images": [
+            "finished/maple-mono/tilted-1584x396.png",
+            "finished/maple-mono/tilted-6336x1584.png"
+          ],
+          "svg": "finished/maple-mono/tilted-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "perspective",
+          "glyphCount": 1114,
+          "images": [
+            "finished/maple-mono/perspective-1584x396.png",
+            "finished/maple-mono/perspective-6336x1584.png"
+          ],
+          "svg": "finished/maple-mono/perspective-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "trails",
+          "glyphCount": 1315,
+          "images": [
+            "finished/maple-mono/trails-1584x396.png",
+            "finished/maple-mono/trails-6336x1584.png"
+          ],
+          "svg": "finished/maple-mono/trails-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "dissolve",
+          "glyphCount": 1156,
+          "images": [
+            "finished/maple-mono/dissolve-1584x396.png",
+            "finished/maple-mono/dissolve-6336x1584.png"
+          ],
+          "svg": "finished/maple-mono/dissolve-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "disintegrate",
+          "glyphCount": 1196,
+          "images": [
+            "finished/maple-mono/disintegrate-1584x396.png",
+            "finished/maple-mono/disintegrate-6336x1584.png"
+          ],
+          "svg": "finished/maple-mono/disintegrate-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": "passed"
+        }
+      ]
+    },
+    {
+      "id": "lofi-forest-pixel",
+      "family": "Lofi Forest Trial",
+      "style": "Pixel",
+      "sha256": "a21951332953e1a7e1220e95aa85c6924176ed612dec9440520e90cd118b672f",
+      "trial": true,
+      "variants": [
+        {
+          "effect": "clean",
+          "glyphCount": 445,
+          "images": [
+            "trial-previews/lofi-forest-pixel/clean-1584x396.png",
+            "trial-previews/lofi-forest-pixel/clean-6336x1584.png"
+          ],
+          "svg": "trial-previews/lofi-forest-pixel/clean-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "oversized",
+          "glyphCount": 843,
+          "images": [
+            "trial-previews/lofi-forest-pixel/oversized-1584x396.png",
+            "trial-previews/lofi-forest-pixel/oversized-6336x1584.png"
+          ],
+          "svg": "trial-previews/lofi-forest-pixel/oversized-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "tilted",
+          "glyphCount": 335,
+          "images": [
+            "trial-previews/lofi-forest-pixel/tilted-1584x396.png",
+            "trial-previews/lofi-forest-pixel/tilted-6336x1584.png"
+          ],
+          "svg": "trial-previews/lofi-forest-pixel/tilted-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "perspective",
+          "glyphCount": 806,
+          "images": [
+            "trial-previews/lofi-forest-pixel/perspective-1584x396.png",
+            "trial-previews/lofi-forest-pixel/perspective-6336x1584.png"
+          ],
+          "svg": "trial-previews/lofi-forest-pixel/perspective-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "trails",
+          "glyphCount": 637,
+          "images": [
+            "trial-previews/lofi-forest-pixel/trails-1584x396.png",
+            "trial-previews/lofi-forest-pixel/trails-6336x1584.png"
+          ],
+          "svg": "trial-previews/lofi-forest-pixel/trails-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "dissolve",
+          "glyphCount": 606,
+          "images": [
+            "trial-previews/lofi-forest-pixel/dissolve-1584x396.png",
+            "trial-previews/lofi-forest-pixel/dissolve-6336x1584.png"
+          ],
+          "svg": "trial-previews/lofi-forest-pixel/dissolve-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": null
+        },
+        {
+          "effect": "disintegrate",
+          "glyphCount": 611,
+          "images": [
+            "trial-previews/lofi-forest-pixel/disintegrate-1584x396.png",
+            "trial-previews/lofi-forest-pixel/disintegrate-6336x1584.png"
+          ],
+          "svg": "trial-previews/lofi-forest-pixel/disintegrate-text.svg",
+          "brandingPixels": "passed",
+          "closingBraceMatchesClean": "passed"
+        }
+      ]
+    }
+  ],
+  "pendingFonts": [],
+  "originalUnchanged": true,
+  "originalSha256": "bdb363049eda79110997c89a1d0b696017f1bf13582d0595e50978e313e41221",
+  "completedDesigns": 28
+}

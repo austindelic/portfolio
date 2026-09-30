@@ -1,0 +1,13 @@
+{
+  "seed": 271828,
+  "layout": { "width": 1584, "height": 396, "artworkWidth": 736, "cellWidth": 4.5, "cellHeight": 7.5, "textSize": 8, "braceHeight": 0.84 },
+  "colour": "#245BFF",
+  "glyphs": ".,:-/|ivCoG08@",
+  "effects": ["clean", "oversized", "tilted", "perspective", "trails", "dissolve", "disintegrate"],
+  "fonts": [
+    { "id": "menlo", "family": "Menlo", "path": "/System/Library/Fonts/Menlo.ttc", "expectedFamily": "Menlo", "trial": false },
+    { "id": "departure-mono", "family": "Departure Mono", "path": "apps/portfolio/public/fonts/DepartureMono-Regular.woff2", "expectedFamily": "Departure Mono", "trial": false },
+    { "id": "maple-mono", "family": "Maple Mono NF", "path": "~/Library/Fonts/MapleMono-NF-Regular.ttf", "expectedFamily": "Maple Mono NF", "trial": false },
+    { "id": "lofi-forest-pixel", "family": "Lofi Forest Pixel", "pathEnvironment": "TNS_LOFI_FONT", "expectedFamily": "Lofi", "trial": true, "textLayout": { "cellWidth": 6, "cellHeight": 9, "textSize": 12 } }
+  ]
+}
