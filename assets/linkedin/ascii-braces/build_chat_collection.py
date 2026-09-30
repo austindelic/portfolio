@@ -1,4 +1,4 @@
-"""Collect every chat deliverable and chart the 421 distinct banner designs."""
+"""Collect every chat deliverable and chart the distinct banner designs."""
 from pathlib import Path
 import csv
 import hashlib
@@ -21,7 +21,8 @@ TW, TH, LABEL, GAP, MARGIN, HEADER, ROW, FOOTER = 792, 198, 336, 16, 24, 188, 22
 WIDTH = MARGIN * 2 + LABEL + TW * 7 + GAP * 6
 BLUE = "#245bff"
 COLOURS = {"original": "#5c6675", "early-ai": "#a85515", "text-braces": BLUE,
-           "mixed-lofi": "#7c3aed", "thermochrome": "#007c7e", "electric-blue": "#b63460", "metamorbit": "#637326"}
+           "mixed-lofi": "#7c3aed", "thermochrome": "#007c7e", "electric-blue": "#b63460", "metamorbit": "#637326",
+           "hollow-electric-blue": "#b63460"}
 
 
 def digest(path):
@@ -73,7 +74,10 @@ def catalog():
     for face in trials["faces"]:
         add(face["familyId"], face["label"] + " words / Departure ASCII", [
             {"effect": v["effect"], "preview": prefix + v["images"][0], "master": prefix + v["images"][1]} for v in face["variants"]])
-    assert len(rows) == 62 and len(designs) == 421
+    hollow = "text-rendered/trial-previews/electric-blue-hollow-disintegrate/electric-blue-hollow-disintegrate"
+    add("hollow-electric-blue", "Electric Blue Regular hollow / Departure ASCII", [{
+        "effect": "disintegrate", "preview": hollow + "-1584x396.png", "master": hollow + "-6336x1584.png"}])
+    assert len(rows) == 63 and len(designs) == 422
     return rows, designs
 
 
@@ -178,7 +182,7 @@ def main():
             thumb = image.convert("RGB").resize((TW, TH), Image.Resampling.LANCZOS)
             thumb.save(CHART / "thumbnails" / f'{design["id"]}.png')
     counts = {g: sum(d["group"] == g for d in designs) for g in COLOURS}
-    assert counts == {"original": 1, "early-ai": 6, "text-braces": 28, "mixed-lofi": 1, "thermochrome": 280, "electric-blue": 70, "metamorbit": 35}
+    assert counts == {"original": 1, "early-ai": 6, "text-braces": 28, "mixed-lofi": 1, "thermochrome": 280, "electric-blue": 70, "metamorbit": 35, "hollow-electric-blue": 1}
     manifest = {"designs": designs, "groups": counts, "copiedFiles": copied, "privateEvaluation": True}
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     with (OUT / "manifest.csv").open("w", newline="") as file:
@@ -186,8 +190,8 @@ def main():
         writer = csv.DictWriter(file, columns)
         writer.writeheader()
         writer.writerows({key: str(d[key]) if isinstance(d[key], list) else d[key] for key in columns} for d in designs)
-    subtitle = "421 designs = 1 original + 6 generated + 28 text braces + 1 mixed-font + 385 trial-font variations"
-    full = CHART / "all-421-designs.png"
+    subtitle = "422 designs = 1 original + 6 generated + 28 text braces + 1 mixed-font + 385 trial-font + 1 hollow"
+    full = CHART / f'all-{len(designs)}-designs.png'
     chart_size = png_chart(rows, full, subtitle)
     print(f'Created full chart: {chart_size[0]} x {chart_size[1]} pixels.', flush=True)
     pages = []
@@ -200,10 +204,10 @@ def main():
     pdf_folder.mkdir(parents=True, exist_ok=True)
     pdf_path = pdf_folder / "complete-variant-chart.pdf"
     pdf = canvas.Canvas(str(pdf_path), pageCompression=1)
-    pdf.setTitle("TNS - all 421 chat designs")
+    pdf.setTitle(f"TNS - all {len(designs)} chat designs")
     pdf.setAuthor("TNS")
     pdf.bookmarkPage("full")
-    pdf.addOutlineEntry("All 421 designs", "full", 0)
+    pdf.addOutlineEntry(f"All {len(designs)} designs", "full", 0)
     pdf_page(pdf, rows, subtitle)
     for start in range(0, len(rows), 8):
         key = f'page-{start // 8 + 1:02}'
@@ -219,9 +223,9 @@ def main():
     page_links = "\n".join(f'- [Chart detail page {i + 1}](02-variant-chart/pages/{p.name})' for i, p in enumerate(pages))
     (OUT / "README.md").write_text(f'''# TNS - complete chat collection
 
-**421 designs: the original plus 420 variants.** All earlier deliverables are copied byte-for-byte into `01-design-files/`, retaining their original folder structure. The original working files remain untouched.
+**{len(designs)} designs: the original plus {len(designs) - 1} variants.** All earlier deliverables are copied byte-for-byte into `01-design-files/`, retaining their original folder structure. The original working files remain untouched.
 
-- [Massive chart PNG](02-variant-chart/all-421-designs.png) - {chart_size[0]} x {chart_size[1]} pixels; zoom to read each cell.
+- [Massive chart PNG](02-variant-chart/{full.name}) - {chart_size[0]} x {chart_size[1]} pixels; zoom to read each cell.
 - [Complete chart PDF](02-variant-chart/output/pdf/complete-variant-chart.pdf) - the entire chart on page 1, followed by eight detail pages.
 - [Design index CSV](manifest.csv) - IDs, font/style/effect labels, exact file paths and actual dimensions.
 - [Full manifest](manifest.json) - includes copied-file hashes and all design records.
@@ -235,6 +239,7 @@ def main():
 | Thermochrome wordmarks across seven Departure effects | 280 |
 | Electric Blue wordmarks across seven Departure effects | 70 |
 | MetamorBit width variations across seven Departure effects | 35 |
+| Hollow Electric Blue Regular with Departure disintegration | 1 |
 
 ## Readable chart pages
 
@@ -246,7 +251,7 @@ This combined collection is private evaluation material because it includes tria
 ''')
     verification = {"designCount": len(designs), "rowCount": len(rows), "counts": counts,
                     "copiedFileCount": len(copied), "copyHashesMatch": True, "chartDimensions": chart_size,
-                    "detailCharts": len(pages), "pdfPages": len(reader.pages), "all421IdsInPdf": True,
+                    "detailCharts": len(pages), "pdfPages": len(reader.pages), "allDesignIdsInPdf": True,
                     "fontBinariesExcluded": True, "sourceFilesPreserved": True}
     (OUT / "verification.json").write_text(json.dumps(verification, indent=2) + "\n")
     archive = ROOT / "all-chat-collection.zip"
@@ -258,7 +263,7 @@ This combined collection is private evaluation material because it includes tria
         assert z.testzip() is None
         assert not any(Path(n).suffix.lower() in {".ttf", ".otf", ".ttc", ".woff", ".woff2"} for n in z.namelist())
         assert len(z.namelist()) == len([p for p in OUT.rglob("*") if p.is_file()])
-    print(f'COMPLETE: {OUT}\nBundle: {archive}\n421 designs, {len(copied)} copied deliverables, 9 PDF pages.', flush=True)
+    print(f'COMPLETE: {OUT}\nBundle: {archive}\n{len(designs)} designs, {len(copied)} copied deliverables, 9 PDF pages.', flush=True)
 
 
 if __name__ == "__main__":
