@@ -1,6 +1,7 @@
 __pycache__/
 trial-previews/
 lofi-forest-private-previews.zip
+lofi-forest-private-previews/
 *.ttf
 *.otf
 *.woff

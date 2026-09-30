@@ -11,10 +11,10 @@ import render
 SPEC = json.loads((render.BASE / "wordmark-variant.json").read_text())
 
 
-def layout(path):
+def layout(path, font_loader=None, maximum_size=80):
     # Use a common size/baseline for both word groups, with natural glyph proportions.
-    for size in range(80, 7, -1):
-        font = render.load_font(path, size)
+    for size in range(maximum_size, 7, -1):
+        font = font_loader(size) if font_loader else render.load_font(path, size)
         boxes = [font.getbbox(s["text"], anchor="ls") for s in SPEC["segments"]]
         top = min(b[1] for b in boxes)
         bottom = max(b[3] for b in boxes)

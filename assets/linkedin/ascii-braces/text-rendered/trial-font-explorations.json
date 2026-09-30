@@ -1,0 +1,13 @@
+{
+  "id": "three-trial-font-explorations",
+  "archives": {
+    "thermochrome": "~/Downloads/MD_Thermochrome-0_5-Trial.zip",
+    "electric-blue": "~/Downloads/ElectricBlue-Trial.zip",
+    "metamorbit": "~/Downloads/Trial_MetamorBit_v0.30_default-style-only.zip"
+  },
+  "metamorbitWidths": [200, 300, 400, 500, 600],
+  "artworkFont": "departure-mono",
+  "effects": ["clean", "oversized", "tilted", "perspective", "trails", "dissolve", "disintegrate"],
+  "expectedFaces": { "thermochrome": 40, "electric-blue": 10, "metamorbit": 5 },
+  "privateTrial": true
+}
