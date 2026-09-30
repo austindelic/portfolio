@@ -918,7 +918,7 @@ mod tests {
             p[0].date > p[1].date || (p[0].date == p[1].date && p[0].slug < p[1].slug)
         }));
         assert_eq!(app.content.projects.len(), 3);
-        assert_eq!(app.content.socials.len(), 7);
+        assert_eq!(app.content.socials.len(), 6);
         assert_eq!(
             app.resolve("/blog/site-and-terminal/"),
             Action::Navigate(Page::Post(site_index))
