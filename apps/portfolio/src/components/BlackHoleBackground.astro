@@ -2,13 +2,10 @@
 import type { BlackHoleOptions as Props } from "@austindelic/blackhole";
 const props: Props = Astro.props;
 ---
-<div data-black-hole-background data-settings={JSON.stringify(props)} transition:persist="black-hole-background" class={`relative h-full w-full bg-black ${props.className ?? ""}`}>
-  <img src="/images/black-hole-mobile.webp" width="1200" height="1200" alt="" aria-hidden="true" fetchpriority="high" class="bh-background-still absolute inset-0 h-full w-full object-cover pointer-events-none" />
-  <noscript>
-    <img src="/images/black-hole-mobile.webp" width="1200" height="1200" alt="" aria-hidden="true" class="absolute inset-0 h-full w-full object-cover pointer-events-none" />
-  </noscript>
-  <canvas class="bh-background-live block h-full w-full bg-black pointer-events-none" aria-hidden="true"></canvas>
-  <div data-black-hole-error hidden class="absolute inset-x-4 bottom-4 border border-red-500/60 bg-black/85 p-3 font-mono text-xs text-red-200"></div>
+<div data-black-hole-background data-settings={JSON.stringify(props)} transition:persist="black-hole-background" class={`relative h-full w-full bg-white ${props.className ?? ""}`}>
+  <img src="/images/black-hole-white-blue.webp" width="1200" height="1200" alt="" aria-hidden="true" fetchpriority="high" class="bh-background-still absolute inset-0 h-full w-full object-cover pointer-events-none" />
+  <canvas class="bh-background-live block h-full w-full bg-white pointer-events-none" aria-hidden="true"></canvas>
+  <div data-black-hole-error hidden class="absolute inset-x-4 bottom-4 border border-red-500/60 bg-white/95 p-3 font-mono text-xs text-red-800"></div>
 </div>
 <script>
 import type { BlackHoleOptions as Props } from "@austindelic/blackhole";
@@ -140,8 +137,9 @@ window.addEventListener("pageshow", syncBackground);
 </script>
 
 <style>
- .bh-background-live, .bh-background-still { visibility: hidden; }
+ .bh-background-live { visibility: hidden; }
  [data-bh-live="true"] .bh-background-live { visibility: visible; }
+ [data-bh-live="true"] .bh-background-still { visibility: hidden; }
  [data-bh-fallback="true"] .bh-background-still { visibility: visible; }
  @media (pointer: coarse), (max-width: 768px), (max-height: 768px) {
    .bh-background-live { display: none; }

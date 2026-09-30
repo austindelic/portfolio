@@ -80,6 +80,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "@austindelic/blackhole@0.1.0": "patches/@austindelic%2Fblackhole@0.1.0.patch",
+  },
   "packages": {
     "@astrojs/compiler": ["@astrojs/compiler@2.13.0", "", {}, "sha512-mqVORhUJViA28fwHYaWmsXSzLO9osbdZ5ImUfxBarqsYdMlPbqAqGJCxsNzvppp1BEzc1mJNjOVvQqeDN8Vspw=="],
 

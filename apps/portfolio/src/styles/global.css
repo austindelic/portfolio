@@ -79,7 +79,7 @@
 
 .bh-content-shell::before {
 	/* Keep text legible when the luminous disk crosses behind the glass. */
-	background: rgb(0 0 0 / 0.62);
+	background: rgb(255 255 255 / 0.94);
 	box-shadow:
 		inset 0 1px 0 rgb(255 255 255 / 0.07),
 		inset 0 0 0 1px rgb(255 255 255 / 0.04);
@@ -88,7 +88,7 @@
 }
 
 .bh-home-card::before {
-	background: rgb(0 0 0 / 0.24);
+	background: rgb(234 240 255 / 0.94);
 	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.055);
 	-webkit-backdrop-filter: blur(4px);
 	backdrop-filter: blur(4px);
@@ -111,7 +111,7 @@
 .bh-perf-opaque-content .bh-content-shell::before,
 .bh-perf-opaque-content .bh-home-card::before,
 .bh-perf-opaque-content .bh-home-inset::before {
-	background-color: #020303;
+	background-color: #ffffff;
 	-webkit-backdrop-filter: none;
 	backdrop-filter: none;
 }
@@ -134,19 +134,19 @@
 	}
 
 	.portfolio-theme .portfolio-section {
-		background: rgb(20 20 20 / 94%);
-		text-shadow: 0 1px 2px #000;
+		background: rgb(255 255 255 / 96%);
+		text-shadow: none;
 	}
 }
 
 @-moz-document url-prefix() {
 	.bh-content-shell::before {
-		background: rgb(0 0 0 / 0.22);
+		background: rgb(255 255 255 / 0.94);
 	}
 
 	.bh-home-card::before {
 		/* Keep text legible when the luminous disk crosses behind the glass. */
-	background: rgb(0 0 0 / 0.62);
+		background: rgb(255 255 255 / 0.94);
 	}
 
 	.bh-home-inset::before {
@@ -357,14 +357,14 @@ body::-webkit-scrollbar {
 	}
 }
 
-/* Ayu Dark code surfaces, matching Shiki’s bundled theme. */
+/* Light code surfaces complement the white sky and blue ink. */
 :root {
-	--code-bg: #0b0e14;
-	--code-bg-soft: #0b0e14;
-	--code-fg: #bfbdb6;
-	--code-muted: #626a73;
-	--code-border: #232b36;
-	--code-accent: #e6b450;
+	--code-bg: #eaf0ff;
+	--code-bg-soft: #eaf0ff;
+	--code-fg: #10245b;
+	--code-muted: #435c8c;
+	--code-border: #c5d5ff;
+	--code-accent: #2b1fd4;
 }
 
 .astro-code,
@@ -377,6 +377,8 @@ pre {
 }
 
 .astro-code {
+	/* biome-ignore lint/complexity/noImportantStyles: Override Shiki’s inline white code-block background. */
+	background: var(--code-bg) !important;
 	padding: 1rem;
 	overflow-x: auto;
 }
@@ -403,21 +405,26 @@ pre {
 
 /* Departure-inspired foreground; the standalone shader retains its own theme. */
 .portfolio-theme {
-	--background: #222222;
-	--foreground: #c0c0c0;
-	--primary: #ffa133;
-	--primary-foreground: #222222;
-	--muted: #292929;
-	--muted-foreground: #b0b0a1;
-	--border: #606052;
-	--ring: #ffa133;
-	--card: #222222;
-	--card-foreground: #c0c0c0;
-	--accent: #ffa133;
-	--accent-foreground: #222222;
-	--destructive: #f08a7c;
-	--line: #8a8a6f;
-	color-scheme: dark;
+	--background: #ffffff;
+	--foreground: #10245b;
+	--primary: #2b1fd4;
+	--primary-foreground: #ffffff;
+	--muted: #eaf0ff;
+	--muted-foreground: #435c8c;
+	--border: #c5d5ff;
+	--ring: #2b1fd4;
+	--card: #ffffff;
+	--popover: #ffffff;
+	--popover-foreground: #10245b;
+	--secondary: #eaf0ff;
+	--secondary-foreground: #10245b;
+	--input: #c5d5ff;
+	--card-foreground: #10245b;
+	--accent: #2b1fd4;
+	--accent-foreground: #ffffff;
+	--destructive: #b4233b;
+	--line: #5478e8;
+	color-scheme: light;
 }
 .portfolio-theme body {
 	color: var(--foreground);
@@ -425,7 +432,7 @@ pre {
 }
 .portfolio-theme ::selection {
 	background: var(--primary);
-	color: #222;
+	color: var(--primary-foreground);
 }
 .portfolio-theme a,
 .portfolio-theme button {
@@ -451,7 +458,7 @@ pre {
 	padding: 0;
 }
 .portfolio-header {
-	background: rgb(34 34 34 / 85%);
+	background: rgb(255 255 255 / 94%);
 	border: 1px solid var(--border);
 	border-bottom: 2px solid var(--line);
 	padding: 10px 14px;
@@ -492,11 +499,11 @@ pre {
 .nav-active,
 .portfolio-theme .nav-link[aria-current="page"]:hover {
 	background: var(--primary);
-	color: #222;
+	color: var(--primary-foreground);
 }
 .portfolio-section {
 	position: relative;
-	background: rgb(34 34 34 / 85%);
+	background: rgb(255 255 255 / 94%);
 	border: 1px solid var(--border);
 	padding: 12px 16px;
 	margin-bottom: 12px;
@@ -580,7 +587,7 @@ pre {
 	grid-template-columns: 74px minmax(0, 1fr);
 	gap: 8px;
 	padding: 5px 0;
-	border-bottom: 1px dotted #505047;
+	border-bottom: 1px dotted var(--border);
 }
 .profile-details > div:last-child {
 	border-bottom: 0;
@@ -688,10 +695,10 @@ a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible)::after {
 a.project-row:is(:hover, :focus-visible) .row-category {
 	background: var(--primary);
 	border-color: var(--primary);
-	color: #222;
+	color: var(--primary-foreground);
 }
 a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
-	background: #2a2a26;
+	background: var(--muted);
 }
 .small-badge {
 	font-size: 11px;
@@ -950,9 +957,9 @@ body.bh-exploring { overflow: hidden; }
 .bh-explore[hidden], #explore-settings-content[hidden] { display: none; }
 .bh-explore { position: fixed; inset: 0; z-index: 30; pointer-events: none; font-size: 12px; color: var(--foreground); outline: none; }
 .bh-explore button { cursor: pointer; min-height: 40px; padding: 8px 14px; }
-.explore-exit, .explore-settings { position: absolute; right: 24px; pointer-events: auto; background: rgb(24 24 24 / 94%); border: 1px solid var(--border); box-shadow: 0 8px 28px #0006; }
+.explore-exit, .explore-settings { position: absolute; right: 24px; pointer-events: auto; background: rgb(255 255 255 / 96%); border: 1px solid var(--border); box-shadow: 0 8px 28px rgb(16 36 91 / 12%); }
 .explore-exit { top: 24px; display: flex; gap: 24px; align-items: center; }
-.explore-help { position: absolute; left: 24px; bottom: 24px; margin: 0; line-height: 1.9; color: #ddd; background: rgb(24 24 24 / 94%); border: 1px solid var(--border); padding: 10px 14px; }
+.explore-help { position: absolute; left: 24px; bottom: 24px; margin: 0; line-height: 1.9; color: var(--muted-foreground); background: rgb(255 255 255 / 96%); border: 1px solid var(--border); padding: 10px 14px; }
 .explore-settings { bottom: 24px; width: 260px; }
 [data-explore-settings] { width: 100%; display: flex; justify-content: space-between; }
 [data-explore-settings][aria-expanded="true"] span { transform: rotate(180deg); }
@@ -962,11 +969,11 @@ body.bh-exploring { overflow: hidden; }
 #explore-settings-content input { accent-color: var(--primary); }
 #explore-settings-content input[type="range"] { width: 100%; }
 [data-explore-reset] { border: 1px solid var(--border); }
-.bh-explore button:hover { background: #ffffff0d; }
+.bh-explore button:hover { background: var(--muted); }
 
 /* Give the writing room without changing the terminal-inspired shell. */
 .portfolio-theme .portfolio-article {
-	background: rgb(20 20 20 / 94%);
+	background: rgb(255 255 255 / 96%);
 }
 .page-intro {
 	margin: 8px 0 20px;
@@ -988,7 +995,7 @@ body.bh-exploring { overflow: hidden; }
 	width: 100%;
 	height: auto;
 	border: 1px solid var(--border);
-	background: #000;
+	background: var(--muted);
 }
 .portfolio-article .article-hero {
 	margin: 24px 0 32px;
@@ -1007,16 +1014,16 @@ body.bh-exploring { overflow: hidden; }
 	margin-top: 36px;
 }
 .portfolio-theme pre {
-	border: 1px solid #232b36;
+	border: 1px solid var(--code-border);
 	padding: 18px;
 	margin: 20px 0;
 	line-height: 1.8;
 	tab-size: 2;
 }
 .portfolio-theme :not(pre) > code {
-	background: #0b0e14;
-	color: #e6b450;
-	border: 1px solid #232b36;
+	background: var(--code-bg-soft);
+	color: var(--code-accent);
+	border: 1px solid var(--code-border);
 	padding: 1px 4px;
 }
 .portfolio-theme pre code {

@@ -9,7 +9,7 @@ export default defineConfig({
   site: "https://austindelic.com",
   compressHTML: true,
   markdown: {
-    shikiConfig: { theme: "ayu-dark" },
+    shikiConfig: { theme: "github-light" },
   },
   vite: {
     plugins: [tailwindcss()],

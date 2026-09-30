@@ -58,7 +58,7 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
 <!doctype html>
 <html
   lang="en"
-  class="dark portfolio-theme h-full"
+  class="portfolio-theme h-full"
 >
   <head >
 
@@ -68,9 +68,14 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
 
   <!-- Background layer -->
     <div class={backgroundLayerClass}>
-      <div class="absolute inset-0 bg-black" />
+      <div class="absolute inset-0 bg-white" />
       <div class="bh-background-canvas absolute inset-0">
         <BlackHoleBackground
+          appearance="white-blue"
+          paletteMode="custom"
+          shadowColor="#2B1FD4"
+          midColor="#5478E8"
+          highlightColor="#C5D5FF"
           showControls={false}
           interactive={false}
           forceActiveRender={true}

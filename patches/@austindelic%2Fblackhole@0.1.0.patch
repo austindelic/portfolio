@@ -1,0 +1,472 @@
+diff --git a/dist/BlackHoleWebGlBackend-IXH2AYEH.js b/dist/BlackHoleWebGlBackend-IXH2AYEH.js
+index 9f4832e30f93d22f0ebc3d78ad4d95f91c5ab3c7..ed47e7df4ddd344b494537ba651ad8dc47055d95 100644
+--- a/dist/BlackHoleWebGlBackend-IXH2AYEH.js
++++ b/dist/BlackHoleWebGlBackend-IXH2AYEH.js
+@@ -1,3 +1,4 @@
++import { whiteBlueGlsl } from "./white-blue-appearance.js";
+ /* Blackhole 0.1.0 — see bundled notices and shader source attribution. */
+ import {
+   RenderTargetAllocationError
+@@ -275,7 +276,7 @@ function createStandardFragmentSource(name, shaderBody) {
+   return `${shaders_fragment_header_glsl_default}
+ out vec4 shadertoyFragColor;
+ 
+-${cleanShaderSource(name, shaderBody)}
++${cleanShaderSource(name, whiteBlueGlsl(name, shaderBody))}
+ 
+ void main() {
+ 	mainImage(shadertoyFragColor, gl_FragCoord.xy);
+@@ -285,7 +286,7 @@ void main() {
+ function createBlackHoleFragmentSource(entrySource) {
+   return `${shaders_fragment_header_glsl_default}
+ ${getBlackHoleCoreSource()}
+-${shaders_helpers_glsl_default}
++${whiteBlueGlsl("Helpers", shaders_helpers_glsl_default)}
+ ${entrySource}
+ `;
+ }
+diff --git a/dist/BlackHoleWebGpuBackend-KSUSYK3R.js b/dist/BlackHoleWebGpuBackend-KSUSYK3R.js
+index d408b060805d60e18a513356c677993d08d4a24b..0d749f2caed8c3b25749f07c760cf5f664417ac1 100644
+--- a/dist/BlackHoleWebGpuBackend-KSUSYK3R.js
++++ b/dist/BlackHoleWebGpuBackend-KSUSYK3R.js
+@@ -1,3 +1,4 @@
++import { whiteBlueWgsl } from "./white-blue-appearance.js";
+ /* Blackhole 0.1.0 — see bundled notices and shader source attribution. */
+ import {
+   createGlyphAtlasRaster
+@@ -171,6 +172,7 @@ async function createWebGpuBackend({
+   });
+   const vertexModule = device.createShaderModule({ code: vertex });
+   const compile = async (name, source, formats, present = false) => {
++    source = whiteBlueWgsl(name === "a" && cellGrid ? "cell" : name, source);
+     const code = present ? source.replace(
+       "gl_FragCoord_1 = gl_FragCoord;",
+       "gl_FragCoord_1 = vec4(gl_FragCoord.x, params.data[0].y - gl_FragCoord.y, gl_FragCoord.zw);"
+diff --git a/dist/chunk-BU67QNSF.js b/dist/chunk-BU67QNSF.js
+index 5fca98fed84f0e27b7e749427d3c326d4071d177..0b3704a9220b1fc44c484c41ea158361ce73d4a0 100644
+--- a/dist/chunk-BU67QNSF.js
++++ b/dist/chunk-BU67QNSF.js
+@@ -18,12 +18,13 @@ function mountBlackHole(element, initial = {}) {
+   const originalLabel = element.getAttribute("aria-label");
+   const originalTabIndex = element.getAttribute("tabindex");
+   let canvas = callerCanvas ? element : doc.createElement("canvas");
+-  canvas.style.cssText += ";display:block;width:100%;height:100%;background:black";
++  canvas.style.cssText += `;display:block;width:100%;height:100%;background:${props.appearance === 'white-blue' ? 'white' : 'black'}`;
+   canvas.setAttribute("aria-label", "Interactive black hole shader");
+   if (!callerCanvas) element.append(canvas);
+   const errorBox = doc.createElement("div");
+   errorBox.setAttribute("role", "alert");
+   errorBox.style.cssText = "padding:12px;background:#190b0b;color:#ffd5d5;font:12px monospace";
++  if (props.appearance === "white-blue") { errorBox.style.background = "#fff"; errorBox.style.color = "#b4233b"; }
+   let disposed = false;
+   const onError = (message) => {
+     if (disposed) return;
+@@ -54,6 +55,7 @@ function mountBlackHole(element, initial = {}) {
+   function update(next) {
+     if (disposed) return;
+     props = { ...props, ...next };
++    if ("appearance" in next) canvas.style.background = props.appearance === "white-blue" ? "white" : "black";
+     state.initialProps = props;
+     state.animationMode = props.animationMode ?? "off";
+     state.animationAutoplay = props.animationAutoplay ?? true;
+diff --git a/dist/chunk-OVARF56J.js b/dist/chunk-OVARF56J.js
+index 0a000fe6f9c4a8701c34ff413b16c780e3833e25..9628b8e3e9af2de12c578e62f6580a65883f027d 100644
+--- a/dist/chunk-OVARF56J.js
++++ b/dist/chunk-OVARF56J.js
+@@ -616,6 +616,8 @@ function startRendererSession(canvas, state, options, backend, fallbackReason, s
+     lastAnimatedAsciiEnabled,
+     asciiMix
+   );
++  if (state.initialProps.appearance === "white-blue") activeRenderUniforms.paletteMode = 2;
++
+   const publishAnimationStatus = (status) => {
+     if (!showControls || status === lastAnimationStatus) return;
+     lastAnimationStatus = status;
+@@ -1178,7 +1180,8 @@ function startRendererSession(canvas, state, options, backend, fallbackReason, s
+         activeAsciiEnabled,
+         asciiMix
+       );
+-      if (resolvedRendererMode === "ascii-cell") {
++      if (state.initialProps.appearance === "white-blue") activeRenderUniforms.paletteMode = 2;
++if (resolvedRendererMode === "ascii-cell") {
+         activeRenderUniforms.asciiCellSize.x = settings.cellWidth;
+         activeRenderUniforms.asciiCellSize.y = settings.cellHeight;
+       }
+diff --git a/dist/components/BlackHoleCore.d.ts b/dist/components/BlackHoleCore.d.ts
+index 15e82027eca359ee9a138fdb50e489af03e3c371..79dcfbdd40bec8706cbd098593825ae1c1444adc 100644
+--- a/dist/components/BlackHoleCore.d.ts
++++ b/dist/components/BlackHoleCore.d.ts
+@@ -248,6 +248,8 @@ export type BlackHoleStats = {
+     animationSequenceTime: number;
+ };
+ export type Props = {
++	/** White sky and blue ink; source appearance remains the default. */
++	appearance?: "source" | "white-blue";
+     routes?: import("../config/black-hole-animation").BlackHoleRoutes;
+     paused?: boolean;
+     className?: string;
+diff --git a/node_modules/@austindelic/blackhole/dist/white-blue-appearance.js b/dist/white-blue-appearance.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f23ebf6fca436a03e6fbd78b4f296a0411f33f99
+--- /dev/null
++++ b/dist/white-blue-appearance.js
+@@ -0,0 +1,123 @@
++// node_modules/@austindelic/blackhole/src/components/WhiteBlueAppearance.ts
++function replace(source, before, after) {
++  if (!source.includes(before))
++    throw new Error("White-blue shader patch no longer matches Blackhole 0.1.0");
++  return source.replace(before, after);
++}
++var glslColour = `
++vec3 WhiteBlueColor(float value) {
++    return value < 0.5 ? mix(uShadowColor, uMidColor, value * 2.0)
++        : mix(uMidColor, uHighlightColor, (value - 0.5) * 2.0);
++}
++vec3 WhiteBluePaper(vec4 scene) {
++    float emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++    return mix(vec3(1.0), vec3(16.0, 36.0, 91.0) / 255.0,
++        clamp(scene.a, 0.0, 1.0) * (1.0 - emission));
++}
++`;
++function whiteBlueGlsl(name, source) {
++  if (name === "Image" || name === "ASCII")
++    source = replace(source, "return base + (1.0 - base) * glow;", `
++    if (uPaletteMode == 2) {
++        float emission = smoothstep(0.001, 0.04, sourcePeak);
++        return mix(base, uHighlightColor, clamp(dot(glow, vec3(0.3, 0.59, 0.11)), 0.0, 1.0) * emission);
++    }
++    return base + (1.0 - base) * glow;`);
++  if (name === "Buffer A")
++    return replace(source, "FinalColor = ApplyToneMapping(FinalColor, CurrentShift);", `FinalColor = ApplyToneMapping(FinalColor, CurrentShift);
++    if (uPaletteMode == 2) { FinalColor = ApplyToneMapping(res.AccumColor, CurrentShift); FinalColor.a = (res.Status < 0.5 || abs(res.Status - 3.0) < 0.25) ? 1.0 : clamp(res.AccumColor.a, 0.0, 1.0); }`);
++  if (name === "Helpers")
++    return replace(source, "finalColor = ApplyToneMapping(finalColor, currentShift);", `finalColor = ApplyToneMapping(finalColor, currentShift);
++    if (uPaletteMode == 2) { finalColor = ApplyToneMapping(res.AccumColor, currentShift); finalColor.a = (res.Status < 0.5 || abs(res.Status - 3.0) < 0.25) ? 1.0 : clamp(res.AccumColor.a, 0.0, 1.0); }`);
++  if (name === "Image") {
++    source = replace(source, "void mainImage", glslColour + "void mainImage");
++    return replace(source, "fragColor = vec4(color, 1.0);", `
++    if (uPaletteMode == 2) {
++        vec4 scene = texture(iChannel0, uv);
++        if (uAsciiMix <= 0.001) {
++            float emission = smoothstep(0.001, 0.04, max(max(color.r, color.g), color.b));
++            color = mix(WhiteBluePaper(vec4(color, scene.a)),
++                WhiteBlueColor(dot(color, vec3(0.3, 0.59, 0.11))), emission);
++        }
++        fragColor = vec4(color, scene.a);
++        return;
++    }
++    fragColor = vec4(color, 1.0);`);
++  }
++  if (name === "ASCII") {
++    source = replace(source, "uPaletteMode == 1", "uPaletteMode >= 1");
++    source = replace(source, "void mainImage", glslColour + "void mainImage");
++    return replace(source, "fragColor = vec4(CompositeGlow", `
++    if (uPaletteMode == 2) {
++        vec4 scene = texture(iChannel0, uv);
++        float emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++        vec3 blue = mix(WhiteBluePaper(scene), base,
++            clamp(ink * boundary * state.a, 0.0, 1.0) * emission);
++        fragColor = vec4(CompositeGlow(blue, uv, originalColor), 1.0);
++        return;
++    }
++    fragColor = vec4(CompositeGlow`);
++  }
++  return source;
++}
++var wgslColour = `
++fn WhiteBlueColor(value: f32) -> vec3<f32> {
++    if (value < 0.5) { return mix(params.data[24].xyz, params.data[25].xyz, value * 2.0); }
++    return mix(params.data[25].xyz, params.data[26].xyz, (value - 0.5) * 2.0);
++}
++fn WhiteBluePaper(scene: vec4<f32>) -> vec3<f32> {
++    let emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++    return mix(vec3<f32>(1.0), vec3<f32>(16.0, 36.0, 91.0) / 255.0,
++        clamp(scene.a, 0.0, 1.0) * (1.0 - emission));
++}
++`;
++function whiteBlueWgsl(name, source) {
++  if (name === "image" || name === "present" || name === "ascii")
++    source = replace(source, "return (_e48 + ((vec3(1f) - _e50) * _e53));", `
++    if (i32(params.data[23].x) == 2) {
++        let emission = smoothstep(0.001, 0.04, sourcePeak);
++        return mix(base_1, params.data[26].xyz, clamp(dot(glow, vec3<f32>(0.3, 0.59, 0.11)), 0.0, 1.0) * emission);
++    }
++    return (_e48 + ((vec3(1f) - _e50) * _e53));`);
++  if (name === "a")
++    return replace(source, "FinalColor = _e223;", `FinalColor = _e223;
++    if (i32(params.data[23].x) == 2) { FinalColor = ApplyToneMapping(res_1.AccumColor, CurrentShift); FinalColor.w = select(clamp(res_1.AccumColor.w, 0.0, 1.0), 1.0, res_1.Status < 0.5 || abs(res_1.Status - 3.0) < 0.25); }`);
++  if (name === "cell")
++    return replace(source, "finalColor = _e60;", `finalColor = _e60;
++    if (i32(params.data[23].x) == 2) { finalColor = ApplyToneMapping(res_2.AccumColor, currentShift); finalColor.w = select(clamp(res_2.AccumColor.w, 0.0, 1.0), 1.0, res_2.Status < 0.5 || abs(res_2.Status - 3.0) < 0.25); }`);
++  if (name === "image" || name === "present") {
++    source = replace(source, "fn mainImage", wgslColour + "fn mainImage");
++    return replace(source, "(*fragColor) = vec4<f32>(_e31.x, _e31.y, _e31.z, 1f);", `
++    if (i32(params.data[23].x) == 2) {
++        let scene = textureSample(iChannel0Texture, iChannel0Sampler, uv_2);
++        var blue = color_2;
++        if (params.data[19].x <= 0.001) {
++            let emission = smoothstep(0.001, 0.04, max(max(blue.r, blue.g), blue.b));
++            blue = mix(WhiteBluePaper(vec4<f32>(blue, scene.a)),
++                WhiteBlueColor(dot(blue, vec3<f32>(0.3, 0.59, 0.11))), emission);
++        }
++        (*fragColor) = vec4<f32>(blue, scene.a);
++        return;
++    }
++    (*fragColor) = vec4<f32>(_e31.x, _e31.y, _e31.z, 1f);`);
++  }
++  if (name === "ascii") {
++    source = replace(source, "fn mainImage", wgslColour + "fn mainImage");
++    source = replace(source, "i32(_e135.x) == 1i", "i32(_e135.x) >= 1i");
++    return replace(source, "let _e162 = originalColor;", `
++    if (i32(params.data[23].x) == 2) {
++        let scene = textureSample(iChannel0Texture, iChannel0Sampler, uv_2);
++        let emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++        let blue = mix(WhiteBluePaper(scene), base_2,
++            clamp(ink * boundary * state.w, 0.0, 1.0) * emission);
++        (*fragColor) = vec4<f32>(CompositeGlow(blue, uv_2, originalColor), 1.0);
++        return;
++    }
++    let _e162 = originalColor;`);
++  }
++  return source;
++}
++export {
++  whiteBlueGlsl,
++  whiteBlueWgsl
++};
+diff --git a/src/components/BlackHoleCore.ts b/src/components/BlackHoleCore.ts
+index 547e317cf64283f788aa4ca01c485e6382b0836f..41d4b46dcdad11f0cb0f3e2e202342984c46c204 100644
+--- a/src/components/BlackHoleCore.ts
++++ b/src/components/BlackHoleCore.ts
+@@ -287,6 +287,8 @@ export type BlackHoleStats = {
+ };
+ 
+ export type Props = {
++	/** White sky and blue ink; source appearance remains the default. */
++	appearance?: "source" | "white-blue";
+  routes?: import("../config/black-hole-animation").BlackHoleRoutes;
+  paused?: boolean;
+ 	className?: string;
+diff --git a/src/components/BlackHoleGl.ts b/src/components/BlackHoleGl.ts
+index 38a9972768203bd543aacfae8bd99c2791c372b5..7baa35abb09e647c78d15ab5701f61272bbc33ec 100644
+--- a/src/components/BlackHoleGl.ts
++++ b/src/components/BlackHoleGl.ts
+@@ -1,3 +1,4 @@
++import { whiteBlueGlsl } from "./WhiteBlueAppearance";
+ import BLACK_HOLE_HELPERS from "../embedded/shaders_helpers.glsl";
+ import FRAGMENT_HEADER from "../embedded/shaders_fragment-header.glsl";
+ import asciiAnalysisSource from "../embedded/shaders_ascii-analysis.glsl";
+@@ -68,7 +69,7 @@ export function createStandardFragmentSource(
+ 	return `${FRAGMENT_HEADER}
+ out vec4 shadertoyFragColor;
+ 
+-${cleanShaderSource(name, shaderBody)}
++${cleanShaderSource(name, whiteBlueGlsl(name, shaderBody))}
+ 
+ void main() {
+ 	mainImage(shadertoyFragColor, gl_FragCoord.xy);
+@@ -79,7 +80,7 @@ void main() {
+ export function createBlackHoleFragmentSource(entrySource: string): string {
+ 	return `${FRAGMENT_HEADER}
+ ${getBlackHoleCoreSource()}
+-${BLACK_HOLE_HELPERS}
++${whiteBlueGlsl("Helpers", BLACK_HOLE_HELPERS)}
+ ${entrySource}
+ `;
+ }
+diff --git a/src/components/BlackHoleRuntime.ts b/src/components/BlackHoleRuntime.ts
+index 408b4d2f99ee93390e1033b3369d6eaa002c0c05..5d5c68639d492cc9eaf59c8ef9b68a3cd8ac0be1 100644
+--- a/src/components/BlackHoleRuntime.ts
++++ b/src/components/BlackHoleRuntime.ts
+@@ -516,6 +516,8 @@ function startRendererSession(
+ 		asciiMix,
+ 	);
+ 
++	if (state.initialProps.appearance === "white-blue") activeRenderUniforms.paletteMode = 2;
++
+ 	const publishAnimationStatus = (status: string) => {
+ 		if (!showControls || status === lastAnimationStatus) return;
+ 		lastAnimationStatus = status;
+@@ -1187,7 +1189,8 @@ function startRendererSession(
+ 				activeAsciiEnabled,
+ 				asciiMix,
+ 			);
+-			if (resolvedRendererMode === "ascii-cell") {
++			if (state.initialProps.appearance === "white-blue") activeRenderUniforms.paletteMode = 2;
++if (resolvedRendererMode === "ascii-cell") {
+ 				activeRenderUniforms.asciiCellSize.x = settings.cellWidth;
+ 				activeRenderUniforms.asciiCellSize.y = settings.cellHeight;
+ 			}
+diff --git a/src/components/BlackHoleWebGpuBackend.ts b/src/components/BlackHoleWebGpuBackend.ts
+index 53a74a2248b283233c1c56189194c783a33d4ea0..9e89a6fc68bbaf52a5f9b36d641a67df7f2eeafc 100644
+--- a/src/components/BlackHoleWebGpuBackend.ts
++++ b/src/components/BlackHoleWebGpuBackend.ts
+@@ -1,3 +1,4 @@
++import { whiteBlueWgsl } from "./WhiteBlueAppearance";
+ /// <reference path="../types/webgpu.d.ts" />
+ 
+ import ascii from "../embedded/shaders_webgpu_ascii.wgsl";
+@@ -164,6 +165,7 @@ export async function createWebGpuBackend({
+ 		present = false,
+ 	) => {
+ 		// Offscreen rows keep GL's logical bottom-up indexing. Only presentation flips.
++		source = whiteBlueWgsl(name === "a" && cellGrid ? "cell" : name, source);
+ 		const code = present
+ 			? source.replace(
+ 					"gl_FragCoord_1 = gl_FragCoord;",
+diff --git a/node_modules/@austindelic/blackhole/src/components/WhiteBlueAppearance.ts b/src/components/WhiteBlueAppearance.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..79694c70c367c587c2e2b0ffd283eecaa4b23b2e
+--- /dev/null
++++ b/src/components/WhiteBlueAppearance.ts
+@@ -0,0 +1,123 @@
++// Patch for Blackhole 0.1.0. Palette mode 2 keeps the existing uniform layout
++// while distinguishing white-blue appearance from source/custom palettes.
++// Compose after ASCII analysis: feeding white sky into luminance analysis
++// would fill it with glyphs and lose the traced centre's silhouette.
++function replace(source: string, before: string, after: string): string {
++	if (!source.includes(before)) throw new Error("White-blue shader patch no longer matches Blackhole 0.1.0");
++	return source.replace(before, after);
++}
++
++const glslColour = `
++vec3 WhiteBlueColor(float value) {
++    return value < 0.5 ? mix(uShadowColor, uMidColor, value * 2.0)
++        : mix(uMidColor, uHighlightColor, (value - 0.5) * 2.0);
++}
++vec3 WhiteBluePaper(vec4 scene) {
++    float emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++    return mix(vec3(1.0), vec3(16.0, 36.0, 91.0) / 255.0,
++        clamp(scene.a, 0.0, 1.0) * (1.0 - emission));
++}
++`;
++
++export function whiteBlueGlsl(name: string, source: string): string {
++    if (name === "Image" || name === "ASCII") source = replace(source,
++        "return base + (1.0 - base) * glow;", `
++    if (uPaletteMode == 2) {
++        float emission = smoothstep(0.001, 0.04, sourcePeak);
++        return mix(base, uHighlightColor, clamp(dot(glow, vec3(0.3, 0.59, 0.11)), 0.0, 1.0) * emission);
++    }
++    return base + (1.0 - base) * glow;`);
++	if (name === "Buffer A") return replace(source,
++		"FinalColor = ApplyToneMapping(FinalColor, CurrentShift);",
++		"FinalColor = ApplyToneMapping(FinalColor, CurrentShift);\n    if (uPaletteMode == 2) { FinalColor = ApplyToneMapping(res.AccumColor, CurrentShift); FinalColor.a = (res.Status < 0.5 || abs(res.Status - 3.0) < 0.25) ? 1.0 : clamp(res.AccumColor.a, 0.0, 1.0); }");
++	if (name === "Helpers") return replace(source,
++		"finalColor = ApplyToneMapping(finalColor, currentShift);",
++		"finalColor = ApplyToneMapping(finalColor, currentShift);\n    if (uPaletteMode == 2) { finalColor = ApplyToneMapping(res.AccumColor, currentShift); finalColor.a = (res.Status < 0.5 || abs(res.Status - 3.0) < 0.25) ? 1.0 : clamp(res.AccumColor.a, 0.0, 1.0); }");
++	if (name === "Image") {
++		source = replace(source, "void mainImage", glslColour + "void mainImage");
++		return replace(source, "fragColor = vec4(color, 1.0);", `
++    if (uPaletteMode == 2) {
++        vec4 scene = texture(iChannel0, uv);
++        if (uAsciiMix <= 0.001) {
++            float emission = smoothstep(0.001, 0.04, max(max(color.r, color.g), color.b));
++            color = mix(WhiteBluePaper(vec4(color, scene.a)),
++                WhiteBlueColor(dot(color, vec3(0.3, 0.59, 0.11))), emission);
++        }
++        fragColor = vec4(color, scene.a);
++        return;
++    }
++    fragColor = vec4(color, 1.0);`);
++	}
++	if (name === "ASCII") {
++		source = replace(source, "uPaletteMode == 1", "uPaletteMode >= 1");
++		source = replace(source, "void mainImage", glslColour + "void mainImage");
++		return replace(source, "fragColor = vec4(CompositeGlow", `
++    if (uPaletteMode == 2) {
++        vec4 scene = texture(iChannel0, uv);
++        float emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++        vec3 blue = mix(WhiteBluePaper(scene), base,
++            clamp(ink * boundary * state.a, 0.0, 1.0) * emission);
++        fragColor = vec4(CompositeGlow(blue, uv, originalColor), 1.0);
++        return;
++    }
++    fragColor = vec4(CompositeGlow`);
++	}
++	return source;
++}
++
++const wgslColour = `
++fn WhiteBlueColor(value: f32) -> vec3<f32> {
++    if (value < 0.5) { return mix(params.data[24].xyz, params.data[25].xyz, value * 2.0); }
++    return mix(params.data[25].xyz, params.data[26].xyz, (value - 0.5) * 2.0);
++}
++fn WhiteBluePaper(scene: vec4<f32>) -> vec3<f32> {
++    let emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++    return mix(vec3<f32>(1.0), vec3<f32>(16.0, 36.0, 91.0) / 255.0,
++        clamp(scene.a, 0.0, 1.0) * (1.0 - emission));
++}
++`;
++
++export function whiteBlueWgsl(name: string, source: string): string {
++    if (name === "image" || name === "present" || name === "ascii") source = replace(source,
++        "return (_e48 + ((vec3(1f) - _e50) * _e53));", `
++    if (i32(params.data[23].x) == 2) {
++        let emission = smoothstep(0.001, 0.04, sourcePeak);
++        return mix(base_1, params.data[26].xyz, clamp(dot(glow, vec3<f32>(0.3, 0.59, 0.11)), 0.0, 1.0) * emission);
++    }
++    return (_e48 + ((vec3(1f) - _e50) * _e53));`);
++	if (name === "a") return replace(source, "FinalColor = _e223;",
++		"FinalColor = _e223;\n    if (i32(params.data[23].x) == 2) { FinalColor = ApplyToneMapping(res_1.AccumColor, CurrentShift); FinalColor.w = select(clamp(res_1.AccumColor.w, 0.0, 1.0), 1.0, res_1.Status < 0.5 || abs(res_1.Status - 3.0) < 0.25); }");
++	if (name === "cell") return replace(source, "finalColor = _e60;",
++		"finalColor = _e60;\n    if (i32(params.data[23].x) == 2) { finalColor = ApplyToneMapping(res_2.AccumColor, currentShift); finalColor.w = select(clamp(res_2.AccumColor.w, 0.0, 1.0), 1.0, res_2.Status < 0.5 || abs(res_2.Status - 3.0) < 0.25); }");
++	if (name === "image" || name === "present") {
++		source = replace(source, "fn mainImage", wgslColour + "fn mainImage");
++		return replace(source, "(*fragColor) = vec4<f32>(_e31.x, _e31.y, _e31.z, 1f);", `
++    if (i32(params.data[23].x) == 2) {
++        let scene = textureSample(iChannel0Texture, iChannel0Sampler, uv_2);
++        var blue = color_2;
++        if (params.data[19].x <= 0.001) {
++            let emission = smoothstep(0.001, 0.04, max(max(blue.r, blue.g), blue.b));
++            blue = mix(WhiteBluePaper(vec4<f32>(blue, scene.a)),
++                WhiteBlueColor(dot(blue, vec3<f32>(0.3, 0.59, 0.11))), emission);
++        }
++        (*fragColor) = vec4<f32>(blue, scene.a);
++        return;
++    }
++    (*fragColor) = vec4<f32>(_e31.x, _e31.y, _e31.z, 1f);`);
++	}
++	if (name === "ascii") {
++		source = replace(source, "fn mainImage", wgslColour + "fn mainImage");
++		source = replace(source, "i32(_e135.x) == 1i", "i32(_e135.x) >= 1i");
++		return replace(source, "let _e162 = originalColor;", `
++    if (i32(params.data[23].x) == 2) {
++        let scene = textureSample(iChannel0Texture, iChannel0Sampler, uv_2);
++        let emission = smoothstep(0.001, 0.04, max(max(scene.r, scene.g), scene.b));
++        let blue = mix(WhiteBluePaper(scene), base_2,
++            clamp(ink * boundary * state.w, 0.0, 1.0) * emission);
++        (*fragColor) = vec4<f32>(CompositeGlow(blue, uv_2, originalColor), 1.0);
++        return;
++    }
++    let _e162 = originalColor;`);
++	}
++	return source;
++}
+diff --git a/src/index.ts b/src/index.ts
+index 19a927121c526eb89a96c13b92e5b7ebc685221e..ae9800d7245dc0083ab7596e6a698ab74c13be1d 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -15,12 +15,13 @@ export function mountBlackHole(element: HTMLElement, initial: BlackHoleOptions =
+  const originalLabel = element.getAttribute('aria-label');
+  const originalTabIndex = element.getAttribute('tabindex');
+  let canvas = callerCanvas ? element as HTMLCanvasElement : doc.createElement('canvas');
+- canvas.style.cssText += ';display:block;width:100%;height:100%;background:black';
++ canvas.style.cssText += `;display:block;width:100%;height:100%;background:${props.appearance === 'white-blue' ? 'white' : 'black'}`;
+  canvas.setAttribute('aria-label', 'Interactive black hole shader');
+  if (!callerCanvas) element.append(canvas);
+  const errorBox = doc.createElement('div');
+  errorBox.setAttribute('role','alert');
+  errorBox.style.cssText = 'padding:12px;background:#190b0b;color:#ffd5d5;font:12px monospace';
++ if (props.appearance === "white-blue") { errorBox.style.background = "#fff"; errorBox.style.color = "#b4233b"; }
+  let disposed = false;
+  const onError = (message: string | null) => {
+   if (disposed) return;
+@@ -40,6 +41,7 @@ export function mountBlackHole(element: HTMLElement, initial: BlackHoleOptions =
+  function update(next: Partial<BlackHoleOptions>) {
+   if (disposed) return;
+   props = { ...props, ...next };
++  if ("appearance" in next) canvas.style.background = props.appearance === "white-blue" ? "white" : "black";
+   state.initialProps = props;
+   state.animationMode = props.animationMode ?? 'off';
+   state.animationAutoplay = props.animationAutoplay ?? true;
