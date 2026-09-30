@@ -40,12 +40,6 @@
   ],
   "socials": [
     {
-      "title": "Portfolio",
-      "description": "austindelic.com",
-      "href": "https://austindelic.com",
-      "icon": "Globe"
-    },
-    {
       "title": "GitHub",
       "description": "@austindelic",
       "href": "https://github.com/austindelic",
