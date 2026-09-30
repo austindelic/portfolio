@@ -37,6 +37,17 @@ sys.exit(code)
         for row in screen.buffer.values():
             for cell in row.values():
                 assert cell.bg in (expected, 'ffa133'), cell
+    def wait_background():
+        # pyte creates default-colour cells on resize before the child repaints them.
+        deadline = time.monotonic() + 3
+        while True:
+            try:
+                check_background()
+                return
+            except AssertionError:
+                if time.monotonic() >= deadline:
+                    raise
+                pump(.05)
     def capture(label):
         check_background()
         (out/f'{name}-{label}.txt').write_text(text())
@@ -79,7 +90,7 @@ sys.exit(code)
             key(b'\x1b',.2)
         for w,h in [(60,18),(30,10),(80,24),(160,50),(120,40)]:
             screen.resize(h,w);fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',h,w,0,0));os.kill(proc.pid,signal.SIGWINCH);pump(.25)
-            check_background()
+            wait_background()
             if w==30:assert 'Resize terminal' in text(),text()
         if exit_key is None:os.kill(proc.pid,signal.SIGTERM);pump(.4)
         else:key(exit_key,.4)
