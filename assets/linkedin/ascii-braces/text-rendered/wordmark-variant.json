@@ -1,0 +1,13 @@
+{
+  "id": "lofi-wordmark-departure-disintegrate",
+  "wordmarkFont": "lofi-forest-pixel",
+  "artworkFont": "departure-mono",
+  "effect": "disintegrate",
+  "wordmarkColour": "#1b1b1b",
+  "segments": [
+    { "text": "the next", "box": [795, 167, 1085, 231], "clear": [790, 160, 1100, 238] },
+    { "text": "something", "box": [1145, 167, 1450, 231], "clear": [1135, 160, 1455, 238] }
+  ],
+  "preservedWordmarkBraces": [[1104, 170, 1131, 223], [1464, 170, 1491, 223]],
+  "privateTrial": true
+}
