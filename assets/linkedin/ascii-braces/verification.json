@@ -1,0 +1,127 @@
+{
+  "originalSha256": "bdb363049eda79110997c89a1d0b696017f1bf13582d0595e50978e313e41221",
+  "originalUnchanged": true,
+  "generationTool": "built-in image_gen",
+  "variants": [
+    {
+      "name": "Clean",
+      "source": "sources/01-clean-generated.png",
+      "generatedDimensions": [
+        2172,
+        724
+      ],
+      "master": "masters/01-clean-2172x543.png",
+      "masterDimensions": [
+        2172,
+        543
+      ],
+      "linkedin": "linkedin/01-clean-1584x396.png",
+      "linkedinDimensions": [
+        1584,
+        396
+      ],
+      "sha256": "768fb7fa3abb0b186a7e8ce4dde3e3d1d47caab9b22e224bad7621f3aeb8449c",
+      "brandingPixelComparison": "passed"
+    },
+    {
+      "name": "Oversized",
+      "source": "sources/02-oversized-generated.png",
+      "generatedDimensions": [
+        2048,
+        768
+      ],
+      "master": "masters/02-oversized-2048x512.png",
+      "masterDimensions": [
+        2048,
+        512
+      ],
+      "linkedin": "linkedin/02-oversized-1584x396.png",
+      "linkedinDimensions": [
+        1584,
+        396
+      ],
+      "sha256": "a199ebeb6ff9b9d037a4dd4a5a53c3749e7a00505275fa4cbf99647133468ceb",
+      "brandingPixelComparison": "passed"
+    },
+    {
+      "name": "Tilted",
+      "source": "sources/03-tilted-generated.png",
+      "generatedDimensions": [
+        2172,
+        724
+      ],
+      "master": "masters/03-tilted-2172x543.png",
+      "masterDimensions": [
+        2172,
+        543
+      ],
+      "linkedin": "linkedin/03-tilted-1584x396.png",
+      "linkedinDimensions": [
+        1584,
+        396
+      ],
+      "sha256": "b980b828775e93b5c49b4ab00f9ab90040b12cbeb0427fe0b9e68829095f3cb1",
+      "brandingPixelComparison": "passed"
+    },
+    {
+      "name": "Perspective",
+      "source": "sources/04-perspective-generated.png",
+      "generatedDimensions": [
+        2206,
+        713
+      ],
+      "master": "masters/04-perspective-2204x551.png",
+      "masterDimensions": [
+        2204,
+        551
+      ],
+      "linkedin": "linkedin/04-perspective-1584x396.png",
+      "linkedinDimensions": [
+        1584,
+        396
+      ],
+      "sha256": "3bfd491a500ad7a9b631e76ed2c732735768597ac2a713c948a319a192aa5a80",
+      "brandingPixelComparison": "passed"
+    },
+    {
+      "name": "Trails",
+      "source": "sources/05-trails-generated.png",
+      "generatedDimensions": [
+        2172,
+        724
+      ],
+      "master": "masters/05-trails-2172x543.png",
+      "masterDimensions": [
+        2172,
+        543
+      ],
+      "linkedin": "linkedin/05-trails-1584x396.png",
+      "linkedinDimensions": [
+        1584,
+        396
+      ],
+      "sha256": "51f3b7b02e6fa5d2109d6cd37e9dea690fe5344f46a531a5e2cfdde8b2924e1f",
+      "brandingPixelComparison": "passed"
+    },
+    {
+      "name": "Dissolve",
+      "source": "sources/06-dissolve-generated.png",
+      "generatedDimensions": [
+        2172,
+        724
+      ],
+      "master": "masters/06-dissolve-2172x543.png",
+      "masterDimensions": [
+        2172,
+        543
+      ],
+      "linkedin": "linkedin/06-dissolve-1584x396.png",
+      "linkedinDimensions": [
+        1584,
+        396
+      ],
+      "sha256": "b64f1872b72483c43895b6a8f6d28ac55d200adefe257c9559907cea93dc83b7",
+      "brandingPixelComparison": "passed"
+    }
+  ]
+}
