@@ -3,6 +3,7 @@
 import BaseHead from "../components/BaseHead.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import BlackHoleExplore from "../components/BlackHoleExplore.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import Header from "../components/Header.astro";
 import "../styles/global.css";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
@@ -16,6 +17,8 @@ const {
 	title = SITE_TITLE,
 	// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 	description = SITE_DESCRIPTION,
+	// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
+	noindex = false,
 	// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
 	navbarActiveItemID,
 	contentPlacement = "center",
@@ -39,15 +42,16 @@ const contentWrapperClass = [
 	"bh-foreground-layer pointer-events-none relative z-10 w-full md:px-4 mx-auto",
 	isRightPlacement
 		? "lg:ml-auto lg:mr-4 lg:px-0 lg:w-[38.8rem] xl:w-[42.2rem]"
-		: "xl:w-[46.75rem] lg:w-[68%]",
+		: contentPlacement === "wide"
+			? "max-w-[76rem] px-3 md:px-6"
+			: "xl:w-[46.75rem] lg:w-[68%]",
 	hideContent ? "hidden" : "",
 	opaqueContent ? "bh-perf-opaque-content" : "",
 ]
 	.filter(Boolean)
 	.join(" ");
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
-const shellClass =
-	"bh-content-shell pointer-events-auto mt-4";
+const shellClass = "bh-content-shell pointer-events-auto mt-4";
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const backgroundLayerClass =
 	"bh-background-layer pointer-events-none fixed inset-0 z-0 overflow-hidden";
@@ -62,7 +66,7 @@ const shaderAnimationMode = noRouteAnimation ? "off" : "route";
 >
   <head >
 
-    <BaseHead title={title} description={description} image={image} />
+    <BaseHead title={title} description={description} image={image} noindex={noindex} />
   </head>
   <body class="relative min-h-screen font-Departure" data-bh-perf={Array.from(bhPerfFlags).join(",")}>
 

@@ -12,7 +12,8 @@
     "astro": "astro",
     "lint": "biome lint",
     "check": "biome check",
-    "test:performance": "tsx --test scripts/perf/*.test.ts"
+    "test:performance": "tsx --test scripts/perf/*.test.ts",
+    "test:portrait": "tsx --test tests/portrait.test.ts"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",

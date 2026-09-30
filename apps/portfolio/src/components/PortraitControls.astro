@@ -1,0 +1,31 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes these values in the template.
+import { palettes, placements } from "../portrait/settings";
+---
+<form class="portrait-controls" data-portrait-controls aria-label="Portrait settings">
+  <fieldset disabled>
+    <legend>01 / Tune the signal</legend>
+    <div class="portrait-selects">
+      <label>Palette<select name="palette">{Object.entries(palettes).map(([value, palette]) => <option value={value}>{palette.label}</option>)}</select></label>
+      <label>Crop<select name="crop"><option value="face">Face + shoulders</option><option value="full">Full photograph</option></select></label>
+    </div>
+    <label class="portrait-range" for="portrait-grain">Grain size<output data-value="grain" for="portrait-grain">2</output><input id="portrait-grain" name="grain" type="range" min="1" max="16" step="1" value="2" /></label>
+    <label class="portrait-range" for="portrait-contrast">Contrast<output data-value="contrast" for="portrait-contrast">1.25</output><input id="portrait-contrast" name="contrast" type="range" min="0.65" max="1.9" step="0.05" value="1.25" /></label>
+    <label class="portrait-range" for="portrait-brightness">Brightness<output data-value="brightness" for="portrait-brightness">0.00</output><input id="portrait-brightness" name="brightness" type="range" min="-0.2" max="0.2" step="0.01" value="0" /></label>
+    <div class="portrait-effects">
+      <label><input name="scanlines" type="checkbox" /> Scanlines</label>
+      <label><input name="tilt" type="checkbox" /> Pointer tilt</label>
+      <label><input name="reveal" type="checkbox" /> Original reveal</label>
+    </div>
+    <p class="portrait-control-hint">Reveal on hover, or use the original button. Tilt follows your pointer.</p>
+    <label>Homepage placement<select name="placement">{Object.entries(placements).map(([value, label]) => <option value={value}>{label}</option>)}</select></label>
+    <div class="portrait-actions">
+      <button type="button" data-action="reset">Reset</button>
+      <button type="button" data-action="randomize">↗ Randomize</button>
+      <button type="button" data-action="copy">Copy preview link</button>
+      <a href="/?portrait=amber-bayer" data-home-preview>Preview on homepage <span aria-hidden="true">→</span></a>
+    </div>
+  </fieldset>
+  <p class="portrait-status" data-portrait-status role="status" aria-live="polite"></p>
+  <label class="portrait-copy-fallback" data-copy-fallback hidden>Preview link<input type="text" readonly aria-label="Preview link to copy" /></label>
+</form>

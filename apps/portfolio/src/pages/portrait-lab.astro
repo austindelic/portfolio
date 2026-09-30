@@ -1,0 +1,42 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: Astro template component.
+import Portrait from "../components/Portrait.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro template component.
+import PortraitBoot from "../components/PortraitBoot.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro template component.
+import PortraitControls from "../components/PortraitControls.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro template component.
+import BaseLayout from "../layouts/BaseLayout.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this value in the template.
+import { presets } from "../portrait/settings";
+import "../styles/portrait.css";
+---
+<BaseLayout title="Portrait lab — Austin Delic" description="Twelve portrait treatments, six palettes and five ways to frame them." contentPlacement="wide" noindex={true}>
+  <div class="portrait-lab" data-portrait-lab>
+    <header class="portrait-lab-intro">
+      <div class="portrait-eyebrow"><span><span class="portrait-led" aria-hidden="true"></span> Design study / 001</span><a href="/">Back to site ↗</a></div>
+      <div class="portrait-lab-heading"><h1>Same face.<br /><span>Different frequencies.</span></h1><p>A little ink. A little interference.<br />Twelve ways to turn a photograph into a signal.<br /><span>Pick a treatment, then make it yours.</span></p></div>
+    </header>
+    <section class="portrait-workbench" aria-labelledby="portrait-selected-heading">
+      <div class="portrait-preview-panel">
+        <div class="portrait-panel-label"><span>Live preview</span><span data-selected-index>01 / 12</span></div>
+        <Portrait />
+        <div class="portrait-selected-copy"><h2 id="portrait-selected-heading" data-selected-name>Amber Bayer</h2><p data-selected-description>Ordered pixels. Warm signal.</p></div>
+      </div>
+      <PortraitControls />
+    </section>
+    <section class="portrait-contact-sheet" aria-labelledby="portrait-studies-heading">
+      <div class="portrait-sheet-heading"><h2 id="portrait-studies-heading">02 / The contact sheet</h2><span>12 treatments / one photograph</span></div>
+      <div class="portrait-presets">
+        {presets.map((preset, index) => <button type="button" class="portrait-preset" data-preset={preset.id} aria-pressed={index === 0}>
+          <div class="portrait-thumbnail"><img src={`/images/portraits/${preset.id}.webp`} alt="" width="480" height="480" loading="lazy" /><span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span></div>
+          <span class="portrait-preset-title">{preset.name}<span aria-hidden="true">↗</span></span>
+          <span class="portrait-preset-description">{preset.description}</span>
+        </button>)}
+      </div>
+    </section>
+    <footer class="portrait-lab-footer"><span>AD / Portrait experiments</span><span>Nothing is final. Try another frequency.</span></footer>
+    <noscript><p class="portrait-noscript">These are the printed studies. Enable JavaScript to tune a portrait and preview its homepage placement.</p></noscript>
+  </div>
+  <PortraitBoot />
+</BaseLayout>

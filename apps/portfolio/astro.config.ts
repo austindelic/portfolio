@@ -5,13 +5,19 @@ import { defineConfig } from "astro/config";
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [sitemap(), react()],
-  site: "https://austindelic.com",
-  compressHTML: true,
-  markdown: {
-    shikiConfig: { theme: "ayu-dark" },
-  },
-  vite: {
-    plugins: [tailwindcss()],
-  },
+	integrations: [
+		sitemap({
+			filter: (page) =>
+				!new URL(page).pathname.replace(/\/$/, "").endsWith("/portrait-lab"),
+		}),
+		react(),
+	],
+	site: "https://austindelic.com",
+	compressHTML: true,
+	markdown: {
+		shikiConfig: { theme: "ayu-dark" },
+	},
+	vite: {
+		plugins: [tailwindcss()],
+	},
 });

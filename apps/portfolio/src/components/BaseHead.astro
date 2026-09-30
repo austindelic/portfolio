@@ -8,9 +8,10 @@ export interface Props {
 	title: string;
 	description: string;
 	image?: string;
+	noindex?: boolean;
 }
 
-const { title, description, image = "/share.jpg" } = Astro.props;
+const { title, description, image = "/share.jpg", noindex = false } = Astro.props;
 ---
 
 <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
@@ -19,6 +20,7 @@ const { title, description, image = "/share.jpg" } = Astro.props;
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="generator" content={Astro.generator} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
 
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="/favicon.ico?v=departure-braces-1" />
 <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png?v=departure-braces-1" />

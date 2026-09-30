@@ -1,0 +1,16 @@
+---
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this prop in the template.
+const { compact = false } = Astro.props;
+---
+<figure class:list={["portrait", { "portrait-compact": compact }]} data-portrait>
+  <div class="portrait-frame" data-portrait-frame>
+    <img class="portrait-fallback" src="/images/portraits/amber-bayer.webp" alt="Dithered portrait of Austin smiling by the ocean, wearing a cap." width="480" height="480" />
+    <canvas width="480" height="480" aria-hidden="true" hidden></canvas>
+    <img class="portrait-original" src="/images/portraits/profile.webp" alt="" width="800" height="800" hidden />
+    <span class="portrait-banner-mark" aria-hidden="true">AD<span>Human behind the pixels.</span><span data-portrait-name>Amber Bayer</span></span>
+    <span class="portrait-crosshair portrait-crosshair-tl" aria-hidden="true"></span>
+    <span class="portrait-crosshair portrait-crosshair-br" aria-hidden="true"></span>
+  </div>
+  <figcaption><span data-portrait-name>Amber Bayer</span><span>AD / 001</span></figcaption>
+  <button class="portrait-reveal-button" type="button" data-reveal-button hidden aria-pressed="false">Show original</button>
+</figure>

@@ -1,21 +1,25 @@
 ---
-// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
-import { MapPin } from "pixelarticons/react/MapPin.js";
+import { getCollection } from "astro:content";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import { Briefcase } from "pixelarticons/react/Briefcase.js";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
-import { Target } from "pixelarticons/react/Target.js";
+import { Code } from "pixelarticons/react/Code.js";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import { Mail } from "pixelarticons/react/Mail.js";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
-import { Code } from "pixelarticons/react/Code.js";
-
-import portfolio from "../data/portfolio.json";
-import { getCollection } from "astro:content";
+import { MapPin } from "pixelarticons/react/MapPin.js";
+// biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
+import { Target } from "pixelarticons/react/Target.js";
+// biome-ignore lint/correctness/noUnusedImports: Astro template component.
+import Portrait from "../components/Portrait.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro template component.
+import PortraitBoot from "../components/PortraitBoot.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import PostPreview from "../components/PostPreview.astro";
+import portfolio from "../data/portfolio.json";
 // biome-ignore lint/correctness/noUnusedImports: Astro consumes this component in the template.
 import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/portrait.css";
 import { sortMDByDate } from "../utils";
 
 const allPosts = await getCollection("blog");
@@ -25,10 +29,17 @@ const allPostsByDate = sortMDByDate(visiblePosts);
 
 // biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const { profile, projects } = portfolio;
+// biome-ignore lint/correctness/noUnusedVariables: Astro consumes this value in the template.
 const techStack = profile.stack;
 ---
 
 <BaseLayout navbarActiveItemID="home" contentPlacement="right">
+  <template data-portrait-template>
+    <div class="portrait-home-preview" data-home-portrait>
+      <div class="portrait-home-toolbar"><span>Portrait preview</span><a href="/portrait-lab" data-back-to-lab>← Back to lab</a><a href="/" data-exit-preview>Exit ↗</a></div>
+      <Portrait compact={true} />
+    </div>
+  </template>
   <section id="about" class="portfolio-section" aria-labelledby="about-heading">
     <div class="section-label"><span><span class="section-number">01 /</span> About</span><span>{profile.location}</span></div>
     <div class="identity-grid"><div class="identity-copy">
@@ -63,4 +74,5 @@ const techStack = profile.stack;
     <div class="section-label"><h2 id="blog-heading"><span class="section-number">03 /</span> From the blog</h2><a href="/blog">All posts</a></div>
     <ul class="ruled-list">{allPostsByDate.map((post) => <li><PostPreview post={post} /></li>)}</ul>
   </section>
+  <PortraitBoot />
 </BaseLayout>

@@ -1,0 +1,29 @@
+<script>
+  let dispose: (() => void) | undefined;
+  let generation = 0;
+  function clearPortrait() {
+    generation++;
+    dispose?.();
+    dispose = undefined;
+  }
+  async function setupPortrait() {
+    clearPortrait();
+    const current = generation;
+    const gallery = document.querySelector("[data-portrait-lab]");
+    const preview = document.querySelector("[data-portrait-template]") && new URLSearchParams(location.search).has("portrait");
+    if (!gallery && !preview) return;
+    try {
+      const { mountPortrait } = await import("../portrait/client");
+      if (current !== generation) return;
+      const cleanup = await mountPortrait();
+      if (current !== generation) cleanup();
+      else dispose = cleanup;
+    } catch (error) {
+      console.error("Portrait preview unavailable", error);
+      const status = document.querySelector("[data-portrait-status]");
+      if (status) status.textContent = "Live preview unavailable. The printed studies are still available below.";
+    }
+  }
+  document.addEventListener("astro:before-swap", clearPortrait);
+  document.addEventListener("astro:page-load", setupPortrait);
+</script>
