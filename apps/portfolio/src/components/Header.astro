@@ -58,22 +58,26 @@ const links: Array<{
           const isActive = link.id === navbarActiveItemID;
 
           return (
-            <a
-              href={link.redirect ? link.redirect : link.url}
-              target={link.redirect ? "_blank" : "_self"}
-              id={link.id}
-              aria-current={isActive ? "page" : undefined}
-              class="nav-link inline-flex items-center gap-1"
-            >
-              <Icon className="ui-icon" aria-hidden="true" />
-              {link.title}
-            </a>
+            <>
+              {link.id === "resume" && (
+                <button type="button" class="nav-link explore-trigger" data-explore-trigger aria-controls="black-hole-explore" aria-expanded="false">
+                  <span aria-hidden="true">◎</span> explore
+                </button>
+              )}
+              <a
+                href={link.redirect ? link.redirect : link.url}
+                target={link.redirect ? "_blank" : "_self"}
+                id={link.id}
+                aria-current={isActive ? "page" : undefined}
+                class="nav-link inline-flex items-center gap-1"
+              >
+                <Icon className="ui-icon" aria-hidden="true" />
+                {link.title}
+              </a>
+            </>
           );
         })
       }
-      <button type="button" class="nav-link explore-trigger" data-explore-trigger aria-controls="black-hole-explore" aria-expanded="false">
-        <span aria-hidden="true">◎</span> explore
-      </button>
     </span>
   </nav>
 </header>
