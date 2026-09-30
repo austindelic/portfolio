@@ -3,22 +3,22 @@
  │  ⌂ Home  ≡ Blog  @ Socials  ◎ Explore  ↓ Resume                            │ 
  │ PERTH / 00:00:00                                                           │ 
  │                                                                            │ 
- │ Rendering a Black Hole in the Browser and Terminal                         │ 
- │ Published  25 Sept 2026                                                    │ 
+ │ Writing  01                                                                │ 
+ │ Blog                                                                       │ 
+ │ Notes on software and graphics.                                            │ 
+ │                                                                            │ 
+ │   25 Sept 2026  Rendering a Black Hole in the Browser and Terminal         │ 
  │ How the Astro site and Rust terminal app share their content, shaders and  │ 
  │ black hole.                                                                │ 
  │                                                                            │ 
- │ This portfolio has two interfaces: an Astro website and a native Rust      │ 
- │ terminal app. They share the content and black-hole shaders. The terminal  │ 
- │ version renders the scene as coloured characters, with Ratatui drawing the │ 
- │ interface over it.                                                         │ 
  │                                                                            │ 
- │ The website                                                                │ 
  │                                                                            │ 
- │ Astro builds the profile, projects and Markdown posts into static pages.   │ 
- │ The black hole runs separately in the browser. Open explore to move the    │ 
- │ camera without the page covering the scene, or leave it running behind     │ 
- │ the content.                                                               │ 
+ │                                                                            │ 
+ │                                                                            │ 
+ │                                                                            │ 
+ │                                                                            │ 
+ │                                                                            │ 
+ │                                                                            │ 
  └────────────────────────────────────────────────────────────────────────────┘ 
                                                                                 
 Tab focus  Enter open  j/k scroll  ? help  q quit  | Static background          

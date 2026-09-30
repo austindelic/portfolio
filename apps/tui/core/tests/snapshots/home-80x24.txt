@@ -3,7 +3,7 @@
  │  ⌂ Home  ≡ Blog  @ Socials  ◎ Explore  ↓ Resume                            │ 
  │ PERTH / 00:00:00                                                           │ 
  │                                                                            │ 
- │ 01 / ABOUT                         Perth, Australia                        │ 
+ │ 01 / About                         Perth, Australia                        │ 
  │ Austin Delic.                                                              │ 
  │ Software engineer in Perth.                                                │ 
  │                                                                            │ 
@@ -17,8 +17,8 @@
  │ Focus    Accessibility and developer tools                                 │ 
  │   @ Contact  austin@austindelic.com                                        │ 
  │   Copy email                                                               │ 
- │ Stack    angular / azure / dotnet / go / next / postgres / python / rust / │ 
- │ ts                                                                         │ 
+ │ Stack    ts / go / rust / python / postgres / next / angular / dotnet /    │ 
+ │ azure                                                                      │ 
  └────────────────────────────────────────────────────────────────────────────┘ 
                                                                                 
 Tab focus  Enter open  j/k scroll  ? help  q quit  | Static background          

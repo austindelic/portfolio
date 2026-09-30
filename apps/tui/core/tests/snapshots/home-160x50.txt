@@ -3,7 +3,7 @@
                                                                                   │  ⌂ Home  ≡ Blog  @ Socials  ◎ Explore  ↓ Resume                          │  
                                                                                   │ PERTH / 00:00:00                                                         │  
                                                                                   │                                                                          │  
-                                                                                  │ 01 / ABOUT                         Perth, Australia                      │  
+                                                                                  │ 01 / About                         Perth, Australia                      │  
                                                                                   │ Austin Delic.                                                            │  
                                                                                   │ Software engineer in Perth.                                              │  
                                                                                   │                                                                          │  
@@ -17,10 +17,10 @@
                                                                                   │ Focus    Accessibility and developer tools                               │  
                                                                                   │   @ Contact  austin@austindelic.com                                      │  
                                                                                   │   Copy email                                                             │  
-                                                                                  │ Stack    angular / azure / dotnet / go / next / postgres / python /      │  
-                                                                                  │ rust / ts                                                                │  
+                                                                                  │ Stack    ts / go / rust / python / postgres / next / angular / dotnet /  │  
+                                                                                  │ azure                                                                    │  
                                                                                   │                                                                          │  
-                                                                                  │ 02 / PROJECTS                                                            │  
+                                                                                  │ 02 / Projects  03                                                        │  
                                                                                   │ 01  Tactify  / product                                                   │  
                                                                                   │ Turns visual learning material into tactile graphics and guided audio.   │  
                                                                                   │                                                                          │  
@@ -31,11 +31,11 @@
                                                                                   │ An Astro site and a Rust terminal app, with shared content and a black   │  
                                                                                   │ hole.                                                                    │  
                                                                                   │                                                                          │  
-                                                                                  │ 03 / LATEST POSTS                                                        │  
-                                                                                  │   2026-09-25  Rendering a Black Hole in the Browser and Terminal         │  
+                                                                                  │ 03 / From the blog                                                       │  
+                                                                                  │   All posts                                                              │  
+                                                                                  │   25 Sept 2026  Rendering a Black Hole in the Browser and Terminal       │  
                                                                                   │ How the Astro site and Rust terminal app share their content, shaders    │  
                                                                                   │ and black hole.                                                          │  
-                                                                                  │                                                                          │  
                                                                                   │                                                                          │  
                                                                                   │                                                                          │  
                                                                                   │                                                                          │  

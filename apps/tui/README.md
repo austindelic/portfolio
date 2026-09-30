@@ -1,10 +1,10 @@
 # Austin Delic — terminal portfolio
 
-A native terminal CLI with the website's content and GPU black hole, rendered as actual terminal characters. Ratatui and Crossterm handle the terminal; `wgpu` runs the website's WGSL shaders offscreen through Metal, Vulkan or DirectX 12. There is no window, browser, or Bevy runtime.
+A native terminal CLI with the website's content and GPU black hole, rendered as actual terminal characters. Ratatui and Crossterm handle the terminal; the published Blackhole 0.1.0 crates use `wgpu` to render offscreen through Metal, Vulkan or DirectX 12. There is no window, browser, or Bevy runtime.
 
 ## Install and run
 
-After npm publication, run `npx austindelic` with Node 22 or newer. The standalone distribution lives in `npm/` and bundles five native targets.
+Run `npx austindelic` with Node 22 or newer. The standalone launcher lives in `npm/` and selects one of five exact-version native companion packages for macOS ARM64/x64, Linux ARM64/x64, or Windows x64. npm installs only the matching platform package. Release setup and verification gates are documented in [release/README.md](release/README.md).
 
 From this repository, with a current Rust toolchain:
 
@@ -35,6 +35,7 @@ austindelic --renderer gpu             # fail clearly if graphics cannot initial
 austindelic --renderer static          # never initialize the GPU
 austindelic --no-animation             # render on demand; no autonomous motion
 austindelic --ascii                    # ASCII borders and labels
+austindelic --terminal-background      # use the host terminal's configured background (-t)
 austindelic --cell-aspect 0.5           # character width / height
 ```
 
@@ -79,12 +80,18 @@ node --import tsx apps/tui/scripts/sync-assets.ts --check
 
 Sync copies content and the resume, removes obsolete post copies, and records input hashes. Committed assets allow Cargo builds without Node. The native route evaluator uses portfolio camera presets and spherical eased transitions. The small `cli/examples/probe.rs` executable verifies rendering through the external crate; it also supports regenerating fallback artwork.
 
+Home, Blog, and Socials use the website's headings, introductory copy, and section counts. The stack follows the source JSON order, and publication dates use the website's Australian format (for example, `25 Sept 2026`). The Blog shows an empty state when no posts are published. Installed copies keep the content embedded at build time; install a newer package version to receive content changes.
+
 ## Verification
 
 ```sh
-cargo test --manifest-path apps/tui/Cargo.toml -p tui-core -p austindelic
-cargo clippy --manifest-path apps/tui/Cargo.toml -p tui-core -p austindelic --all-targets -- -D warnings
+cargo test --locked --manifest-path apps/tui/Cargo.toml --workspace
+cargo clippy --locked --manifest-path apps/tui/Cargo.toml --workspace --all-targets -- -D warnings
 cargo fmt --manifest-path apps/tui/Cargo.toml -p tui-core -p austindelic --check
+cargo build --locked --manifest-path apps/tui/Cargo.toml -p austindelic --bin austindelic --example pty-smoke
+node --import tsx apps/tui/scripts/sync-assets.ts --check
+node --import tsx apps/tui/scripts/build-launcher.ts
+node --import tsx --test apps/tui/scripts/tests/npm-launcher.test.ts
 uv run --with pyte apps/tui/scripts/smoke.py apps/tui/target/debug/austindelic /tmp/austindelic-smoke --gpu
 ```
 
@@ -92,7 +99,7 @@ The PTY harness exercises screens, Explore controls, repeated resize, q, Ctrl-C,
 
 `AUSTINDELIC_DIAGNOSTICS=/tmp/metrics.json` records session metrics on exit. It does not transmit data. Layout snapshots cover 60×18, 80×24, 120×40, and 160×50. Set `UPDATE_SNAPSHOTS=1` only when intentionally updating them.
 
-See [VALIDATION.md](VALIDATION.md) for measured results and remaining verification.
+See [VALIDATION.md](VALIDATION.md) for historical measurements and the current terminal presentation checks, and [EXTRACTION_VALIDATION.md](EXTRACTION_VALIDATION.md) for the renderer migration and release integration checks.
 
 ## License
 
@@ -104,6 +111,6 @@ The launcher uses exact-version optional packages for the five supported targets
 
 Run `python3 apps/tui/scripts/compare-builds.py` from the repository root to compare the default release baseline against thin/full LTO at optimization levels 3, s, and z. On macOS/Linux with GPU access, pass the baseline and candidate paths to `python3 apps/tui/scripts/benchmark.py`. This records seven startup samples and three throughput/input-latency samples per build; select the smallest build within 10% of the baseline. Compiler comparisons abort if application sources change during the study.
 
-`packed/sizes.json` records native bytes, npm compressed bytes, installed bytes, and artifact integrity. `packed/comparison.json` includes baseline comparisons. Copy accepted `size`, `unpackedSize`, and `executableBytes` measurements for each package into `scripts/size-budgets.json`; the release check permits at most 5% growth. Missing budgets are reported on main/manual runs and block tagged publication. Do not set unmeasured platform budgets. A first complete five-platform run is needed before publishing.
+`packed/sizes.json` records native bytes, npm compressed bytes, installed bytes, and artifact integrity. `packed/comparison.json` includes baseline comparisons. Copy accepted `size`, `unpackedSize`, and `executableBytes` measurements for each package into `scripts/size-budgets.json`; the release check permits at most 5% growth. Publication refuses missing budgets or growth over the allowance. Do not set unmeasured platform budgets. The complete five-platform release workflow must pass before publication.
 
 For local packaging, generate notices, place the executable under `release/native/<target>/`, set `NPM_CLI_JS` to npm's `bin/npm-cli.js`, and run `NPM_TARGET=<target> node --import tsx apps/tui/scripts/pack.ts <output-directory>`. This produces development-only artifacts. Full release assembly omits `NPM_TARGET` and requires all five native/baseline binaries and measurement files from `release-build.sh`.

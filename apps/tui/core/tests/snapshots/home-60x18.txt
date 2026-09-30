@@ -3,7 +3,7 @@
  │  ⌂ Home  ≡ Blog  @ Socials  ◎ Explore  ↓ Resume        │ 
  │ PERTH / 00:00:00                                       │ 
  │                                                        │ 
- │ 01 / ABOUT                         Perth, Australia    │ 
+ │ 01 / About                         Perth, Australia    │ 
  │ Austin Delic.                                          │ 
  │ Software engineer in Perth.                            │ 
  │                                                        │ 
