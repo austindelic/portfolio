@@ -253,8 +253,8 @@ impl PortfolioApp {
                 0 => Action::Navigate(Page::Home),
                 1 => Action::Navigate(Page::Blog),
                 2 => Action::Navigate(Page::Socials),
-                3 => Action::Resume,
-                _ => Action::Navigate(Page::Explore),
+                3 => Action::Navigate(Page::Explore),
+                _ => Action::Resume,
             }
         } else {
             self.actions.get(index - 5)?.clone()
@@ -512,9 +512,9 @@ impl PortfolioApp {
                 panel,
             );
             let labels = if self.ascii {
-                ["Home", "Blog", "Socials", "Resume", "Explore"]
+                ["Home", "Blog", "Socials", "Explore", "Resume"]
             } else {
-                ["⌂ Home", "≡ Blog", "@ Socials", "↓ Resume", "◎ Explore"]
+                ["⌂ Home", "≡ Blog", "@ Socials", "◎ Explore", "↓ Resume"]
             };
             let mut nx = x + 2;
             for (i, label) in labels.iter().enumerate() {
@@ -1005,7 +1005,7 @@ mod tests {
     fn external_actions_and_mouse() {
         let mut app = PortfolioApp::default();
         render(&mut app, 120, 40);
-        assert_eq!(app.activate(3), Some(Action::Resume));
+        assert_eq!(app.activate(4), Some(Action::Resume));
         assert!(app.actions.contains(&Action::CopyEmail));
         let index = app
             .actions
@@ -1017,6 +1017,8 @@ mod tests {
         let (r, _) = app.hits.iter().find(|(_, index)| *index == 2).unwrap();
         app.input(Input::Click(r.x, r.y));
         assert_eq!(app.page, Page::Socials);
+        assert_eq!(app.activate(3), None);
+        assert_eq!(app.page, Page::Explore);
     }
     #[test]
     fn markdown_contains_content_and_link_actions() {
