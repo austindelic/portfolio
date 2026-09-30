@@ -1,5 +1,5 @@
 # Run with: uv run --with pyte scripts/smoke.py /absolute/path/to/austindelic
-import os,sys,pty,termios,fcntl,struct,subprocess,time,select,signal,tempfile,json,html
+import os,sys,pty,termios,fcntl,struct,subprocess,time,select,signal,tempfile,json,html,re
 from pathlib import Path
 import pyte
 binary=str(Path(sys.argv[1]).resolve())
@@ -51,17 +51,32 @@ sys.exit(code)
     try:
         pump(7 if gpu else 2.5)
         assert 'Austin Delic.' in text(),text()
+        assert 'Founding engineer at The Next Something.' in text(),text()
+        assert 'Stack    ts / go / rust / python / postgres' in text(),text()
+        assert '02 / Projects  03' in text(),text()
         if gpu:assert 'GPU' in text(),text()
         if name=='fallback':assert 'Static fallback' in text(),text()
         capture('home')
         key(b'?');assert 'PORTFOLIO' in text(),text();capture('help')
         key(b'\x1b');assert 'Austin Delic.' in text(),text()
-        key(b'\x1b[C\r');assert 'Blog posts' in text(),text();capture('blog')
-        key(b'\t'*5+b'\r');assert '2026-' in text(),text();capture('post')
-        key(b'\x1b[F');key(b'\x1b[H');key(b'\x1b');assert 'Blog posts' in text(),text()
-        key(b'\x1b[C'*3+b'\r');assert 'SOCIAL LINKS' in text(),text();capture('socials')
+        key(b'\x1b[C\r');assert 'Notes on software and graphics.' in text(),text();capture('blog')
+        key(b'\t'*5+b'\r');assert re.search(r'Published  \d{1,2} [A-Za-z]+ \d{4}',text()),text();capture('post')
+        key(b'\x1b[F');assert 'Published  ' not in text(),text()
+        key(b'\x1b[H');assert 'Published  ' in text(),text()
+        key(b'\x1b');assert 'Notes on software and graphics.' in text(),text()
+        key(b'\x1b[C'*3+b'\r');assert 'Social links  07' in text() and 'Find me here.' in text(),text();capture('socials')
         key(b'\x1b[C'*3+b'\r',1);assert 'EXPLORE' in text(),text();capture('explore')
         key(b'wijdqerf[]-=,. ',.4);key(b'?',.2);assert 'Ctrl-C' in text();capture('explore-help');key(b'\x1b',.2);key(b'\x1b',.2)
+        if gpu:
+            key(b'\r',1)
+            key(b'9',1);assert 'Render 0.5x' in text(),text();capture('explore-half')
+            key(b'88',1);assert 'Render 2x' in text(),text()
+            key(b'8',1);assert 'Render 4x' in text(),text();capture('explore-four')
+            key(b'0',1);assert 'Render 1x' in text(),text()
+            key(b'8',1);assert 'Render 2x' in text(),text()
+            key(b'\x1b',.2);key(b'\r',1)
+            assert 'Render 2x' in text(),text();capture('explore-reentered')
+            key(b'\x1b',.2)
         for w,h in [(60,18),(30,10),(80,24),(160,50),(120,40)]:
             screen.resize(h,w);fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',h,w,0,0));os.kill(proc.pid,signal.SIGWINCH);pump(.25)
             check_background()

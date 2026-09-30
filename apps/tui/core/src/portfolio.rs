@@ -6,11 +6,11 @@ use ratatui::{
     widgets::{Block, Borders, Clear, Paragraph},
     Frame,
 };
-use serde::Deserialize;
-use std::{
-    collections::BTreeMap,
-    time::{SystemTime, UNIX_EPOCH},
+use serde::{
+    de::{MapAccess, Visitor},
+    Deserialize, Deserializer,
 };
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn border(ascii: bool) -> ratatui::symbols::border::Set<'static> {
     if ascii {
@@ -44,7 +44,35 @@ pub struct Profile {
     pub work: String,
     pub focus: String,
     pub email: String,
-    pub stack: BTreeMap<String, String>,
+    #[serde(deserialize_with = "ordered_stack")]
+    pub stack: Vec<(String, String)>,
+}
+
+// Read entries directly so the website's JSON object order survives deserialization.
+fn ordered_stack<'de, D>(deserializer: D) -> Result<Vec<(String, String)>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct StackVisitor;
+    impl<'de> Visitor<'de> for StackVisitor {
+        type Value = Vec<(String, String)>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a technology stack object")
+        }
+
+        fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
+        where
+            M: MapAccess<'de>,
+        {
+            let mut entries = Vec::new();
+            while let Some(entry) = map.next_entry()? {
+                entries.push(entry);
+            }
+            Ok(entries)
+        }
+    }
+    deserializer.deserialize_map(StackVisitor)
 }
 #[derive(Clone, Deserialize)]
 pub struct Project {
@@ -353,7 +381,7 @@ impl PortfolioApp {
         match self.page {
             Page::Home => {
                 rows.push(Row::new(
-                    format!("01 / ABOUT                         {}", p.location),
+                    format!("01 / About                         {}", p.location),
                     Kind::Muted,
                 ));
                 rows.push(Row::new(format!("{}.", p.name), Kind::Heading));
@@ -376,12 +404,19 @@ impl PortfolioApp {
                 rows.push(Row::new(
                     format!(
                         "Stack    {}",
-                        p.stack.keys().cloned().collect::<Vec<_>>().join(" / ")
+                        p.stack
+                            .iter()
+                            .map(|(key, _)| key.as_str())
+                            .collect::<Vec<_>>()
+                            .join(" / ")
                     ),
                     Kind::Muted,
                 ));
                 rows.push(Row::new("", Kind::Body));
-                rows.push(Row::new("02 / PROJECTS", Kind::Heading));
+                rows.push(Row::new(
+                    format!("02 / Projects  {:02}", self.content.projects.len()),
+                    Kind::Heading,
+                ));
                 for (i, p) in self.content.projects.iter().enumerate() {
                     let title = format!("{:02}  {}  / {}", i + 1, p.title, p.label);
                     rows.push(match &p.link {
@@ -391,17 +426,30 @@ impl PortfolioApp {
                     rows.push(Row::new(&p.description, Kind::Muted));
                     rows.push(Row::new("", Kind::Body));
                 }
-                rows.push(Row::new("03 / LATEST POSTS", Kind::Heading));
+                rows.push(Row::new("03 / From the blog", Kind::Heading));
+                rows.push(Row::link("All posts", Action::Navigate(Page::Blog)));
                 self.post_rows(&mut rows);
             }
             Page::Blog => {
-                rows.push(Row::new("WRITING / ARCHIVE", Kind::Muted));
-                rows.push(Row::new("Blog posts", Kind::Heading));
+                rows.push(Row::new(
+                    format!("Writing  {:02}", self.posts.len()),
+                    Kind::Muted,
+                ));
+                rows.push(Row::new("Blog", Kind::Heading));
+                rows.push(Row::new("Notes on software and graphics.", Kind::Body));
+                rows.push(Row::new("", Kind::Body));
+                if self.posts.is_empty() {
+                    rows.push(Row::new("No posts yet.", Kind::Muted));
+                }
                 self.post_rows(&mut rows);
             }
             Page::Socials => {
-                rows.push(Row::new("SOCIAL LINKS", Kind::Muted));
-                rows.push(Row::new(format!("{}.", p.name), Kind::Heading));
+                rows.push(Row::new(
+                    format!("Social links  {:02}", self.content.socials.len()),
+                    Kind::Muted,
+                ));
+                rows.push(Row::new("Find me here.", Kind::Heading));
+                rows.push(Row::new("", Kind::Body));
                 for (i, s) in self.content.socials.iter().enumerate() {
                     rows.push(Row::link(
                         format!("{:02}  {}  ->", i + 1, s.title),
@@ -414,7 +462,10 @@ impl PortfolioApp {
             Page::Post(i) => {
                 if let Some(post) = self.posts.get(i) {
                     rows.push(Row::new(&post.title, Kind::Heading));
-                    rows.push(Row::new(&post.date, Kind::Muted));
+                    rows.push(Row::new(
+                        format!("Published  {}", display_date(&post.date)),
+                        Kind::Muted,
+                    ));
                     rows.push(Row::new(&post.description, Kind::Muted));
                     rows.push(Row::new("", Kind::Body));
                     rows.extend(markdown(&post.body, |url| {
@@ -434,7 +485,7 @@ impl PortfolioApp {
     fn post_rows(&self, rows: &mut Vec<Row>) {
         for (i, p) in self.posts.iter().enumerate() {
             rows.push(Row::link(
-                format!("{}  {}", p.date, p.title),
+                format!("{}  {}", display_date(&p.date), p.title),
                 Action::Navigate(Page::Post(i)),
             ));
             rows.push(Row::new(&p.description, Kind::Muted));
@@ -654,6 +705,44 @@ Esc / ? / Enter closes help"
         }
     }
 }
+fn display_date(date: &str) -> String {
+    // Canonical blog frontmatter uses ISO calendar dates. Leave other values readable.
+    let parts: Vec<_> = date.split('-').collect();
+    if parts.len() != 3
+        || parts[0].len() != 4
+        || parts[1].len() != 2
+        || parts[2].len() != 2
+        || !parts
+            .iter()
+            .all(|part| part.bytes().all(|b| b.is_ascii_digit()))
+    {
+        return date.to_string();
+    }
+    let year: u32 = parts[0].parse().unwrap();
+    let month: usize = parts[1].parse().unwrap();
+    let day: u32 = parts[2].parse().unwrap();
+    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+    let days = match month {
+        2 => {
+            if leap {
+                29
+            } else {
+                28
+            }
+        }
+        4 | 6 | 9 | 11 => 30,
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        _ => return date.to_string(),
+    };
+    if year == 0 || day == 0 || day > days {
+        return date.to_string();
+    }
+    let months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec",
+    ];
+    format!("{day} {} {year}", months[month - 1])
+}
+
 fn markdown(body: &str, resolve: impl Fn(&str) -> Action) -> Vec<Row> {
     let mut rows = Vec::new();
     let mut text = String::new();
@@ -883,6 +972,118 @@ mod tests {
         lines.join("\n")
     }
     #[test]
+    fn website_stack_order_and_page_copy() {
+        let mut app = fixture_app(false);
+        let rows = app.document();
+        assert!(rows.iter().any(|row| row.text
+            == "Stack    ts / go / rust / python / postgres / next / angular / dotnet / azure"));
+        assert!(rows.iter().any(|row| row.text == "02 / Projects  03"));
+        assert!(rows.iter().any(|row| row.text == "03 / From the blog"));
+        let all_posts = rows.iter().find(|row| row.text == "All posts").unwrap();
+        assert_eq!(all_posts.action, Some(Action::Navigate(Page::Blog)));
+
+        render(&mut app, 120, 40);
+        app.focus = app
+            .actions
+            .iter()
+            .position(|action| *action == Action::Navigate(Page::Blog))
+            .unwrap()
+            + 5;
+        app.input(Input::Enter);
+        let rows = app.document();
+        assert!(rows.iter().any(|row| row.text == "Writing  01"));
+        assert!(rows.iter().any(|row| row.text == "Blog"));
+        assert!(rows
+            .iter()
+            .any(|row| row.text == "Notes on software and graphics."));
+        app.input(Input::Back);
+        assert_eq!(app.page, Page::Home);
+
+        app.navigate(Page::Socials);
+        let rows = app.document();
+        assert!(rows.iter().any(|row| row.text == "Social links  07"));
+        assert!(rows.iter().any(|row| row.text == "Find me here."));
+        assert_eq!(
+            rows.iter().filter(|row| row.action.is_some()).count(),
+            app.content.socials.len()
+        );
+
+        app.content.projects.pop();
+        app.content.socials.pop();
+        app.navigate(Page::Home);
+        assert!(app
+            .document()
+            .iter()
+            .any(|row| row.text == "02 / Projects  02"));
+        app.navigate(Page::Socials);
+        assert!(app
+            .document()
+            .iter()
+            .any(|row| row.text == "Social links  06"));
+    }
+
+    #[test]
+    fn publication_dates_match_website_and_preserve_unknown_values() {
+        for (date, expected) in [
+            ("2026-09-25", "25 Sept 2026"),
+            ("2026-06-01", "1 June 2026"),
+            ("2026-07-01", "1 July 2026"),
+            ("2024-02-29", "29 Feb 2024"),
+            ("2026-12-31", "31 Dec 2026"),
+            ("2026-02-29", "2026-02-29"),
+            ("1900-02-29", "1900-02-29"),
+            ("2026-04-31", "2026-04-31"),
+            ("2026-00-01", "2026-00-01"),
+            ("2026-13-01", "2026-13-01"),
+            ("2026-01-00", "2026-01-00"),
+            ("2026-1-01", "2026-1-01"),
+            ("2026-09-25T12:00:00Z", "2026-09-25T12:00:00Z"),
+            ("unknown", "unknown"),
+            ("二〇二六-09-25", "二〇二六-09-25"),
+            ("", ""),
+        ] {
+            assert_eq!(display_date(date), expected);
+        }
+        let mut app = fixture_app(false);
+        for page in [Page::Home, Page::Blog] {
+            app.navigate(page);
+            assert!(app
+                .document()
+                .iter()
+                .any(|row| row.text.starts_with("25 Sept 2026  ")));
+        }
+        app.navigate(Page::Post(0));
+        assert!(app
+            .document()
+            .iter()
+            .any(|row| row.text == "Published  25 Sept 2026"));
+        assert_eq!(app.posts[0].date, "2026-09-25");
+        app.posts[0].date = "Date pending".into();
+        assert!(app
+            .document()
+            .iter()
+            .any(|row| row.text == "Published  Date pending"));
+    }
+
+    #[test]
+    fn empty_blog_still_supports_navigation() {
+        let mut app = fixture_app(false);
+        app.posts.clear();
+        app.navigate(Page::Blog);
+        for (width, height) in [(60, 18), (80, 24), (120, 40)] {
+            let text = render(&mut app, width, height);
+            assert!(text.contains("Writing  00"));
+            assert!(text.contains("No posts yet."));
+            assert!(app.actions.is_empty());
+        }
+        app.input(Input::Next);
+        app.input(Input::Enter);
+        assert_eq!(app.page, Page::Blog);
+        app.input(Input::Back);
+        assert_eq!(app.page, Page::Home);
+    }
+
+    #[test]
     fn explore_resolution_remains_visible_with_panel_background() {
         let mut app = fixture_app(false);
         app.navigate(Page::Explore);
@@ -1054,6 +1255,7 @@ mod tests {
         for (w, h) in [(60, 18), (80, 24), (120, 40), (160, 50)] {
             for (name, page, ascii) in [
                 ("home", Page::Home, false),
+                ("blog", Page::Blog, false),
                 ("post", Page::Post(0), false),
                 ("ascii", Page::Socials, true),
             ] {

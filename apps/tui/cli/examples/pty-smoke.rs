@@ -77,7 +77,7 @@ fn main() -> Result<()> {
             wait_for(&output, "Austin")?;
             output.lock().unwrap().clear();
             send(b"\x1b[C\r")?;
-            wait_for(&output, "Blog posts")?;
+            wait_for(&output, "Writing")?;
             pair.master.resize(PtySize {
                 rows: 40,
                 cols: 120,

@@ -3,8 +3,9 @@
  |  Home  Blog  Socials  Explore  Resume                  | 
  | PERTH / 00:00:00                                       | 
  |                                                        | 
- | SOCIAL LINKS                                           | 
- | Austin Delic.                                          | 
+ | Social links  07                                       | 
+ | Find me here.                                          | 
+ |                                                        | 
  |   01  Portfolio  ->                                    | 
  | austindelic.com                                        | 
  |                                                        | 
@@ -12,7 +13,6 @@
  | @austindelic                                           | 
  |                                                        | 
  |   03  YouTube  ->                                      | 
- | Austin Develops                                        | 
  +--------------------------------------------------------+ 
                                                             
 Tab focus  Enter open  j/k scroll  ? help  q quit  | Static 
