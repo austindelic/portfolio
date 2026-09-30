@@ -1,7 +1,7 @@
 ---
 publishDate: 2026-09-25
-title: "Contracts in Rust, by Example"
-description: "Rust contracts in code: preconditions, postconditions, runtime checks, and a tiny C++ comparison."
+title: "Rust contracts by example"
+description: "Preconditions and postconditions in Rust, with a C++ comparison."
 published: true
 tags:
   - rust
@@ -9,11 +9,11 @@ tags:
   - engineering
 ---
 
-Contracts put a function’s requirements and promises beside its signature.
+Contracts state what a function requires and guarantees.
 
-[Experimental, nightly-only](https://doc.rust-lang.org/unstable-book/language-features/contracts.html); [runtime checks](https://doc.rust-lang.org/unstable-book/compiler-flags/contract-checks.html) are off by default. Tested with nightly-2026-09-24.
+[Contracts are experimental and nightly-only](https://doc.rust-lang.org/unstable-book/language-features/contracts.html). [Runtime checks](https://doc.rust-lang.org/unstable-book/compiler-flags/contract-checks.html) are off by default. These examples use nightly-2026-09-24.
 
-## Require input, promise a minimum
+## Find the minimum
 
 ```rust
 // Save as contracts.rs.
@@ -92,9 +92,9 @@ fn main() {
 }
 ```
 
-## A tiny C++ comparison
+## C++26
 
-[C++26 declaration](https://eel.is/c++draft/dcl.contract.func), requiring compiler support:
+The equivalent [C++26 declaration](https://eel.is/c++draft/dcl.contract.func) needs compiler support:
 
 ```cpp
 #include <algorithm>

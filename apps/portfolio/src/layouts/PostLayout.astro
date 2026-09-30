@@ -26,7 +26,7 @@ const displayDate = dateFormat.format(publishDate);
   navbarActiveItemID="blog"
 >
   <article class="portfolio-article portfolio-section">
-    <div class="section-label"><span>Writing</span><a href="/blog"><ArrowLeft className="ui-icon" aria-hidden="true" /> Back to posts</a></div>
+    <div class="section-label"><span>Writing</span><a href="/blog"><ArrowLeft className="ui-icon" aria-hidden="true" /> All posts</a></div>
     <h1 class="page-title">{title}</h1>
     <dl class="article-meta">
       <div><dt>Published</dt><dd><time datetime={new Date(publishDate).toISOString()}>{displayDate}</time></dd></div>
@@ -35,7 +35,7 @@ const displayDate = dateFormat.format(publishDate);
     <p class="article-deck">{description}</p>
     {heroImage && <figure class="article-hero">
       <img src={heroImage} alt={heroAlt ?? title} width="1440" height="960" fetchpriority="high" />
-      <figcaption>The browser version. The same content is bundled into the terminal app.</figcaption>
+      <figcaption>The browser version.</figcaption>
     </figure>}
     <slot />
   </article>

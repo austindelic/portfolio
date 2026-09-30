@@ -1,10 +1,10 @@
 {
   "profile": {
     "name": "Austin Delic",
-    "subtitle": "Software engineer in Perth.",
-    "bio": "I build web and mobile apps, work on the backend, and write tools in Rust. My projects include Tactify, which turns visual learning material into tactile graphics and audio, and Still, a project environment manager. This site has a terminal version too.",
+    "subtitle": "Founding engineer at The Next Something.",
+    "bio": "I build web and mobile apps, backend systems and Rust tools.",
     "location": "Perth, Australia",
-    "work": "Web, mobile and backend development",
+    "work": "Web, mobile and backend",
     "focus": "Accessibility and developer tools",
     "email": "austin@austindelic.com",
     "stack": {
@@ -22,18 +22,18 @@
   "projects": [
     {
       "title": "Tactify",
-      "description": "Turns visual learning material into tactile graphics and guided audio.",
+      "description": "Tactile graphics and guided audio from visual learning material.",
       "label": "product"
     },
     {
       "title": "Still",
-      "description": "A Rust tool for managing a project’s tools, packages and tasks.",
+      "description": "A Rust environment manager for tools, packages and tasks.",
       "label": "systems",
       "link": "https://github.com/austindelic/still"
     },
     {
       "title": "This site + the TUI",
-      "description": "An Astro site and a Rust terminal app, with shared content and a black hole.",
+      "description": "An Astro site and Rust terminal app with shared content.",
       "label": "personal",
       "link": "/blog/site-and-terminal/"
     }
