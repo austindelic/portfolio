@@ -14,11 +14,10 @@ const socials = portfolio.socials;
 const icons = { Globe, Code, Video, Camera, Music, Briefcase, Mail };
 ---
 
-<BaseLayout title="Links | Austin Delic" description="Find my code, videos and social accounts, or send me an email." navbarActiveItemID="socials">
+<BaseLayout title="Links | Austin Delic" description="My code, videos and contact details." navbarActiveItemID="socials">
   <section class="portfolio-section directory-panel" aria-labelledby="links-heading">
     <div class="section-label"><span>Social links</span><span>{String(socials.length).padStart(2, "0")}</span></div>
     <h1 id="links-heading" class="page-title">Find me here.</h1>
-    <p class="page-intro">Code on GitHub, videos on YouTube, or just send me an email.</p>
     <ul class="ruled-list">
       {socials.map((item, index) => {
         const Icon = icons[item.icon as keyof typeof icons];
