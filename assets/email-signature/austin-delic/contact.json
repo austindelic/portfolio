@@ -1,0 +1,13 @@
+{
+  "name": "Austin Delic",
+  "email": "austin@thenextsomething.co",
+  "emailSource": "Confirmed by Austin in this chat on 2026-10-12",
+  "title": "[TNS job title]",
+  "company": "the next something",
+  "linkedin": "https://linkedin.com/in/austindelic",
+  "linkedinSource": "apps/portfolio/src/data/portfolio.json",
+  "companyWebsite": null,
+  "phone": null,
+  "pending": ["TNS job title"],
+  "omittedOptionalUnknownDetails": ["TNS website", "phone number"]
+}

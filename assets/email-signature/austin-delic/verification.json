@@ -1,0 +1,20 @@
+{
+  "checkedOn": "2026-10-12",
+  "browser": "Chrome via Playwright CLI",
+  "logo": {
+    "naturalDimensions": [568, 54],
+    "displayDimensions": [284, 27],
+    "loaded": true
+  },
+  "verifiedLinks": ["mailto:austin@thenextsomething.co", "https://linkedin.com/in/austindelic"],
+  "mobileViewportWidths": [375, 320],
+  "horizontalOverflow": false,
+  "browserErrors": [],
+  "failedRequests": [],
+  "titlePlaceholderVisible": true,
+  "imageFreeAlternative": "passed",
+  "lightSignatureBackgroundOnDarkBrowserCanvas": "passed",
+  "inboxClients": "Not verified; browser inspection only",
+  "accountModified": false,
+  "emailSent": false
+}

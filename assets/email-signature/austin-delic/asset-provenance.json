@@ -1,0 +1,22 @@
+{
+  "source": "assets/linkedin/ascii-braces/sources/tns-original-6336x1584.png",
+  "sourceSha256": "bdb363049eda79110997c89a1d0b696017f1bf13582d0595e50978e313e41221",
+  "crop": [
+    3160,
+    660,
+    6000,
+    930
+  ],
+  "imageDimensions": [
+    568,
+    54
+  ],
+  "displayDimensions": [
+    284,
+    27
+  ],
+  "colour": "#245bff",
+  "trialFontsUsed": false,
+  "signatureFont": "Arial / Helvetica / sans-serif",
+  "textWordmarkFont": "Courier New / Courier / monospace"
+}
