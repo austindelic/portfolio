@@ -1,0 +1,17 @@
+{
+  "checkedOn": "2026-10-12",
+  "browser": "Chrome via Playwright CLI",
+  "naturalDimensions": [1760, 640],
+  "displayDimensions": [440, 160],
+  "singleImage": true,
+  "separateGreeting": "Thanks,",
+  "emailLink": "mailto:austin@thenextsomething.co",
+  "descriptiveAltText": true,
+  "mobileViewportWidths": [375, 320],
+  "horizontalOverflow": false,
+  "browserErrors": [],
+  "failedRequests": [],
+  "inboxRendering": "Not verified",
+  "signatureInstalled": false,
+  "emailSent": false
+}

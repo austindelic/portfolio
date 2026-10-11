@@ -1,0 +1,36 @@
+{
+  "fonts": {
+    "family": "Departure Mono",
+    "style": "Regular",
+    "sha256": "5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb",
+    "requiredGlyphsPresent": true
+  },
+  "sourceHashUnchanged": true,
+  "sourceSha256": "bdb363049eda79110997c89a1d0b696017f1bf13582d0595e50978e313e41221",
+  "variants": [
+    {
+      "file": "austin-delic-tns-440x160.png",
+      "dimensions": [
+        440,
+        160
+      ],
+      "repeatRenderIdentical": true,
+      "closingBraceUnchanged": true
+    },
+    {
+      "file": "austin-delic-tns-1760x640.png",
+      "dimensions": [
+        1760,
+        640
+      ],
+      "repeatRenderIdentical": true,
+      "closingBraceUnchanged": true
+    }
+  ],
+  "asciiCharacters": 193,
+  "trialFontsUsed": false,
+  "aiGenerationUsed": false,
+  "thanksInImage": false,
+  "titlePlaceholderInImage": false,
+  "inboxRendering": "Not verified"
+}

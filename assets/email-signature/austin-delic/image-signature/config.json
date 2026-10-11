@@ -1,0 +1,17 @@
+{
+  "width": 440,
+  "height": 160,
+  "seed": 271828,
+  "blue": "#245bff",
+  "font": "apps/portfolio/public/fonts/DepartureMono-Regular.woff2",
+  "fontSha256": "5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb",
+  "artwork": {"width": 142, "braceWidth": 40, "braceHeight": 128, "openingX": 26, "closingX": 93, "top": 16, "cellWidth": 4, "cellHeight": 6, "fontSize": 7, "characters": ".,:-/|ivCoG08@"},
+  "text": [
+    {"value": "Austin Delic", "x": 156, "baseline": 47, "size": 24, "colour": "#191919"},
+    {"value": "austin@thenextsomething.co", "x": 156, "baseline": 76, "size": 13, "colour": "#245bff"},
+    {"value": "LinkedIn: austindelic", "x": 156, "baseline": 98, "size": 11, "colour": "#626b7a"}
+  ],
+  "wordmark": {"source": "assets/linkedin/ascii-braces/sources/tns-original-6336x1584.png", "crop": [3160, 660, 6000, 930], "x": 154, "y": 120, "width": 262, "height": 25},
+  "email": "austin@thenextsomething.co",
+  "linkedin": "https://linkedin.com/in/austindelic"
+}
