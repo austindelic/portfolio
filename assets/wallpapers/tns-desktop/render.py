@@ -205,4 +205,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if "--collection" in sys.argv:
+        import runpy
+        sys.argv.remove("--collection")
+        runpy.run_path(str(BASE / "collection/render.py"), run_name="__main__")
+    else:
+        main()

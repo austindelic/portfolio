@@ -1,0 +1,23 @@
+{
+  "width": 3840,
+  "height": 2160,
+  "seed": 271828,
+  "font": "apps/portfolio/public/fonts/DepartureMono-Regular.woff2",
+  "fontSha256": "5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb",
+  "text": "the next {something}",
+  "edgeMargin": 160,
+  "overlapStroke": 3,
+  "contourThickness": 24,
+  "styles": ["filled", "contour", "disintegrate"],
+  "positions": ["original", "centred"],
+  "textPlacements": ["brace-gap", "top-left", "top-centre", "top-right", "middle-left", "middle-right", "bottom-left", "bottom-centre", "bottom-right"],
+  "modes": {
+    "light": {"background": "#fafbff", "blue": "#245bff", "text": "#191e2b", "artOpacityGain": 1.25},
+    "dark": {"background": "#0b101a", "blue": "#7999ff", "text": "#e4eaf6", "artOpacityGain": 1.8}
+  },
+  "sizes": [
+    {"id": "compact", "artWidth": 1650, "artHeight": 1240, "heightFraction": 0.84, "original": [1820, 360], "fontSize": 14, "cellWidth": 8, "cellHeight": 13, "wordmarkSize": 48},
+    {"id": "medium", "artWidth": 2100, "artHeight": 1460, "heightFraction": 0.84, "original": [1390, 250], "fontSize": 15, "cellWidth": 9, "cellHeight": 14, "wordmarkSize": 64},
+    {"id": "oversized", "artWidth": 3400, "artHeight": 2160, "heightFraction": 1.35, "original": [400, 0], "fontSize": 21, "cellWidth": 13, "cellHeight": 20, "wordmarkSize": 80}
+  ]
+}
