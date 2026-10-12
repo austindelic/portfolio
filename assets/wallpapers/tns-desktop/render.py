@@ -54,7 +54,6 @@ def geometry(concept):
 def wordmark(concept):
     actual = font(concept["wordmarkSize"])
     pieces = [("the next ", "text"), ("{", "blue"), ("something", "text"), ("}", "blue")]
-    width = sum(actual.getlength(text) for text, _ in pieces)
     # Centre visible glyphs, including their ascenders/descenders, rather than the baseline.
     text = "".join(piece for piece, _ in pieces)
     ink = actual.getmask(text).getbbox()
@@ -83,13 +82,24 @@ def verify_composition(concept):
     left = words[0]["x"] + ink[0]
     right = words[0]["x"] + ink[2]
     upper, lower = words[0]["y"] + top, words[0]["y"] + bottom
-    assert [(left + right) / 2, (upper + lower) / 2] == centre
+    # The central brace tips sit above the silhouette bounding-box centre.
+    # Align lettering with the horizontal gap between those tips.
+    tip_centres = []
+    for index, mask in enumerate(masks):
+        pixels = np.asarray(mask) > 128
+        _, xs = np.where(pixels)
+        edge = xs.min() if index == 0 else xs.max()
+        rows = np.flatnonzero(pixels[:, edge])
+        tip_centres.append(concept["y"] + (rows.min() + rows.max() + 1) / 2)
+    gap_centre = [centre[0], sum(tip_centres) / len(tip_centres)]
+    text_centre = [(left + right) / 2, (upper + lower) / 2]
+    assert text_centre == gap_centre, (text_centre, gap_centre)
     # Check the full wordmark rectangle against both brace silhouettes.
     for mask in masks:
         local = (int(np.floor(left - concept["x"] - 24)), int(np.floor(upper - concept["y"] - 24)),
                  int(np.ceil(right - concept["x"] + 24)), int(np.ceil(lower - concept["y"] + 24)))
         assert mask.crop(local).getbbox() is None, "Wordmark collides with brace artwork"
-    return {"braceCentre": centre, "wordmarkCentre": centre, "wordmarkClearOfBraces": True}
+    return {"braceCentre": centre, "wordmarkCentre": text_centre, "braceGapCentre": gap_centre, "wordmarkClearOfBraces": True}
 
 
 def render(concept, cells, palette):
@@ -133,7 +143,7 @@ def comparison(results):
     image = Image.new("RGB", (2024, 1910), "#eef1f7")
     draw = ImageDraw.Draw(image)
     heading, label = font(36), font(24)
-    draw.text((32, 22), "TNS / CENTRED DESKTOP WALLPAPERS", font=heading, fill="#191e2b")
+    draw.text((32, 22), "TNS / DESKTOP WALLPAPERS", font=heading, fill="#191e2b")
     draw.text((32, 70), "LIGHT", font=label, fill="#626b7a")
     draw.text((1032, 70), "DARK", font=label, fill="#626b7a")
     for index, concept in enumerate(CONFIG["concepts"]):
@@ -177,7 +187,7 @@ def main():
     comparison(results)
     (OUT / "verification.json").write_text(json.dumps({"designCount": 6, "font": "Departure Mono Regular", "fontSha256": CONFIG["fontSha256"],
         "sameGeometryForLightAndDark": True, "aiGenerationUsed": False, "trialFontsUsed": False, "variants": results}, indent=2) + "\n")
-    archive = OUT / "tns-wallpapers-centred-light-and-dark.zip"
+    archive = OUT / "tns-wallpapers-light-and-dark.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:
         for file in sorted(OUT.rglob("*")):
             if file.is_file() and file != archive and "__pycache__" not in file.parts:
