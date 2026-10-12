@@ -4,6 +4,8 @@ Three concepts, each with light and dark palettes:
 
 The expanded **`collection/`** contains 324 distinct designs: all three brace styles at all three sizes, original and centred artwork, nine text placements and both modes. See its README, CSV index, complete overview, 18 detailed comparison sheets, and separate light/dark ZIPs. Run `python3 assets/wallpapers/tns-desktop/render.py --collection` to rebuild it. The earlier six-design sets below remain preserved.
 
+**`split-wordmark/`** adds the screenshot-matched layout with “the next” outside the opening brace and “something” inside the large pair, on the original text baseline. It includes matching dark/light exports, editable source, and a ZIP.
+
 The latest exports are in **`brace-gap/`**. The brace silhouettes stay centred on the desktop, with the wordmark aligned to the horizontal gap between their middle tips. Placement checks use the visible glyph bounds. Earlier compositions remain in the original folders and `centred/`.
 
 1. **Disintegrate** — an opening brace dissolves into characters to the left, with an intact closing brace.

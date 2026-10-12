@@ -1,0 +1,10 @@
+{
+  "style": "filled",
+  "size": "medium",
+  "position": "original",
+  "fontSize": 64,
+  "gapBeforeOpeningBrace": 96,
+  "outsideText": "the next",
+  "insideText": "something",
+  "modes": ["dark", "light"]
+}

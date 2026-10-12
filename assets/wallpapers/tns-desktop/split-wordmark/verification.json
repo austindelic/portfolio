@@ -1,0 +1,57 @@
+{
+  "font": "Departure Mono Regular",
+  "fontSha256": "5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb",
+  "sameBaselineAsReference": true,
+  "baseline": 938.5,
+  "braceGapCentre": [
+    2461.5,
+    918.0
+  ],
+  "words": [
+    {
+      "text": "the next",
+      "colour": "text",
+      "x": 1154,
+      "y": 938.5
+    },
+    {
+      "text": "something",
+      "colour": "text",
+      "x": 2277.5,
+      "y": 938.5
+    }
+  ],
+  "textBounds": [
+    [
+      1159,
+      891.5,
+      1476,
+      938.5
+    ],
+    [
+      2282.5,
+      891.5,
+      2640.5,
+      950.5
+    ]
+  ],
+  "outsideGap": 96,
+  "braceArtworkPreserved": true,
+  "aiGenerationUsed": false,
+  "variants": [
+    {
+      "mode": "dark",
+      "master": "4k/tns-split-wordmark-dark-3840x2160.png",
+      "preview": "1080p/tns-split-wordmark-dark-1920x1080.png",
+      "svg": "editable/tns-split-wordmark-dark.svg",
+      "repeatRenderIdentical": true
+    },
+    {
+      "mode": "light",
+      "master": "4k/tns-split-wordmark-light-3840x2160.png",
+      "preview": "1080p/tns-split-wordmark-light-1920x1080.png",
+      "svg": "editable/tns-split-wordmark-light.svg",
+      "repeatRenderIdentical": true
+    }
+  ]
+}
