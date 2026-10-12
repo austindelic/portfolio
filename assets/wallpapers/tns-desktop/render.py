@@ -12,6 +12,7 @@ from PIL import Image, ImageDraw, ImageFont
 BASE = Path(__file__).resolve().parent
 ROOT = BASE.parents[2]
 CONFIG = json.loads((BASE / "config.json").read_text())
+OUT = BASE / CONFIG.get("outputDirectory", ".")
 FONT = ROOT / CONFIG["font"]
 spec = importlib.util.spec_from_file_location("tns_banner", ROOT / "assets/linkedin/ascii-braces/text-rendered/render.py")
 core = importlib.util.module_from_spec(spec)
@@ -54,14 +55,41 @@ def wordmark(concept):
     actual = font(concept["wordmarkSize"])
     pieces = [("the next ", "text"), ("{", "blue"), ("something", "text"), ("}", "blue")]
     width = sum(actual.getlength(text) for text, _ in pieces)
-    x = concept["wordmarkCentre"][0] - width / 2
-    y = concept["wordmarkCentre"][1]
+    # Centre visible glyphs, including their ascenders/descenders, rather than the baseline.
+    text = "".join(piece for piece, _ in pieces)
+    ink = actual.getmask(text).getbbox()
+    top, bottom = actual.getbbox(text, anchor="ls")[1::2]
+    x = concept["wordmarkCentre"][0] - (ink[0] + ink[2]) / 2
+    y = concept["wordmarkCentre"][1] - (top + bottom) / 2
     records = []
     for text, colour in pieces:
         records.append({"text": text, "colour": colour, "x": x, "y": y})
         x += actual.getlength(text)
     assert 150 <= records[0]["x"] and x <= CONFIG["width"] - 150
     return actual, records
+
+
+def verify_composition(concept):
+    masks, _ = core.transformed_masks(FONT, concept["effect"])
+    boxes = [mask.getbbox() for mask in masks]
+    x0, y0 = min(b[0] for b in boxes), min(b[1] for b in boxes)
+    x1, y1 = max(b[2] for b in boxes), max(b[3] for b in boxes)
+    centre = [concept["x"] + (x0 + x1) / 2, concept["y"] + (y0 + y1) / 2]
+    assert centre == [CONFIG["width"] / 2, CONFIG["height"] / 2], centre
+    actual, words = wordmark(concept)
+    text = "".join(w["text"] for w in words)
+    ink = actual.getmask(text).getbbox()
+    top, bottom = actual.getbbox(text, anchor="ls")[1::2]
+    left = words[0]["x"] + ink[0]
+    right = words[0]["x"] + ink[2]
+    upper, lower = words[0]["y"] + top, words[0]["y"] + bottom
+    assert [(left + right) / 2, (upper + lower) / 2] == centre
+    # Check the full wordmark rectangle against both brace silhouettes.
+    for mask in masks:
+        local = (int(np.floor(left - concept["x"] - 24)), int(np.floor(upper - concept["y"] - 24)),
+                 int(np.ceil(right - concept["x"] + 24)), int(np.ceil(lower - concept["y"] + 24)))
+        assert mask.crop(local).getbbox() is None, "Wordmark collides with brace artwork"
+    return {"braceCentre": centre, "wordmarkCentre": centre, "wordmarkClearOfBraces": True}
 
 
 def render(concept, cells, palette):
@@ -105,7 +133,7 @@ def comparison(results):
     image = Image.new("RGB", (2024, 1910), "#eef1f7")
     draw = ImageDraw.Draw(image)
     heading, label = font(36), font(24)
-    draw.text((32, 22), "TNS / DESKTOP WALLPAPER CONCEPTS", font=heading, fill="#191e2b")
+    draw.text((32, 22), "TNS / CENTRED DESKTOP WALLPAPERS", font=heading, fill="#191e2b")
     draw.text((32, 70), "LIGHT", font=label, fill="#626b7a")
     draw.text((1032, 70), "DARK", font=label, fill="#626b7a")
     for index, concept in enumerate(CONFIG["concepts"]):
@@ -113,9 +141,9 @@ def comparison(results):
         for column, mode in enumerate(CONFIG["modes"]):
             x = 32 + column * 1000
             draw.text((x, y), concept["name"].upper() + " / " + mode.upper(), font=label, fill="#245bff")
-            with Image.open(BASE / "4k" / f'{concept["id"]}-{mode}-3840x2160.png') as source:
+            with Image.open(OUT / "4k" / f'{concept["id"]}-{mode}-3840x2160.png') as source:
                 image.paste(source.resize(thumb, Image.Resampling.LANCZOS), (x, y + 34))
-    image.save(BASE / "comparison.png", optimize=True)
+    image.save(OUT / "comparison.png", optimize=True)
 
 
 def main():
@@ -127,32 +155,35 @@ def main():
         if char != " ":
             assert any(glyph) and (glyph.size, bytes(glyph)) != (missing.size, bytes(missing))
     for directory in ("4k", "1080p", "editable"):
-        (BASE / directory).mkdir(exist_ok=True)
+        (OUT / directory).mkdir(parents=True, exist_ok=True)
     results = []
     for concept in CONFIG["concepts"]:
         records = geometry(concept)
-        (BASE / "editable" / f'{concept["id"]}-cells.json').write_text(json.dumps(records, separators=(",", ":")) + "\n")
+        placement = verify_composition(concept)
+        (OUT / "editable" / f'{concept["id"]}-cells.json').write_text(json.dumps(records, separators=(",", ":")) + "\n")
         for mode, palette in CONFIG["modes"].items():
             print(f'Rendering {concept["name"]} / {mode}: {len(records)} actual characters', flush=True)
             image = render(concept, records, palette)
             assert np.array_equal(np.asarray(image), np.asarray(render(concept, records, palette)))
-            master = BASE / "4k" / f'{concept["id"]}-{mode}-3840x2160.png'
+            master = OUT / "4k" / f'{concept["id"]}-{mode}-3840x2160.png'
             image.save(master, optimize=True)
             assert Image.open(master).size == (3840, 2160)
-            preview = BASE / "1080p" / f'{concept["id"]}-{mode}-1920x1080.png'
+            preview = OUT / "1080p" / f'{concept["id"]}-{mode}-1920x1080.png'
             image.resize((1920, 1080), Image.Resampling.LANCZOS).save(preview, optimize=True)
             assert Image.open(preview).size == (1920, 1080)
-            (BASE / "editable" / f'{concept["id"]}-{mode}.svg').write_text(svg(concept, records, palette))
+            (OUT / "editable" / f'{concept["id"]}-{mode}.svg').write_text(svg(concept, records, palette))
             results.append({"concept": concept["name"], "mode": mode, "characters": len(records),
-                            "master": str(master.relative_to(BASE)), "preview": str(preview.relative_to(BASE)), "repeatRenderIdentical": True})
+                            "master": str(master.relative_to(OUT)), "preview": str(preview.relative_to(OUT)), "repeatRenderIdentical": True, **placement})
     comparison(results)
-    (BASE / "verification.json").write_text(json.dumps({"designCount": 6, "font": "Departure Mono Regular", "fontSha256": CONFIG["fontSha256"],
+    (OUT / "verification.json").write_text(json.dumps({"designCount": 6, "font": "Departure Mono Regular", "fontSha256": CONFIG["fontSha256"],
         "sameGeometryForLightAndDark": True, "aiGenerationUsed": False, "trialFontsUsed": False, "variants": results}, indent=2) + "\n")
-    archive = BASE / "tns-wallpapers-light-and-dark.zip"
+    archive = OUT / "tns-wallpapers-centred-light-and-dark.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:
-        for file in sorted(BASE.rglob("*")):
+        for file in sorted(OUT.rglob("*")):
             if file.is_file() and file != archive and "__pycache__" not in file.parts:
-                z.write(file, file.relative_to(BASE))
+                z.write(file, file.relative_to(OUT))
+        for name in ("render.py", "config.json", "README.md"):
+            z.write(BASE / name, name)
         # Reused banner code is included, but no fonts or earlier image outputs.
         source = ROOT / "assets/linkedin/ascii-braces/text-rendered"
         for name in ("render.py", "config.json"):

@@ -1,0 +1,112 @@
+{
+  "designCount": 6,
+  "font": "Departure Mono Regular",
+  "fontSha256": "5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb",
+  "sameGeometryForLightAndDark": true,
+  "aiGenerationUsed": false,
+  "trialFontsUsed": false,
+  "variants": [
+    {
+      "concept": "Disintegrate",
+      "mode": "light",
+      "characters": 4331,
+      "master": "4k/01-disintegrate-light-3840x2160.png",
+      "preview": "1080p/01-disintegrate-light-1920x1080.png",
+      "repeatRenderIdentical": true,
+      "braceCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkClearOfBraces": true
+    },
+    {
+      "concept": "Disintegrate",
+      "mode": "dark",
+      "characters": 4331,
+      "master": "4k/01-disintegrate-dark-3840x2160.png",
+      "preview": "1080p/01-disintegrate-dark-1920x1080.png",
+      "repeatRenderIdentical": true,
+      "braceCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkClearOfBraces": true
+    },
+    {
+      "concept": "Contour",
+      "mode": "light",
+      "characters": 2002,
+      "master": "4k/02-contour-light-3840x2160.png",
+      "preview": "1080p/02-contour-light-1920x1080.png",
+      "repeatRenderIdentical": true,
+      "braceCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkClearOfBraces": true
+    },
+    {
+      "concept": "Contour",
+      "mode": "dark",
+      "characters": 2002,
+      "master": "4k/02-contour-dark-3840x2160.png",
+      "preview": "1080p/02-contour-dark-1920x1080.png",
+      "repeatRenderIdentical": true,
+      "braceCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkClearOfBraces": true
+    },
+    {
+      "concept": "Monument",
+      "mode": "light",
+      "characters": 5537,
+      "master": "4k/03-monument-light-3840x2160.png",
+      "preview": "1080p/03-monument-light-1920x1080.png",
+      "repeatRenderIdentical": true,
+      "braceCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkClearOfBraces": true
+    },
+    {
+      "concept": "Monument",
+      "mode": "dark",
+      "characters": 5537,
+      "master": "4k/03-monument-dark-3840x2160.png",
+      "preview": "1080p/03-monument-dark-1920x1080.png",
+      "repeatRenderIdentical": true,
+      "braceCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkCentre": [
+        1920.0,
+        1080.0
+      ],
+      "wordmarkClearOfBraces": true
+    }
+  ]
+}

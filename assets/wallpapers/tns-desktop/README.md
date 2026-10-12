@@ -2,11 +2,13 @@
 
 Three concepts, each with light and dark palettes:
 
-1. **Disintegrate** — an opening brace dissolves into characters to the left, with an intact closing brace. Artwork sits to the right, leaving room for desktop icons on the left.
-2. **Contour** — hollow brace shapes traced in real ASCII characters. A small TNS wordmark anchors the opposite corner.
+The latest exports are in **`centred/`**. Both brace silhouettes are centred on the desktop, with a larger wordmark centred in the empty space between them. Placement checks use the visible brace bounds and wordmark glyph bounds, not the artwork canvas or text baseline. Earlier compositions remain in the original folders and ZIP.
+
+1. **Disintegrate** — an opening brace dissolves into characters to the left, with an intact closing brace.
+2. **Contour** — hollow brace shapes traced in real ASCII characters.
 3. **Monument** — large, subdued braces crop into the screen edges and frame the TNS wordmark.
 
-`comparison.png` shows all six designs. `4k/` contains native **3840 x 2160** PNGs; `1080p/` contains **1920 x 1080** downsampled versions. `editable/` contains actual SVG text and reproducible character layouts. The ZIP includes all exports, source code and configuration.
+`centred/comparison.png` shows all six revised designs. Within `centred/`, `4k/` contains native **3840 x 2160** PNGs; `1080p/` contains **1920 x 1080** downsampled versions. `editable/` contains actual SVG text and reproducible character layouts. The new ZIP includes all centred exports, source code and configuration.
 
 All typography and artwork use real **Departure Mono Regular** glyphs. Light mode uses the original #245bff blue; dark mode uses #7999ff and stronger character opacity for visibility on #0b101a. Paired modes have identical geometry. No AI generation, trial fonts, launch claims or partner logos are used.
 

@@ -1,6 +1,7 @@
 {
   "width": 3840,
   "height": 2160,
+  "outputDirectory": "centred",
   "seed": 271828,
   "font": "apps/portfolio/public/fonts/DepartureMono-Regular.woff2",
   "fontSha256": "5b4fed1daa90708aa9c6ee1190abca9dc22164a1c1def0020386e46b61038cfb",
@@ -9,8 +10,8 @@
     "dark": {"background": "#0b101a", "blue": "#7999ff", "text": "#e4eaf6", "artOpacityGain": 1.8}
   },
   "concepts": [
-    {"id": "01-disintegrate", "name": "Disintegrate", "effect": "disintegrate", "artWidth": 2100, "artHeight": 1460, "x": 1390, "y": 250, "fontSize": 15, "cellWidth": 9, "cellHeight": 14, "opacity": 0.85, "wordmarkCentre": [3140, 1850], "wordmarkSize": 44},
-    {"id": "02-contour", "name": "Contour", "effect": "clean", "outline": true, "artWidth": 1650, "artHeight": 1240, "x": 1820, "y": 360, "fontSize": 14, "cellWidth": 8, "cellHeight": 13, "opacity": 0.78, "wordmarkCentre": [650, 1840], "wordmarkSize": 40},
-    {"id": "03-monument", "name": "Monument", "effect": "oversized", "artWidth": 3400, "artHeight": 2160, "x": 400, "y": 0, "fontSize": 21, "cellWidth": 13, "cellHeight": 20, "opacity": 0.28, "wordmarkCentre": [2220, 1130], "wordmarkSize": 60}
+    {"id": "01-disintegrate", "name": "Disintegrate", "effect": "disintegrate", "artWidth": 2100, "artHeight": 1460, "x": 848.5, "y": 350.5, "fontSize": 15, "cellWidth": 9, "cellHeight": 14, "opacity": 0.85, "wordmarkCentre": [1920, 1080], "wordmarkSize": 64},
+    {"id": "02-contour", "name": "Contour", "effect": "clean", "outline": true, "artWidth": 1650, "artHeight": 1240, "x": 1078.5, "y": 460, "fontSize": 14, "cellWidth": 8, "cellHeight": 13, "opacity": 0.78, "wordmarkCentre": [1920, 1080], "wordmarkSize": 48},
+    {"id": "03-monument", "name": "Monument", "effect": "oversized", "artWidth": 3400, "artHeight": 2160, "x": 220, "y": 0, "fontSize": 21, "cellWidth": 13, "cellHeight": 20, "opacity": 0.28, "wordmarkCentre": [1920, 1080], "wordmarkSize": 80}
   ]
 }
