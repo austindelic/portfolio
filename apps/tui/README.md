@@ -21,7 +21,7 @@ cargo run -p austindelic
 cargo run -p austindelic -- --renderer static
 ```
 
-Content, published blog posts, shaders, glyph metrics, static artwork, and the resume PDF are embedded. No network or repository is needed at runtime. External links and the resume use the platform default application only when activated. Copy email uses the system clipboard through `arboard`.
+Content, published blog posts, shaders, glyph metrics, and static artwork are embedded. No network or repository is needed at runtime. External links use the platform default application only when activated. Copy email uses the system clipboard through `arboard`.
 
 The local CLI supports macOS Metal, Linux Vulkan and Windows DirectX 12. Automatic mode starts with a static black hole and keeps it if graphics initialization fails. The app runs locally and is distributed through npm; no application server is required. The website remains on Cloudflare Workers Static Assets.
 
@@ -78,7 +78,7 @@ node --import tsx apps/tui/scripts/sync-assets.ts
 node --import tsx apps/tui/scripts/sync-assets.ts --check
 ```
 
-Sync copies content and the resume, removes obsolete post copies, and records input hashes. Committed assets allow Cargo builds without Node. The native route evaluator uses portfolio camera presets and spherical eased transitions. The small `cli/examples/probe.rs` executable verifies rendering through the external crate; it also supports regenerating fallback artwork.
+Sync copies content, removes obsolete post copies, and records input hashes. Committed assets allow Cargo builds without Node. The native route evaluator uses portfolio camera presets and spherical eased transitions. The small `cli/examples/probe.rs` executable verifies rendering through the external crate; it also supports regenerating fallback artwork.
 
 Home, Blog, and Socials use the website's headings, introductory copy, and section counts. The stack follows the source JSON order, and publication dates use the website's Australian format (for example, `25 Sept 2026`). The Blog shows an empty state when no posts are published. Installed copies keep the content embedded at build time; install a newer package version to receive content changes.
 

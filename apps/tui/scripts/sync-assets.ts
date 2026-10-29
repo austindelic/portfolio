@@ -7,7 +7,6 @@ const check = process.argv.includes("--check");
 const mappings = [];
 for (const [source, target] of [
   ["src/data/portfolio.json", "core/assets/portfolio.json"],
-  ["public/resume.pdf", "core/assets/resume.pdf"],
 ])
   mappings.push([`apps/portfolio/${source}`, `apps/tui/${target}`]);
 for (const slug of (
