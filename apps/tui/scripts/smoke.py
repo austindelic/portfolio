@@ -49,6 +49,19 @@ sys.exit(code)
         key(b'\x1b[F');key(b'\x1b[H');key(b'\x1b');assert 'Blog posts' in text(),text()
         key(b'\x1b[C'*3+b'\r');assert 'SOCIAL LINKS' in text(),text();capture('socials')
         key(b'\x1b[C'*4+b'\r',1);assert 'EXPLORE' in text(),text();capture('explore')
+        if gpu:
+            assert 'Render 1x' in text(),text()
+            key(b' ')
+            for k,label in [(b'9','0.5'),(b'9','0.5'),(b'8','1'),(b'8','2'),(b'8','4'),(b'8','4')]:
+                key(k,.6);assert f'Render {label}x' in text(),text()
+                assert '[paused]' in text(),text()
+            key(b'\x1b');key(b'\r',.6)
+            assert 'Render 4x' in text(),text()
+            for w,h in [(60,18),(120,40)]:
+                screen.resize(h,w);fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',h,w,0,0));os.kill(proc.pid,signal.SIGWINCH);pump(.6)
+                assert '9/8 decrease/increase' in text(),text()
+                assert f'{w*8}x{h*16} px' in text(),text()
+            key(b'0',.6);assert 'Render 1x' in text(),text()
         key(b'wijdqerf[]-=,. ',.4);key(b'?',.2);assert 'Ctrl-C' in text();key(b'\x1b',.2);key(b'\x1b',.2)
         for w,h in [(60,18),(30,10),(80,24),(160,50),(120,40)]:
             screen.resize(h,w);fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',h,w,0,0));os.kill(proc.pid,signal.SIGWINCH);pump(.25)

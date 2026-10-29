@@ -57,9 +57,10 @@ The terminal's reported pixel dimensions determine cell aspect where available; 
 | Explore roll | Q / E |
 | Movement speed | Up / Down |
 | Pause / reset | Space / 0 |
+| Render resolution | 9 decrease / 8 increase; 0.5x, 1x, 2x, 4x |
 | Time / exposure / bloom | [ / ], - / +, comma / period |
 
-Explore is entered through the navigation bar. In static mode it displays the fallback and explains that camera controls require the GPU. External actions report success or failure in the footer. Markdown links and images are listed as selectable actions at the end of each article. Use your terminal's selection override (typically Shift-drag) to select text while mouse capture is enabled.
+Explore is entered through the navigation bar. Render resolution changes the GPU image before ASCII conversion, leaving character density unchanged. The current scale and pixel dimensions appear in Explore. It defaults to 1x, persists across pages during the session, and returns to 1x with 0 reset. In static mode it displays the fallback and explains that camera controls require the GPU. External actions report success or failure in the footer. Markdown links and images are listed as selectable actions at the end of each article. Use your terminal's selection override (typically Shift-drag) to select text while mouse capture is enabled.
 
 ## Source and assets
 

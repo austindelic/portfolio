@@ -19,7 +19,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tui_core::portfolio::{self, Action, Input, Page, PortfolioApp};
-use tui_renderer::{Camera, Request, Worker, route};
+use tui_renderer::{Camera, RenderScale, Request, Worker, route};
 #[derive(Clone, Copy, Debug, ValueEnum, PartialEq)]
 enum RendererMode {
     Auto,
@@ -141,6 +141,7 @@ struct Explore {
     bloom: f32,
     speed: f32,
     paused: bool,
+    render_scale: RenderScale,
 }
 impl Default for Explore {
     fn default() -> Self {
@@ -152,6 +153,7 @@ impl Default for Explore {
             bloom: 0.65,
             speed: 0.2,
             paused: false,
+            render_scale: RenderScale::default(),
         }
     }
 }
@@ -179,6 +181,8 @@ impl Explore {
             KeyCode::Char('+' | '=') => self.exposure = (self.exposure + 0.05).min(4.),
             KeyCode::Char(',') => self.bloom = (self.bloom - 0.01).max(0.),
             KeyCode::Char('.') => self.bloom = (self.bloom + 0.01).min(1.),
+            KeyCode::Char('9') => self.render_scale = self.render_scale.decrease(),
+            KeyCode::Char('8') => self.render_scale = self.render_scale.increase(),
             KeyCode::Char('0') => *self = Self::default(),
             _ => return false,
         }
@@ -295,6 +299,7 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
                 camera: camera.clone(),
                 exposure: explore.exposure,
                 bloom: explore.bloom,
+                render_scale: explore.render_scale,
             });
             requested = true;
             last_request += cadence;
@@ -302,6 +307,15 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
                 last_request = now;
             }
         }
+        let (grid_width, grid_height) = render_grid(size.width, size.height, args.render_columns);
+        let (scene_width, scene_height) =
+            explore
+                .render_scale
+                .scene_size(grid_width, grid_height, aspect);
+        app.explore_resolution = format!(
+            "Render {}x · {scene_width}x{scene_height} px · 9/8 decrease/increase",
+            explore.render_scale.multiplier(),
+        );
         app.explore_help = format!(
             "Time {:.2}x  Exposure {:.2}  Bloom {:.2}  Speed {:.3} {}",
             explore.time_scale,
@@ -339,13 +353,15 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
                     if key.code == KeyCode::Char('q') && app.page != Page::Explore {
                         break;
                     }
+                    let previous_scale = explore.render_scale;
                     if !app.help
                         && app.page == Page::Explore
                         && app.gpu_available
                         && explore.key(key.code)
                     {
                         requested = false;
-                        if key.code == KeyCode::Char('0') {
+                        if key.code == KeyCode::Char('0') || explore.render_scale != previous_scale
+                        {
                             history += 1;
                             generation += 1;
                         }
@@ -525,6 +541,24 @@ mod tests {
             ])
             .is_ok()
         );
+    }
+    #[test]
+    fn explore_render_scale_controls() {
+        let mut e = Explore::default();
+        assert_eq!(e.render_scale, RenderScale::One);
+        for (key, expected) in [
+            ('9', RenderScale::Half),
+            ('9', RenderScale::Half),
+            ('8', RenderScale::One),
+            ('8', RenderScale::Two),
+            ('8', RenderScale::Four),
+            ('8', RenderScale::Four),
+            ('9', RenderScale::Two),
+            ('0', RenderScale::One),
+        ] {
+            assert!(e.key(KeyCode::Char(key)));
+            assert_eq!(e.render_scale, expected);
+        }
     }
     #[test]
     fn explore_controls_and_bounds() {
