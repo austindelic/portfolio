@@ -1,5 +1,5 @@
 use crate::frame::{Cell, CellFrame};
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
@@ -35,6 +35,8 @@ pub const FG: Color = Color::Rgb(192, 192, 192);
 pub const ACCENT: Color = Color::Rgb(255, 161, 51);
 const MUTED: Color = Color::Rgb(176, 176, 161);
 const BORDER: Color = Color::Rgb(96, 96, 82);
+// Ayu Dark's string colour, matching code on the website.
+const CODE: Color = Color::Rgb(230, 180, 80);
 #[derive(Clone, Deserialize)]
 pub struct Profile {
     pub name: String,
@@ -145,6 +147,7 @@ struct Row {
 enum Kind {
     Body,
     Heading,
+    Subheading,
     Muted,
     Code,
 }
@@ -641,10 +644,11 @@ impl PortfolioApp {
                 let color = match kind {
                     Kind::Heading => ACCENT,
                     Kind::Muted => MUTED,
+                    Kind::Code => CODE,
                     _ => FG,
                 };
                 let mut style = Style::default().fg(color).bg(bg);
-                if matches!(kind, Kind::Heading) {
+                if matches!(kind, Kind::Heading | Kind::Subheading) {
                     style = style.add_modifier(Modifier::BOLD);
                 }
                 if *action == Some(self.focus) {
@@ -748,8 +752,13 @@ fn markdown(body: &str, resolve: impl Fn(&str) -> Action) -> Vec<Row> {
     let mut text = String::new();
     let mut kind = Kind::Body;
     let mut links = Vec::new();
-    let mut list_depth: usize = 0;
+    // One entry per open list: the next number for ordered lists, None for bullets.
+    let mut lists: Vec<Option<u64>> = Vec::new();
     let mut code = false;
+    // A paragraph that is only emphasis (a figure caption) or an image reads as muted.
+    let mut emphasis = 0usize;
+    let mut plain = false;
+    let mut caption = false;
     let flush = |rows: &mut Vec<Row>, text: &mut String, kind| {
         if !text.is_empty() {
             rows.push(Row::new(std::mem::take(text), kind));
@@ -760,36 +769,64 @@ fn markdown(body: &str, resolve: impl Fn(&str) -> Action) -> Vec<Row> {
         Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH | Options::ENABLE_TASKLISTS,
     ) {
         match event {
-            Event::Start(Tag::Heading { .. }) => {
+            Event::Start(Tag::Heading { level, .. }) => {
                 flush(&mut rows, &mut text, kind);
-                kind = Kind::Heading;
+                kind = if level <= HeadingLevel::H2 {
+                    Kind::Heading
+                } else {
+                    Kind::Subheading
+                };
             }
+            Event::Start(Tag::Paragraph) => {
+                plain = false;
+                caption = false;
+            }
+            Event::Start(Tag::Emphasis) => {
+                if text.is_empty() && !plain {
+                    caption = true;
+                }
+                emphasis += 1;
+            }
+            Event::End(TagEnd::Emphasis) => emphasis = emphasis.saturating_sub(1),
             Event::Start(Tag::CodeBlock(_)) => {
                 flush(&mut rows, &mut text, kind);
                 kind = Kind::Code;
                 code = true;
             }
             Event::Start(Tag::BlockQuote(_)) => text.push_str("> "),
-            Event::Start(Tag::List(_)) => list_depth += 1,
+            Event::Start(Tag::List(start)) => {
+                flush(&mut rows, &mut text, kind);
+                lists.push(start);
+            }
             Event::Start(Tag::Item) => {
                 flush(&mut rows, &mut text, kind);
-                text.push_str(&format!("{}- ", "  ".repeat(list_depth.saturating_sub(1))));
+                let indent = "  ".repeat(lists.len().saturating_sub(1));
+                match lists.last_mut() {
+                    Some(Some(n)) => {
+                        text.push_str(&format!("{indent}{n:02}. "));
+                        *n += 1;
+                    }
+                    _ => text.push_str(&format!("{indent}- ")),
+                }
             }
-            Event::Start(Tag::Link { dest_url, .. })
-            | Event::Start(Tag::Image { dest_url, .. }) => {
+            Event::Start(Tag::Link { dest_url, .. }) => {
                 links.push(dest_url.to_string());
                 text.push_str(&format!("[{}] ", links.len()));
             }
+            Event::Start(Tag::Image { dest_url, .. }) => {
+                flush(&mut rows, &mut text, kind);
+                links.push(dest_url.to_string());
+                text.push_str(&format!("[{}] Image: ", links.len()));
+                caption = true;
+            }
             Event::Text(s) | Event::Code(s) => {
                 if code {
-                    for (i, line) in s.split('\n').enumerate() {
-                        if i > 0 {
-                            flush(&mut rows, &mut text, kind);
-                        }
-                        text.push_str("  ");
-                        text.push_str(line);
-                    }
+                    // Buffered whole and split at the end of the block, however the parser chunks it.
+                    text.push_str(&s);
                 } else {
+                    if emphasis == 0 && !caption {
+                        plain = true;
+                    }
                     text.push_str(&s);
                 }
             }
@@ -797,18 +834,33 @@ fn markdown(body: &str, resolve: impl Fn(&str) -> Action) -> Vec<Row> {
             Event::HardBreak => flush(&mut rows, &mut text, kind),
             Event::Rule => rows.push(Row::new("--------------------------------", Kind::Muted)),
             Event::TaskListMarker(done) => text.push_str(if done { "[x] " } else { "[ ] " }),
-            Event::End(TagEnd::List(_)) => list_depth = list_depth.saturating_sub(1),
-            Event::End(
-                TagEnd::Heading(_)
-                | TagEnd::Paragraph
-                | TagEnd::CodeBlock
-                | TagEnd::Item
-                | TagEnd::TableRow,
-            ) => {
-                flush(&mut rows, &mut text, kind);
+            Event::End(TagEnd::List(_)) => {
+                lists.pop();
+                if lists.is_empty() {
+                    rows.push(Row::new("", Kind::Body));
+                }
+            }
+            // List items stay together; the list ends with one blank row.
+            Event::End(TagEnd::Item) => flush(&mut rows, &mut text, kind),
+            Event::End(TagEnd::Paragraph) if !lists.is_empty() => {
+                let k = if caption && !plain { Kind::Muted } else { kind };
+                flush(&mut rows, &mut text, k);
+            }
+            Event::End(TagEnd::CodeBlock) => {
+                for line in std::mem::take(&mut text).trim_end_matches('\n').split('\n') {
+                    rows.push(Row::new(format!("  {line}"), Kind::Code));
+                }
                 rows.push(Row::new("", Kind::Body));
                 kind = Kind::Body;
                 code = false;
+            }
+            Event::End(TagEnd::Heading(_) | TagEnd::Paragraph | TagEnd::TableRow) => {
+                let k = if caption && !plain { Kind::Muted } else { kind };
+                flush(&mut rows, &mut text, k);
+                rows.push(Row::new("", Kind::Body));
+                kind = Kind::Body;
+                caption = false;
+                plain = false;
             }
             Event::End(TagEnd::TableCell) => text.push_str(" | "),
             _ => {}

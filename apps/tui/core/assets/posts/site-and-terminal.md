@@ -1,7 +1,8 @@
 ---
 publishDate: 2026-09-25
-title: "A black hole in the browser and terminal"
-description: "Shared content and shaders in an Astro site and Rust app."
+updatedDate: "2026-10-29"
+title: "I put a black hole in my portfolio"
+description: "It runs in your browser and your terminal, from the same shaders."
 heroImage: "/images/site-and-terminal/browser.webp"
 heroAlt: "An ASCII black hole beside Austin’s profile, projects and blog."
 published: true
@@ -11,59 +12,80 @@ tags:
   - graphics
 ---
 
-I built this portfolio for the browser and terminal. The Astro site and native Rust app share content and black-hole shaders. In the terminal, the scene becomes coloured characters beneath a Ratatui interface.
+Does a portfolio need a black hole? No.
 
-## The website
+I built one anyway.
 
-Astro builds the profile, projects and Markdown posts into static pages. The black hole runs in the browser. Open Explore to move the camera and hide the page.
+It’s the background of this site, and it’s the background of the terminal version too. You can run that one right now:
 
-The black and orange interface uses Departure Mono. Code uses Ayu Dark. Mobile uses a still background instead of starting the GPU renderer.
+```sh
+npx austindelic
+```
 
-## The terminal version
+Both versions use the same content and the same shaders. Your browser draws the black hole with WebGPU. Your terminal draws it with wgpu, then turns every frame into coloured characters. This post is how all of that works.
 
-The native app uses `wgpu` for offscreen graphics, Ratatui for layout and Crossterm for input. The GPU output becomes terminal characters and RGB colours.
+## Two apps, one portfolio
+
+The website is built with Astro. It turns my profile, projects and these posts into static pages, and the black hole runs behind them on your GPU.
+
+Every page has its own camera, so moving between pages flies you somewhere new. Hit Explore and the page gets out of the way, so you can fly around it yourself with WASD.
+
+On a phone it shows a still image instead. Reading a post on mobile shouldn’t spin up a GPU renderer.
+
+The terminal app is written in Rust. Ratatui does the layout, Crossterm handles input and wgpu renders the black hole offscreen. The posts and profile get bundled in when it’s built, so it works offline once it’s installed.
 
 ![The black-hole shadow and accretion disc in the terminal’s Explore view.](/images/site-and-terminal/terminal.webp)
 
-*Explore at 160×50 cells, with Departure Mono and true colour.*
+*Explore in the terminal at 160×50 cells, in Departure Mono with true colour.*
 
-Tab moves focus, Enter opens an item and `?` shows the controls. In Explore, WASD moves and IJKL looks around. Ctrl-C quits from any screen.
+Tab moves between links, Enter opens them and `?` shows every control. In Explore, WASD moves and IJKL looks around. Ctrl-C quits from anywhere.
 
-The TUI bundles the site's JSON and Markdown at build time and runs offline. Installed copies keep that content until updated. External links open in the default browser.
+## How a frame gets made
 
-## The render pipeline
+Every frame goes through six passes on the GPU:
 
-The native renderer runs six passes: the scene, three bloom passes, the display image and ASCII analysis. A conversion script turns the GLSL source into WGSL for WebGPU and Rust. The browser also supports WebGL.
+1. **The scene.** Trace light around the black hole and add up what the disc gives off along the way.
+2. **Bloom, in three passes.** Shrink copies of the scene, then blur them across and then down.
+3. **The display image.** Apply exposure and squash the brightness into colours a screen can show.
+4. **ASCII analysis.** Pick the best character for every cell.
 
-![Light paths and disc emission feed bloom and display colour, then glyph analysis produces terminal characters and RGB data.](/images/site-and-terminal/render-pipeline.svg)
+The shaders are written once in GLSL. A script converts them to WGSL, so the browser and the Rust app run the same code. The browser keeps a WebGL fallback for when WebGPU isn’t there.
 
-*The GPU renders the scene and chooses the characters.*
+### Bending light
 
-### Light paths and the disc
+The scene shader traces each ray of light through a Kerr–Newman spacetime, which is the maths for a black hole that spins and carries charge. Light that passes close to the hole curves around it. That’s why you can see the far side of the disc wrapped around the black centre.
 
-`buffer-a.glsl` traces light through a Kerr–Newman spacetime model. Light curves around the black hole, bringing the far side of the accretion disc into view around the dark centre.
+Along each path it adds up colour and opacity from the glowing disc. Frequency shifts change how bright each part looks, and every sample gets a colour somewhere between copper and ivory.
 
-The shader accumulates colour and opacity from emission along each path. Frequency shifts affect brightness. It colours each disc sample copper to ivory before accumulation.
+I didn’t come up with the physics from scratch. It builds on [baopinshui’s NPGS](https://github.com/baopinshui/NPGS) and the other sources credited in [Buffer A](https://github.com/austindelic/blackhole/blob/main/packages/blackhole/shaders/buffer-a.glsl). The bloom and image passes adapt sonicether’s “Gargantua With HDR Bloom”. The credits live in the shader files.
 
-The physics shader draws on the sources credited in [Buffer A](https://github.com/austindelic/blackhole/blob/main/packages/blackhole/shaders/buffer-a.glsl), including [baopinshui's NPGS](https://github.com/baopinshui/NPGS). The bloom and image passes adapt sonicether's “Gargantua With HDR Bloom”. Credits remain in the shader files.
+### Bloom
 
-### Bloom and display colour
+Bloom is what makes the disc glow. Buffer B packs smaller copies of the scene, then buffers C and D blur them horizontally and vertically. Two one-way blurs take far fewer texture samples than one full 2D blur.
 
-Buffer B packs scaled scene copies for bloom. Buffers C and D blur them horizontally and vertically, using fewer texture samples than a full two-dimensional blur.
+### Picking the characters
 
-The image pass applies exposure and compresses brightness into display colours. Browser ASCII adds glow after the glyph mask to avoid applying it twice. The terminal analyses the display image and outputs foreground colours directly.
+This is my favourite part.
 
-### Choosing the characters
+For every cell on screen, the analysis pass looks at its colour, how bright it is and which way any edges run. Then it scores every character against how much of a Departure Mono cell that character actually fills. Edges get directional characters like `/` and `\`. Bright areas get dense ones like `8` and `A`.
 
-The analysis pass samples cell colour and luminance, estimates edge direction and scores glyphs against measured Departure Mono coverage. Directional characters follow edges; dense characters fill bright areas.
+On its own that would flicker, because a cell sitting between two characters swaps back and forth every frame. So changing costs a little. A new character has to be clearly better than the old one before it replaces it. Dark cells stay empty.
 
-A small penalty discourages glyph changes between frames. A candidate must improve enough to replace the previous glyph, reducing flicker. Dark cells are suppressed.
+In the browser, the glow goes on after the characters are drawn, so it isn’t applied twice. In the terminal, the analysis output becomes foreground colours directly.
 
-The Rust renderer copies colour and glyph-state textures into readback buffers and maps them asynchronously. It decodes glyph indices and RGB bytes, then sends the newest completed frame to the terminal. The grid is capped at 240×80 cells.
+The Rust app copies the colour and character data back from the GPU without blocking, turns it into characters and RGB values, and draws the newest finished frame. The grid tops out at 240×80 cells.
 
-## Run it locally
+## Run it
 
-With Git and a current Rust toolchain:
+The quick way, with Node 22 or newer:
+
+```sh
+npx austindelic
+```
+
+It works on Mac, Linux and Windows. Use a terminal with true colour, and set its font to Departure Mono if you want it to look like the screenshot. If the GPU won’t start, it falls back to a still image.
+
+From the source, with Git and Rust:
 
 ```sh
 git clone https://github.com/austindelic/portfolio.git
@@ -71,10 +93,12 @@ cd portfolio
 cargo run --manifest-path apps/tui/Cargo.toml -p austindelic
 ```
 
-Use a true-colour terminal and Departure Mono to match the capture. Automatic mode falls back to a static image if GPU initialisation fails. To request the GPU explicitly:
+To force the GPU renderer:
 
 ```sh
 cargo run --manifest-path apps/tui/Cargo.toml -p austindelic -- --renderer gpu
 ```
 
-The apps live in `apps/portfolio` and `apps/tui`. Both use versioned [Blackhole](https://github.com/austindelic/blackhole) packages for the renderer and shaders.
+The website lives in `apps/portfolio` and the terminal app in `apps/tui`. Both pull the renderer and shaders from versioned [Blackhole](https://github.com/austindelic/blackhole) packages.
+
+It’s all open source under GPL-3.0. If you build something with it, send it my way :)

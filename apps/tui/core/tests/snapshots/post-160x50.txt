@@ -30,9 +30,9 @@
                                           │ for input. The GPU renders offscreen. Its output becomes terminal        │                                          
                                           │ characters and RGB colours rather than pixels in a window.               │                                          
                                           │                                                                          │                                          
-                                          │ [1] A live GPU render in the terminal’s Explore view at 160 columns by   │                                          
-                                          │ 50 rows, showing the complete black-hole shadow and bright accretion     │                                          
-                                          │ disc without the portfolio panel.                                        │                                          
+                                          │ [1] Image: A live GPU render in the terminal’s Explore view at 160       │                                          
+                                          │ columns by 50 rows, showing the complete black-hole shadow and bright    │                                          
+                                          │ accretion disc without the portfolio panel.                              │                                          
                                           │                                                                          │                                          
                                           │ The native GPU renderer in Explore, captured at 160×50 cells using       │                                          
                                           │ Departure Mono and true colour.                                          │                                          
