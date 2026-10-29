@@ -21,7 +21,7 @@ cargo run -p austindelic
 cargo run -p austindelic -- --renderer static
 ```
 
-Content, published blog posts, shaders, glyph metrics, static artwork, and the resume PDF are embedded. No network or repository is needed at runtime. External links and the resume use the platform default application only when activated. Copy email uses the system clipboard through `arboard`.
+Content, published blog posts, shaders, glyph metrics, and static artwork are embedded. No network or repository is needed at runtime. External links use the platform default application only when activated. Copy email uses the system clipboard through `arboard`.
 
 The local CLI supports macOS Metal, Linux Vulkan and Windows DirectX 12. Automatic mode starts with a static black hole and keeps it if graphics initialization fails. The app runs locally and is distributed through npm; no application server is required. The website remains on Cloudflare Pages.
 
@@ -76,7 +76,7 @@ node apps/tui/scripts/sync-assets.mjs
 node apps/tui/scripts/sync-assets.mjs --check
 ```
 
-Sync copies shared graphics assets and website content/resume into embedded TUI assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
+Sync copies shared graphics assets and website content into embedded TUI assets, removes obsolete post copies, and records SHA-256 hashes. Run it before building after content changes. Committed package assets let `cargo install --path apps/tui/cli` build without Node or a running website.
 
 Departure Mono metrics were generated from the actual website rasterizer in Chromium. To recalibrate after changing the font, glyph set, or rasterizer, start the Astro dev server at `http://127.0.0.1:4321` and run:
 

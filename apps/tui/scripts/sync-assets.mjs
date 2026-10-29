@@ -6,7 +6,7 @@ const root=fileURLToPath(new URL('../../..',import.meta.url));
 const check=process.argv.includes('--check');
 const mappings=[];
 for(const name of ['buffer-a','buffer-b','buffer-c','buffer-d','image','ascii-analysis'])mappings.push([`packages/black-hole/shaders/webgpu/${name}.wgsl`,`apps/tui/renderer/assets/${name}.wgsl`]);
-for(const [source,target] of [['src/data/portfolio.json','core/assets/portfolio.json'],['public/resume.pdf','core/assets/resume.pdf']])mappings.push([`apps/portfolio/${source}`,`apps/tui/${target}`]);
+for(const [source,target] of [['src/data/portfolio.json','core/assets/portfolio.json']])mappings.push([`apps/portfolio/${source}`,`apps/tui/${target}`]);
 for(const slug of (await readdir(path.join(root,'apps/portfolio/src/content/blog'))).sort())mappings.push([`apps/portfolio/src/content/blog/${slug}/index.md`,`apps/tui/core/assets/posts/${slug}.md`]);
 mappings.push(['packages/black-hole/shaders/webgpu/uniform-layout.json','apps/tui/renderer/assets/uniform-layout.json'],['packages/black-hole/routes.json','apps/tui/renderer/assets/routes.json']);
 const hashes={};let failed=false;

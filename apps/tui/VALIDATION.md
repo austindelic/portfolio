@@ -15,7 +15,7 @@ The terminal portfolio is distributed only through npm and runs on the visitor's
 ## Release gates
 
 - Run the complete five-platform release workflow and test the assembled platform packages and launcher on every target. Local development archives containing only one target must not be published.
-- Verify Windows WARP and physical GPU execution, platform browser/resume/clipboard actions, and terminal behavior on Windows and Intel macOS.
+- Verify Windows WARP and physical GPU execution, platform browser/clipboard actions, and terminal behavior on Windows and Intel macOS.
 - Complete fixed-camera browser/terminal visual comparison, injected GPU device-loss recovery and longer sustained rendering measurements.
 - Set up npm package ownership and trusted publishing. No npm package has been published during implementation.
 - Import/reconcile the existing Cloudflare Pages project before applying its infrastructure configuration. No infrastructure application is necessary to run the local CLI.

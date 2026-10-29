@@ -45,4 +45,4 @@ Commit the generated lockfile. Verify initialization with `-lockfile=readonly`, 
 
 State lives at `infra/state/terraform.tfstate` and is excluded from Git, alongside local variables and provider downloads. Back up the entire state directory to access-controlled encrypted storage after imports and applies. Avoid concurrent operations from separate copies of local state. Credentials belong in environment variables, never variable files or version control.
 
-After a website deployment, verify home, blog, articles, socials, assets, resume PDF, missing-page status and browser errors at the Pages URL and the existing public domain. Website changes can be rolled back through Cloudflare's deployment history. npm releases are independent of website infrastructure; see `apps/tui/npm/README.md` for publishing setup.
+After a website deployment, verify home, blog, articles, socials, assets, missing-page status and browser errors at the Pages URL and the existing public domain. Website changes can be rolled back through Cloudflare's deployment history. npm releases are independent of website infrastructure; see `apps/tui/npm/README.md` for publishing setup.

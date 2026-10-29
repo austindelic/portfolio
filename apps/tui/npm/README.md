@@ -10,7 +10,7 @@ Requires Node 22 or newer and a terminal of at least 60×18 characters. npm inst
 
 Metal, Vulkan and DirectX 12 render locally into terminal characters. If graphics initialization fails, automatic mode retains static artwork. Use `npx austindelic --renderer gpu` to require live rendering, or `--renderer static` to disable graphics.
 
-Use Tab and arrows to navigate, Enter to activate, `?` for help, and Ctrl-C to quit. Explore uses WASD, IJKL or mouse dragging. Outside Explore, `q` also quits. Resize your terminal freely. URLs and the embedded resume open using your operating system's default application; copying email uses the system clipboard. A true-colour terminal gives the intended appearance. Departure Mono is optional.
+Use Tab and arrows to navigate, Enter to activate, `?` for help, and Ctrl-C to quit. Explore uses WASD, IJKL or mouse dragging. Outside Explore, `q` also quits. Resize your terminal freely. URLs open using your operating system's default application; copying email uses the system clipboard. A true-colour terminal gives the intended appearance. Departure Mono is optional.
 
 ## Releasing from the repository
 

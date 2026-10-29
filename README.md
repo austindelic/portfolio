@@ -4,7 +4,7 @@ Software engineer in Perth. Founding Engineer at **The Next Something**.
 
 I build production applications, Rust tooling, and graphics that run in browsers and terminals.
 
-[Portfolio](https://austindelic.com) · [Email](mailto:austin@austindelic.com) · [LinkedIn](https://www.linkedin.com/in/austindelic) · [Résumé](https://austindelic.com/resume.pdf)
+[Portfolio](https://austindelic.com) · [Email](mailto:austin@austindelic.com) · [LinkedIn](https://www.linkedin.com/in/austindelic)
 
 ## <img src="./assets/readme/terminal.svg" width="24" height="24" alt="Terminal" /> Run it
 
