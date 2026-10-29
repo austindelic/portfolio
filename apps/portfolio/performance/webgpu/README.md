@@ -147,7 +147,7 @@ Regenerate WGSL only when GLSL or its effective source transformations change:
 
 ```sh
 cargo install naga-cli --version 27.0.0 --root /private/tmp/black-hole-naga
-node apps/portfolio/tooling/webgpu/port-shaders.mjs /private/tmp/black-hole-naga/bin/naga
+node packages/black-hole/tooling/webgpu/port-shaders.mjs /private/tmp/black-hole-naga/bin/naga
 ```
 
 Re-run shader compilation, parity and source-hash tests after regeneration. Browser

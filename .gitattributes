@@ -1,6 +1,7 @@
+packages/black-hole/**/*.glsl text eol=lf
+packages/black-hole/**/*.wgsl text eol=lf
+packages/black-hole/**/*.json text eol=lf
 # Asset hashes must be identical on every release platform.
-apps/portfolio/src/shaders/black-hole/webgpu/*.wgsl text eol=lf
-apps/portfolio/src/shaders/black-hole/webgpu/uniform-layout.json text eol=lf
 apps/portfolio/src/data/*.json text eol=lf
 apps/portfolio/src/content/blog/**/index.md text eol=lf
 apps/portfolio/src/lib/ascii-analysis.ts text eol=lf

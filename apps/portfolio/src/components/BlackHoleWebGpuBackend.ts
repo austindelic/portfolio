@@ -1,13 +1,13 @@
 /// <reference types="@webgpu/types" />
 
-import ascii from "../shaders/black-hole/webgpu/ascii.wgsl?raw";
-import analysis from "../shaders/black-hole/webgpu/ascii-analysis.wgsl?raw";
-import bufferA from "../shaders/black-hole/webgpu/buffer-a.wgsl?raw";
-import bufferB from "../shaders/black-hole/webgpu/buffer-b.wgsl?raw";
-import bufferC from "../shaders/black-hole/webgpu/buffer-c.wgsl?raw";
-import bufferD from "../shaders/black-hole/webgpu/buffer-d.wgsl?raw";
-import image from "../shaders/black-hole/webgpu/image.wgsl?raw";
-import slots from "../shaders/black-hole/webgpu/uniform-layout.json";
+import ascii from "@repo/black-hole/shaders/webgpu/ascii.wgsl?raw";
+import analysis from "@repo/black-hole/shaders/webgpu/ascii-analysis.wgsl?raw";
+import bufferA from "@repo/black-hole/shaders/webgpu/buffer-a.wgsl?raw";
+import bufferB from "@repo/black-hole/shaders/webgpu/buffer-b.wgsl?raw";
+import bufferC from "@repo/black-hole/shaders/webgpu/buffer-c.wgsl?raw";
+import bufferD from "@repo/black-hole/shaders/webgpu/buffer-d.wgsl?raw";
+import image from "@repo/black-hole/shaders/webgpu/image.wgsl?raw";
+import slots from "@repo/black-hole/shaders/webgpu/uniform-layout.json";
 import type {
 	BackendFrame,
 	BackendOptions,

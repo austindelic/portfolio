@@ -29,7 +29,7 @@ export function compactShaders() {
 		enforce: "pre",
 		apply: "build",
 		async load(id) {
-			if (!/\/shaders\/black-hole\/[^?]+\.(?:glsl|wgsl)\?raw$/.test(id)) return;
+			if (!/\/packages\/black-hole\/shaders\/[^?]+\.(?:glsl|wgsl)\?raw$/.test(id)) return;
 			const path = id.slice(0, -4);
 			this.addWatchFile(path);
 			return `export default ${JSON.stringify(compactShader(await readFile(path, "utf8")))};`;

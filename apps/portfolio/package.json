@@ -27,7 +27,8 @@
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
 		"sharp": "0.34.5",
-		"tailwindcss": "^4.1.18"
+		"tailwindcss": "^4.1.18",
+		"@repo/black-hole": "workspace:*"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.9",

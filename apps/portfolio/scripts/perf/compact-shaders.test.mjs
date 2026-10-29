@@ -11,7 +11,7 @@ const tokens = (text) =>
 	);
 
 test("all GLSL tokens and preprocessor boundaries survive compaction", async () => {
-	const directory = new URL("../../src/shaders/black-hole/", import.meta.url);
+	const directory = new URL("../../../../packages/black-hole/shaders/", import.meta.url);
 	for (const name of await readdir(directory)) {
 		if (!name.endsWith(".glsl")) continue;
 		const source = await readFile(new URL(name, directory), "utf8");
@@ -40,7 +40,7 @@ test("macro kinds, separated operators, and the core split marker remain intact"
 
 test("generated WGSL tokens survive whitespace compaction", async () => {
 	const directory = new URL(
-		"../../src/shaders/black-hole/webgpu/",
+		"../../../../packages/black-hole/shaders/webgpu/",
 		import.meta.url,
 	);
 	for (const name of await readdir(directory)) {
