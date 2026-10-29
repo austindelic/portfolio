@@ -55,14 +55,13 @@ fn parse_aspect(s: &str) -> std::result::Result<f32, String> {
 struct Session;
 fn startup_trace(stage: &str) {
     use std::io::Write;
-    if let Some(path) = std::env::var_os("AUSTINDELIC_STARTUP_TRACE") {
-        if let Ok(mut file) = std::fs::OpenOptions::new()
+    if let Some(path) = std::env::var_os("AUSTINDELIC_STARTUP_TRACE")
+        && let Ok(mut file) = std::fs::OpenOptions::new()
             .create(true)
             .append(true)
             .open(path)
-        {
-            let _ = writeln!(file, "{stage}");
-        }
+    {
+        let _ = writeln!(file, "{stage}");
     }
 }
 impl Session {

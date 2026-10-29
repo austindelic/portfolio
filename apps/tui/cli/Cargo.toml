@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 tui-core = { path = "../core" }
 tui-renderer = { path = "../renderer" }
-ratatui = "0.30"
+ratatui = { version = "0.30", default-features = false, features = ["crossterm_0_29", "underline-color", "layout-cache"] }
 crossterm = "0.29"
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"

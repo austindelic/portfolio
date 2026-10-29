@@ -51,6 +51,7 @@ yarn-error.log*
 /apps/tui/npm/THIRD_PARTY_NOTICES.md
 /release/
 /packed/
+/release-plan.json
 /infra/.terraform/
 /infra/state/
 /infra/*.tfstate*

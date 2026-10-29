@@ -5,19 +5,27 @@ const { existsSync } = require('node:fs');
 const path = require('node:path');
 const { constants } = require('node:os');
 
+const packageName = require('../package.json').name;
+const packageScope = packageName.startsWith('@') ? packageName.split('/')[0] + '/' : '';
 const targets = Object.freeze(['darwin-arm64', 'darwin-x64', 'linux-arm64', 'linux-x64', 'win32-x64']);
-function executable(platform, arch, root = path.resolve(__dirname, '..')) {
+function executable(platform, arch, root = path.resolve(__dirname, '..'), resolve = require.resolve) {
   const target = `${platform}-${arch}`;
   if (!targets.includes(target)) {
     throw new Error(`Unsupported platform ${target}. Supported: ${targets.join(', ')}.`);
   }
-  return path.join(root, 'native', target, platform === 'win32' ? 'austindelic.exe' : 'austindelic');
+  const name = `${packageScope}austindelic-${target}`;
+  try {
+    return resolve(`${name}/bin/${platform === 'win32' ? 'austindelic.exe' : 'austindelic'}`, { paths: [root] });
+  } catch (error) {
+    if (error.code !== 'MODULE_NOT_FOUND') throw error;
+    throw new Error(`The native package ${name} is missing. Reinstall austindelic with npm install --include=optional ${packageName}. Do not omit optional dependencies; no runtime download will be attempted.`);
+  }
 }
-function launch({ argv = process.argv.slice(2), host = process, spawnProcess = spawn, exists = existsSync, root } = {}) {
+function launch({ argv = process.argv.slice(2), host = process, spawnProcess = spawn, exists = existsSync, root, resolve } = {}) {
   let file;
   try {
     if (Number(host.versions.node.split('.')[0]) < 22) throw new Error('Node.js 22 or newer is required.');
-    file = executable(host.platform, host.arch, root);
+    file = executable(host.platform, host.arch, root, resolve);
     if (!exists(file)) throw new Error(`The native executable is missing for ${host.platform}-${host.arch}. Reinstall austindelic; no runtime download will be attempted.`);
   } catch (error) {
     host.stderr.write(`austindelic: ${error.message}\n`);

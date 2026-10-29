@@ -900,7 +900,10 @@ mod tests {
     }
     #[test]
     fn markdown_contains_content_and_link_actions() {
-        let rows=markdown("# Heading\n\nParagraph with [link](https://example.com).\n\n- item\n\n> quote\n\n```rust\nlet x = 1;\n```\n\n![diagram](image.png)",|s|Action::Open(s.into()));
+        let rows = markdown(
+            "# Heading\n\nParagraph with [link](https://example.com).\n\n- item\n\n> quote\n\n```rust\nlet x = 1;\n```\n\n![diagram](image.png)",
+            |s| Action::Open(s.into()),
+        );
         let all = rows
             .iter()
             .map(|r| r.text.as_str())

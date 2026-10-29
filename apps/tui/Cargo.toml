@@ -2,3 +2,11 @@
 members = ["core", "cli", "renderer"]
 default-members = ["cli"]
 resolver = "2"
+
+# Measured size winner; keep unwinding for renderer recovery and terminal cleanup.
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+panic = "unwind"
