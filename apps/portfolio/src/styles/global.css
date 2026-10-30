@@ -707,14 +707,30 @@ a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
 	overflow-wrap: anywhere;
 }
 .portfolio-article {
-	font-size: 14px;
-	line-height: 1.7;
+	font-size: 16px;
+	line-height: 1.75;
 	overflow-wrap: anywhere;
+}
+.portfolio-article .page-title {
+	font-size: 30px;
+	line-height: 1.25;
+	margin-top: 14px;
 }
 .portfolio-article p,
 .portfolio-article ul,
 .portfolio-article ol {
-	margin: 12px 0;
+	margin: 16px 0;
+}
+.portfolio-article strong {
+	color: #ececec;
+	font-weight: 400;
+}
+.portfolio-article li {
+	margin: 10px 0;
+	padding-left: 4px;
+}
+.portfolio-article li::marker {
+	color: var(--primary);
 }
 .portfolio-article ul,
 .portfolio-article ol {
@@ -724,7 +740,8 @@ a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
 	list-style: square;
 }
 .portfolio-article ol {
-	list-style: decimal;
+	list-style: decimal-leading-zero;
+	padding-left: 32px;
 }
 .portfolio-article h2,
 .portfolio-article h3 {
@@ -733,12 +750,13 @@ a:is(.project-row, .social-row, .post-row):is(:hover, :focus-visible) {
 	color: var(--foreground);
 }
 .portfolio-article h2 {
-	font-size: 18px;
+	font-size: 22px;
 	border-bottom: 1px solid var(--line);
-	padding-bottom: 6px;
+	padding-bottom: 8px;
 }
 .portfolio-article h3 {
-	font-size: 16px;
+	font-size: 18px;
+	color: var(--primary);
 }
 .portfolio-article a {
 	color: var(--primary);
@@ -981,7 +999,8 @@ body.bh-exploring { overflow: hidden; }
 .portfolio-article .article-deck {
 	color: var(--muted-foreground);
 	margin: 16px 0 24px;
-	font-size: 15px;
+	font-size: 18px;
+	line-height: 1.6;
 }
 .portfolio-article img {
 	display: block;
@@ -995,7 +1014,7 @@ body.bh-exploring { overflow: hidden; }
 }
 .portfolio-article figcaption,
 .portfolio-article p:has(> em:only-child) {
-	font-size: 12px;
+	font-size: 13px;
 	line-height: 1.6;
 	color: var(--muted-foreground);
 	margin-top: 10px;
@@ -1004,7 +1023,13 @@ body.bh-exploring { overflow: hidden; }
 	margin-top: 24px;
 }
 .portfolio-article h2 {
-	margin-top: 36px;
+	margin-top: 48px;
+}
+.portfolio-article h3 {
+	margin-top: 32px;
+}
+.portfolio-article pre {
+	font-size: 14px;
 }
 .portfolio-theme pre {
 	border: 1px solid #232b36;

@@ -1,10 +1,12 @@
 ---
 const { post } = Astro.props;
 
+// Frontmatter dates are calendar days parsed as UTC midnight; format them in UTC so they don't shift a day.
 const dateFormat = new Intl.DateTimeFormat("en-AU", {
 	day: "numeric",
 	month: "short",
 	year: "numeric",
+	timeZone: "UTC",
 });
 
 function getFormattedDate(date: string | number | Date) {
