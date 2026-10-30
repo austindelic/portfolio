@@ -37,6 +37,7 @@ const MUTED: Color = Color::Rgb(176, 176, 161);
 const BORDER: Color = Color::Rgb(96, 96, 82);
 // Ayu Dark's string colour, matching code on the website.
 const CODE: Color = Color::Rgb(230, 180, 80);
+const NAV_ITEMS: usize = 4;
 #[derive(Clone, Deserialize)]
 pub struct Profile {
     pub name: String,
@@ -116,7 +117,6 @@ pub enum Page {
 pub enum Action {
     Navigate(Page),
     Open(String),
-    Resume,
     CopyEmail,
 }
 #[derive(Clone, Debug)]
@@ -263,7 +263,6 @@ impl PortfolioApp {
             "" => Action::Navigate(Page::Home),
             "/blog" => Action::Navigate(Page::Blog),
             "/socials" => Action::Navigate(Page::Socials),
-            "/resume.pdf" => Action::Resume,
             _ => {
                 if let Some(slug) = path.strip_prefix("/blog/") {
                     if let Some(i) = self.posts.iter().position(|p| p.slug == slug) {
@@ -279,16 +278,15 @@ impl PortfolioApp {
         }
     }
     fn activate(&mut self, index: usize) -> Option<Action> {
-        let action = if index < 5 {
+        let action = if index < NAV_ITEMS {
             match index {
                 0 => Action::Navigate(Page::Home),
                 1 => Action::Navigate(Page::Blog),
                 2 => Action::Navigate(Page::Socials),
-                3 => Action::Navigate(Page::Explore),
-                _ => Action::Resume,
+                _ => Action::Navigate(Page::Explore),
             }
         } else {
-            self.actions.get(index - 5)?.clone()
+            self.actions.get(index - NAV_ITEMS)?.clone()
         };
         if let Action::Navigate(ref page) = action {
             self.navigate(page.clone());
@@ -307,7 +305,7 @@ impl PortfolioApp {
         match input {
             Input::Help => self.help = true,
             Input::Next | Input::Previous => {
-                let total = 5 + self.actions.len();
+                let total = NAV_ITEMS + self.actions.len();
                 self.focus = if matches!(input, Input::Next) {
                     (self.focus + 1) % total
                 } else {
@@ -317,9 +315,9 @@ impl PortfolioApp {
             }
             Input::Left | Input::Right => {
                 self.focus = if matches!(input, Input::Right) {
-                    (self.focus.min(4) + 1) % 5
+                    (self.focus.min(NAV_ITEMS - 1) + 1) % NAV_ITEMS
                 } else {
-                    (self.focus.min(4) + 4) % 5
+                    (self.focus.min(NAV_ITEMS - 1) + NAV_ITEMS - 1) % NAV_ITEMS
                 };
             }
             Input::Up => self.scroll = self.scroll.saturating_sub(1),
@@ -367,8 +365,8 @@ impl PortfolioApp {
         None
     }
     fn reveal_focus(&mut self) {
-        if self.focus >= 5 {
-            if let Some(row) = self.action_rows.get(self.focus - 5) {
+        if self.focus >= NAV_ITEMS {
+            if let Some(row) = self.action_rows.get(self.focus - NAV_ITEMS) {
                 if *row < self.scroll {
                     self.scroll = *row;
                 } else if *row >= self.scroll + self.body_height {
@@ -566,9 +564,9 @@ impl PortfolioApp {
                 panel,
             );
             let labels = if self.ascii {
-                ["Home", "Blog", "Socials", "Explore", "Resume"]
+                ["Home", "Blog", "Socials", "Explore"]
             } else {
-                ["⌂ Home", "≡ Blog", "@ Socials", "◎ Explore", "↓ Resume"]
+                ["⌂ Home", "≡ Blog", "@ Socials", "◎ Explore"]
             };
             let mut nx = x + 2;
             for (i, label) in labels.iter().enumerate() {
@@ -616,7 +614,7 @@ impl PortfolioApp {
                     let index = self.actions.len();
                     self.actions.push(a);
                     self.action_rows.push(display.len());
-                    index + 5
+                    index + NAV_ITEMS
                 });
                 let text = clean(&row.text, self.ascii);
                 let text = if action.is_some() {
@@ -633,7 +631,7 @@ impl PortfolioApp {
             }
             self.max_scroll = display.len().saturating_sub(self.body_height);
             self.scroll = self.scroll.min(self.max_scroll);
-            self.focus = self.focus.min(4 + self.actions.len());
+            self.focus = self.focus.min(NAV_ITEMS - 1 + self.actions.len());
             for (y, (text, kind, action)) in display
                 .iter()
                 .skip(self.scroll)
@@ -987,7 +985,6 @@ pub fn fallback() -> CellFrame {
             .collect(),
     }
 }
-pub const RESUME: &[u8] = include_bytes!("../assets/resume.pdf");
 
 #[cfg(test)]
 mod tests {
@@ -1040,7 +1037,7 @@ mod tests {
             .iter()
             .position(|action| *action == Action::Navigate(Page::Blog))
             .unwrap()
-            + 5;
+            + NAV_ITEMS;
         app.input(Input::Enter);
         let rows = app.document();
         assert!(rows.iter().any(|row| row.text == "Writing  01"));
@@ -1177,14 +1174,9 @@ mod tests {
             Action::Navigate(Page::Post(site_index))
         );
         assert_eq!(
-            app.resolve("https://austindelic.com/resume.pdf"),
-            Action::Resume
-        );
-        assert_eq!(
             app.resolve("https://github.com/austindelic/still"),
             Action::Open("https://github.com/austindelic/still".into())
         );
-        assert!(RESUME.starts_with(b"%PDF"));
         app.navigate(Page::Blog);
         let rows = app.document();
         for (index, post) in app.posts.iter().enumerate() {
@@ -1219,7 +1211,7 @@ mod tests {
                 .action
                 .unwrap();
             assert_eq!(action, Action::Navigate(Page::Post(expected_index)));
-            app.focus = app.actions.iter().position(|a| *a == action).unwrap() + 5;
+            app.focus = app.actions.iter().position(|a| *a == action).unwrap() + NAV_ITEMS;
             app.input(Input::Enter);
             assert_eq!(app.page, Page::Post(expected_index));
             assert!(app
@@ -1238,7 +1230,7 @@ mod tests {
         assert!(scroll > 0);
         app.navigate(Page::Blog);
         render(&mut app, 80, 24);
-        app.focus = 5;
+        app.focus = NAV_ITEMS;
         app.input(Input::Enter);
         assert!(matches!(app.page, Page::Post(_)));
         render(&mut app, 80, 24);
@@ -1258,14 +1250,13 @@ mod tests {
     fn external_actions_and_mouse() {
         let mut app = PortfolioApp::default();
         render(&mut app, 120, 40);
-        assert_eq!(app.activate(4), Some(Action::Resume));
         assert!(app.actions.contains(&Action::CopyEmail));
         let index = app
             .actions
             .iter()
             .position(|a| *a == Action::CopyEmail)
             .unwrap()
-            + 5;
+            + NAV_ITEMS;
         assert_eq!(app.activate(index), Some(Action::CopyEmail));
         let (r, _) = app.hits.iter().find(|(_, index)| *index == 2).unwrap();
         app.input(Input::Click(r.x, r.y));

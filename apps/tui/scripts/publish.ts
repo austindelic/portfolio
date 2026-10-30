@@ -125,7 +125,8 @@ async function publishReports<T extends Publishable>(
       );
     else await publish(report);
     let visible = false;
-    for (let attempt = 0; attempt < 12; attempt++) {
+    // npm can take several minutes to serve a new version.
+    for (let attempt = 0; attempt < 72; attempt++) {
       const observed = await existing(report);
       if (observed) {
         assert.equal(observed, report.integrity, "Registry artifact differs");
@@ -167,6 +168,7 @@ async function publishAll(directory: string) {
                 `${report.name}@${report.version}`,
                 "dist.integrity",
                 "--json",
+                "--prefer-online",
                 `--registry=${url}`,
               ]),
             );

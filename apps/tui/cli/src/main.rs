@@ -222,7 +222,6 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
     let mut frames = 0u64;
     let mut input_at = None;
     let mut max_input_ms = 0f64;
-    let resume_dir = tempfile::tempdir()?;
     // Linux clipboard ownership must survive until another application pastes.
     // Initialize lazily so startup needs no desktop clipboard.
     let mut clipboard = None;
@@ -447,12 +446,7 @@ fn run(args: Args, stop: Arc<AtomicBool>) -> Result<()> {
                 _ => {}
             }
             if let Some(action) = action {
-                app.status = match perform(
-                    action,
-                    &app.content.profile.email,
-                    resume_dir.path(),
-                    &mut clipboard,
-                ) {
+                app.status = match perform(action, &app.content.profile.email, &mut clipboard) {
                     Ok(message) => message,
                     Err(e) => format!("Action failed: {e}"),
                 };
@@ -481,7 +475,6 @@ fn render_grid(width: u16, height: u16, columns: u16) -> (u16, u16) {
 fn perform(
     action: Action,
     email: &str,
-    temp: &std::path::Path,
     clipboard: &mut Option<arboard::Clipboard>,
 ) -> Result<String> {
     match action {
@@ -496,13 +489,6 @@ fn perform(
                 format!("Could not open {url}; select the URL and open it manually")
             })?;
             Ok(format!("Opened {url}"))
-        }
-        Action::Resume => {
-            let path = temp.join("Austin-Delic-Resume.pdf");
-            std::fs::write(&path, portfolio::RESUME)?;
-            open::that(&path)
-                .with_context(|| format!("Could not open resume: {}", path.display()))?;
-            Ok("Opened resume in the default PDF viewer".into())
         }
         Action::CopyEmail => {
             if clipboard.is_none() {
